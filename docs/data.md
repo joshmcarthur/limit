@@ -64,6 +64,19 @@ Checked against the live layer on 22 October 2026:
 - Geometry is almost all of the download: one 2,000-record page is about 2.7 MB over the wire with geometry and 127 KB without. A full download is roughly 35 to 40 MB; the attribute-only data for every in-force record is about 1.5 to 2 MB.
 - So a delta is possible: fetch an attribute-only manifest, compare it with one stored from the last sync, and fetch geometry (by `objectIds`) only for new or changed rows. Cautions: rows repeat heavily with identical ids and `speedLimitZoneGeometryCertId` (compare as a multiset of row hashes, not by zone id); `OBJECTID` isn't stable across rebuilds, so it's only for fetching within one sync; stored zones don't keep their ids; and it isn't proven that the cert id changes when a shape changes. That needs two manifests a few days apart. A forced full refresh every ~90 days would be the backstop.
 
+## Compression
+
+The download is compressed on the wire. `URLSession` sends `Accept-Encoding: gzip, deflate` on its own and decodes the reply, so `URLSessionFetcher` doesn't set the header. Measured on 22 October 2026 against one 2,000-record page of geometry:
+
+| Asked for | Sent | Size |
+| --- | --- | --- |
+| nothing (identity) | uncompressed | 16.4 MB |
+| gzip | gzip | 2.62 MB |
+| gzip, deflate, br | brotli | 2.67 MB |
+| zstd | uncompressed (not offered) | 16.4 MB |
+
+So gzip is already the best the server offers for this data, brotli is no smaller, and the server has no zstd. A full download is nine or so pages, roughly 24 MB over the wire instead of about 150 MB. If the transfer ever needs to shrink further, the lever is `geometryPrecision` (6 decimals is about 0.1 m, finer than GPS can use; 5 is about 1 m) rather than the encoding.
+
 ## Swapping in new data safely
 
 The register is stored blue-green. Each copy sits in its own folder under `Register/` and a small `current` file names the one in use. An update:
