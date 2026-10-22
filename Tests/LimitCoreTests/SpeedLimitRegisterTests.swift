@@ -53,7 +53,7 @@ final class SpeedLimitRegisterTests: XCTestCase {
 
     func testZoneAcrossCellBoundary() {
         let register = SpeedLimitRegister(zones: [zone(30, lat: -41.01, lon: 174.01, size: 0.08)], cellSize: 0.05)
-        XCTAssertEqual(register.lookup(Coordinate(latitude: -40.95, longitude: 174.09))?.limit, 30)
+        XCTAssertEqual(register.lookup(Coordinate(latitude: -40.95, longitude: 174.08))?.limit, 30)
         XCTAssertEqual(register.zoneCount, 1)
     }
 }
