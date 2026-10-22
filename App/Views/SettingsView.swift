@@ -20,7 +20,6 @@ struct SettingsView: View {
                         Text(model.settings.toleranceLabel).foregroundStyle(Palette.inkMuted).monospacedDigit()
                     }
                 }
-                Toggle("Chime when the limit changes", isOn: $model.settings.chimeOnLimitChange)
             } header: {
                 Text("While driving")
             } footer: {

@@ -42,9 +42,6 @@ struct OnboardingReadyView: View {
                             }
                         }
                         .frame(minHeight: 52)
-                        Divider()
-                        Toggle("Chime when the limit changes", isOn: $model.settings.chimeOnLimitChange)
-                            .frame(minHeight: 52)
                     }
                     .padding(.horizontal, DesignTokens.space4)
                     .background(Palette.surface, in: RoundedRectangle(cornerRadius: DesignTokens.radiusMedium, style: .continuous))
