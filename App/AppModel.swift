@@ -15,7 +15,7 @@ final class AppModel {
         }
     }
     private(set) var driveState = DriveState.searching
-    private(set) var syncState = SyncState.neverSynced
+    private(set) var syncStatus = SyncStatus()
     private(set) var locationAccess = LocationAccess.notDetermined
     private(set) var isDriving = false
 
@@ -24,7 +24,10 @@ final class AppModel {
     @ObservationIgnored private let activity = DriveActivityController()
     @ObservationIgnored private let store: RegisterStore
     @ObservationIgnored private var ticker: Task<Void, Never>?
-    @ObservationIgnored private var isSyncing = false
+    @ObservationIgnored private var syncTask: Task<Void, Never>?
+
+    /// What the sync row and the drive screen's footer show, worked out from the status each time it's read.
+    var syncState: SyncState { syncStatus.state(now: Date()) }
 
     private static let settingsKey = "settings.v1"
 
@@ -110,45 +113,44 @@ final class AppModel {
 
     private func loadStoredRegister() {
         do {
-            if let stored = try store.load() {
-                engine.register = stored.register
-                engine.registerCheckedAt = stored.metadata.checkedAt
-                syncState = .resting(checkedAt: stored.metadata.checkedAt, now: Date())
-            }
+            if let stored = try store.load() { use(stored.register, checkedAt: stored.metadata.checkedAt) }
         } catch {
             try? store.clear()
         }
     }
 
+    private func use(_ register: SpeedLimitRegister, checkedAt date: Date) {
+        engine.register = register
+        recordCheck(at: date)
+    }
+
+    private func recordCheck(at date: Date) {
+        engine.registerCheckedAt = date
+        syncStatus.finished(checkedAt: date)
+    }
+
     /// Asks for an update. Opening the app calls this every time and the schedule in `RegisterUpdater`
     /// decides whether anything is actually requested, so it is safe to call as often as is convenient.
     func syncRegister(userInitiated: Bool = false) {
-        guard !isSyncing else { return }
+        guard syncTask == nil else { return }
         let store = store
-        guard case .now = Self.decision(store: store, userInitiated: userInitiated) else { return }
-        isSyncing = true
-        syncState = .updating(progress: nil)
-        Task {
-            defer { isSyncing = false }
+        syncTask = Task {
+            defer { syncTask = nil }
+            // Progress comes through a stream so every tick is shown, in order, before the result.
+            let (updates, continuation) = AsyncStream<Double?>.makeStream()
+            let work = Task {
+                defer { continuation.finish() }
+                return try await Self.update(store: store, userInitiated: userInitiated) { continuation.yield($0) }
+            }
+            for await progress in updates { syncStatus.progressed(progress) }
             do {
-                let scheduled = try await Self.update(store: store, userInitiated: userInitiated) { progress in
-                    Task { @MainActor [weak self] in self?.syncState = .updating(progress: progress) }
-                }
-                guard case .ran(let outcome) = scheduled else {
-                    syncState = .resting(checkedAt: engine.registerCheckedAt, now: Date())
-                    return
-                }
+                guard case .ran(let outcome) = try await work.value else { return }
                 switch outcome {
-                case .unchanged(let metadata):
-                    engine.registerCheckedAt = metadata.checkedAt
-                    syncState = .upToDate(checkedAt: metadata.checkedAt)
-                case .downloaded(let zones, let metadata):
-                    engine.register = SpeedLimitRegister(zones: zones)
-                    engine.registerCheckedAt = metadata.checkedAt
-                    syncState = .upToDate(checkedAt: metadata.checkedAt)
+                case .unchanged(let metadata): recordCheck(at: metadata.checkedAt)
+                case .downloaded(let zones, let metadata): use(SpeedLimitRegister(zones: zones), checkedAt: metadata.checkedAt)
                 }
             } catch {
-                syncState = .failed(lastChecked: engine.registerCheckedAt)
+                syncStatus.failed()
             }
         }
     }
@@ -156,10 +158,6 @@ final class AppModel {
     /// The Retry and Check now buttons: skips the weekly wait and the back-off, but not the short floor
     /// between attempts.
     func retrySync() { syncRegister(userInitiated: true) }
-
-    private nonisolated static func decision(store: RegisterStore, userInitiated: Bool) -> SyncSchedule.Decision {
-        RegisterUpdater(store: store).decision(userInitiated: userInitiated)
-    }
 
     private nonisolated static func update(
         store: RegisterStore,

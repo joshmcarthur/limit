@@ -189,6 +189,27 @@ final class RegisterUpdaterTests: XCTestCase {
         XCTAssertEqual(source.pageRequests, 1)
     }
 
+    private final class Reports: @unchecked Sendable {
+        private let lock = NSLock()
+        private var values: [Double?] = []
+        func add(_ v: Double?) { lock.lock(); values.append(v); lock.unlock() }
+        var all: [Double?] { lock.lock(); defer { lock.unlock() }; return values }
+    }
+
+    func testProgressStartsWithNilOnlyWhenTheUpdateActuallyRuns() async throws {
+        let source = Source()
+        let t0 = Date(timeIntervalSince1970: 1_000_000)
+        let started = Reports()
+        _ = try await updater(source, at: t0).updateIfDue(progress: { started.add($0) })
+        guard let first = started.all.first else { return XCTFail("expected a report that it started") }
+        XCTAssertNil(first, "the first report is nil: running, total not known yet")
+
+        let skipped = Reports()
+        let scheduled = try await updater(source, at: t0.addingTimeInterval(60)).updateIfDue(progress: { skipped.add($0) })
+        guard case .notDue = scheduled else { return XCTFail("expected to wait") }
+        XCTAssertTrue(skipped.all.isEmpty, "nothing to show when no request is made")
+    }
+
     func testFailuresBackOffAndSurviveARelaunch() async throws {
         let source = Source()
         source.layerFails = true

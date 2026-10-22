@@ -66,14 +66,17 @@ public struct RegisterUpdater: Sendable {
 
     /// Whether the schedule allows a request now. `userInitiated` is for a person asking, which skips the
     /// weekly wait and the back-off but not the short floor between attempts.
-    public func decision(userInitiated: Bool = false) -> SyncSchedule.Decision {
+    private func decision(userInitiated: Bool) -> SyncSchedule.Decision {
         schedule.decision(attempts: store.loadAttempts(), lastSuccessAt: (try? store.loadMetadata())?.checkedAt,
                           now: now(), userInitiated: userInitiated)
     }
 
     /// Updates only if the schedule allows it. Everything that opens the app or taps Retry goes through here.
+    /// Reports `progress(nil)` as soon as it commits to running, so a caller can show that it has started
+    /// without checking the schedule itself.
     public func updateIfDue(userInitiated: Bool = false, progress: @Sendable (Double?) -> Void = { _ in }) async throws -> ScheduledUpdate {
         if case .wait(let until) = decision(userInitiated: userInitiated) { return .notDue(until: until) }
+        progress(nil)
         return .ran(try await update(progress: progress))
     }
 
