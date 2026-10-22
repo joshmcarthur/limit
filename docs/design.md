@@ -27,7 +27,7 @@ The screens follow the "Limit — onboarding and main screen" canvas, and the to
 
 ## Assumptions to confirm
 
-- After "End drive" the main screen stays up with a "Start drive" button. The design doesn't cover this state.
+- After "End drive" the main screen stays up, saying "Drive ended" and "Location and the Lock Screen card are off.", with a "Start again" button. While a drive is running "End drive" is a small button in the top bar. The design doesn't cover this state.
 - Freshness thresholds (stale after 30 days, unknown after 180) are proposals.
 - Over-limit shows from the tolerance upward (`delta >= tolerance`) and clears at `tolerance - 2` (minimum 0).
 - App icon, launch screen and the About screen's licence wording are not designed yet.

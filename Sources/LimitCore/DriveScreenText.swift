@@ -23,7 +23,7 @@ public enum DriveScreenText {
 
     /// Nil when a limit is showing: the road name stands on its own.
     public static func subheadline(isDriving: Bool, access: LocationAccess, snapshot: DriveSnapshot) -> String? {
-        if !isDriving { return "Start a drive to see the limit" }
+        if !isDriving { return "Location and the Lock Screen card are off." }
         switch access {
         case .denied: return "Turn on location for Limit in Settings"
         case .reduced: return "Turn on Precise Location so Limit can find your road"

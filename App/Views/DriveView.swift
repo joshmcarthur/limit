@@ -78,7 +78,8 @@ struct DriveView: View {
                 .font(.footnote)
                 .foregroundStyle(Palette.inkMuted)
             Spacer()
-            if isLandscape { driveButton(compact: true) }
+            // Ending a drive is a small control while driving; coming back is a big one once it has ended.
+            if isLandscape || model.isDriving { driveButton(compact: true) }
             Button { showAbout = true } label: { Image(systemName: "info.circle").font(.title3) }
                 .frame(width: 44, height: 44)
                 .accessibilityLabel("About the data")
@@ -92,7 +93,7 @@ struct DriveView: View {
 
     private var bottomBar: some View {
         VStack(spacing: DesignTokens.space3) {
-            driveButton(compact: false)
+            if !model.isDriving { driveButton(compact: false) }
             syncFooter
         }
         .padding(.bottom, DesignTokens.space2)
@@ -112,7 +113,7 @@ struct DriveView: View {
     }
 
     private func driveButton(compact: Bool) -> some View {
-        let title = model.isDriving ? "End drive" : "Start drive"
+        let title = model.isDriving ? "End drive" : "Start again"
         let action = { model.isDriving ? model.endDrive() : model.beginDrive() }
         return Group {
             if compact {
@@ -125,6 +126,9 @@ struct DriveView: View {
             }
         }
         .tint(Palette.tint)
+        .accessibilityHint(model.isDriving
+            ? "Turns off location and removes the Lock Screen card"
+            : "Turns location back on")
     }
 
     @ToolbarContentBuilder

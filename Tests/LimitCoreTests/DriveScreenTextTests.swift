@@ -20,7 +20,7 @@ final class DriveScreenTextTests: XCTestCase {
         for access in [LocationAccess.notDetermined, .denied, .reduced, .authorized] {
             let (headline, subheadline) = text(withLimit, driving: false, access: access)
             XCTAssertEqual(headline, "Drive ended")
-            XCTAssertEqual(subheadline, "Start a drive to see the limit")
+            XCTAssertEqual(subheadline, "Location and the Lock Screen card are off.")
         }
     }
 
