@@ -20,7 +20,10 @@ struct SpeedReadoutView: View {
                 .minimumScaleFactor(0.5)
                 .foregroundStyle(numberColor)
                 .padding(.horizontal, size * 0.14)
-                .padding(.vertical, size * 0.04)
+                // The font's line box is much taller than its digits (room for accents and descenders that
+                // numbers don't use), which left a big gap above the caption. Digits are about 0.72 of the
+                // size tall, so keep the box to that plus a little air, centred on the digits.
+                .frame(height: size * 0.8)
                 .background {
                     if over.isOver {
                         RoundedRectangle(cornerRadius: DesignTokens.radiusMedium, style: .continuous)
