@@ -34,18 +34,12 @@ struct OnboardingReadyView: View {
                         Toggle("Show on Lock Screen", isOn: $model.settings.showOnLockScreen)
                             .frame(minHeight: 52)
                         Divider()
-                        Stepper(value: $model.settings.overTolerance, in: OverLimitEvaluator.toleranceRange) {
-                            HStack {
-                                Text("Show “over” from")
-                                Spacer()
-                                Text(model.settings.toleranceLabel).foregroundStyle(Palette.inkMuted).monospacedDigit()
-                            }
-                        }
-                        .frame(minHeight: 52)
+                        ToleranceStepper(settings: $model.settings)
+                            .frame(minHeight: 52)
                     }
                     .padding(.horizontal, DesignTokens.space4)
                     .background(Palette.surface, in: RoundedRectangle(cornerRadius: DesignTokens.radiusMedium, style: .continuous))
-                    Text("GPS speed can be a few km/h out, so “over” only shows once you’re past this. It isn’t a speed you can drive at: the limit is the limit.")
+                    Text(ToleranceStepper.footnote)
                         .font(.footnote).foregroundStyle(Palette.inkMuted).padding(.horizontal, DesignTokens.space4)
                 }
 

@@ -78,7 +78,7 @@ struct DriveView: View {
         case .authorized:
             return state.snapshot.limit == nil
                 ? "Obey the posted speed limit signs"
-                : "Data from Waka Kotahi’s National Speed Limit Register"
+                : LimitCore.attribution
         }
     }
 

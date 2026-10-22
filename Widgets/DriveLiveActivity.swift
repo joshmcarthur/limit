@@ -65,7 +65,7 @@ private struct LockScreenView: View {
                         .font(.caption.weight(.semibold))
                         .foregroundStyle(Palette.ink)
                 } else {
-                    Text("Data from Waka Kotahi’s National Speed Limit Register")
+                    Text(LimitCore.attribution)
                         .font(.caption)
                         .foregroundStyle(Palette.inkMuted)
                 }

@@ -13,17 +13,11 @@ struct SettingsView: View {
             }
             Section {
                 Toggle("Show on Lock Screen", isOn: $model.settings.showOnLockScreen)
-                Stepper(value: $model.settings.overTolerance, in: OverLimitEvaluator.toleranceRange) {
-                    HStack {
-                        Text("Show “over” from")
-                        Spacer()
-                        Text(model.settings.toleranceLabel).foregroundStyle(Palette.inkMuted).monospacedDigit()
-                    }
-                }
+                ToleranceStepper(settings: $model.settings)
             } header: {
                 Text("While driving")
             } footer: {
-                Text("GPS speed can be a few km/h out, so “over” only shows once you’re past this. It isn’t a speed you can drive at: the limit is the limit.")
+                Text(ToleranceStepper.footnote)
             }
             Section {
                 NavigationLink("About the data") { AboutView() }
