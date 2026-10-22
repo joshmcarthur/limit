@@ -41,18 +41,23 @@ final class RegisterDownloaderTests: XCTestCase {
     private let endpoint = RegisterEndpoint(queryURL: URL(string: "https://example.test/query")!, pageSize: 2)
 
     func testEndpointURLs() {
-        let url = endpoint.pageURL(offset: 4)
+        let now = ISO8601DateFormatter().date(from: "2026-10-22T05:00:00Z")!
+        let url = endpoint.pageURL(offset: 4, now: now)
         let items = Dictionary(uniqueKeysWithValues: URLComponents(url: url, resolvingAgainstBaseURL: false)!.queryItems!.map { ($0.name, $0.value ?? "") })
         XCTAssertEqual(items["resultOffset"], "4")
         XCTAssertEqual(items["resultRecordCount"], "2")
         XCTAssertEqual(items["f"], "pgeojson")
-        XCTAssertEqual(items["where"], "whenIneffective IS NULL")
+        XCTAssertEqual(items["where"], RegisterEndpoint.inForce(now: now))
+        XCTAssertTrue(items["where"]!.hasPrefix("whenIneffective IS NULL AND ("))
+        XCTAssertTrue(items["where"]!.contains("speedLimitZoneEndDate >= TIMESTAMP '2026-10-20 00:00:00'"), "two days back")
+        XCTAssertTrue(items["where"]!.contains("speedLimitZoneSeasonalRecur = 1"), "recurring seasonal limits are kept")
         XCTAssertEqual(items["orderByFields"], "OBJECTID")
-        XCTAssertEqual(items["outFields"], "speedLimitZoneId,speedLimitZoneName,speedLimitZoneValue,speedLimitZoneVariableSpeed,speedLimitZoneVarPrdDesc")
+        XCTAssertEqual(items["outFields"], "speedLimitZoneId,speedLimitZoneName,speedLimitZoneValue,speedLimitZoneVariableSpeed,speedLimitZoneVarPrdDesc,"
+                       + "speedCategoryName,speedLimitZoneStartDate,speedLimitZoneEndDate,speedLimitZoneSeasonalRecur,speedLimitZoneStructureTypeName")
         XCTAssertEqual(items["outSR"], "4326")
-        let count = URLComponents(url: endpoint.countURL(), resolvingAgainstBaseURL: false)!.queryItems!
+        let count = URLComponents(url: endpoint.countURL(now: now), resolvingAgainstBaseURL: false)!.queryItems!
         XCTAssertTrue(count.contains(URLQueryItem(name: "returnCountOnly", value: "true")))
-        XCTAssertTrue(count.contains(URLQueryItem(name: "where", value: "whenIneffective IS NULL")))
+        XCTAssertTrue(count.contains(URLQueryItem(name: "where", value: RegisterEndpoint.inForce(now: now))))
     }
 
     func testRepeatedRecordsAreDroppedFromTheDownload() async throws {

@@ -69,8 +69,10 @@ public struct ActivePeriod: Equatable, Sendable {
         if let start, let end, end < start { return nil }
         // A yearly window needs both ends to know where it starts and stops.
         guard !repeatsYearly || (start != nil && end != nil) else { return nil }
-        self.start = start
-        self.end = end
+        // Only the NZ calendar day matters, so keep each end at noon on its day. That also means a period
+        // read back from storage (which keeps just the day) equals the one that was written.
+        self.start = start.map(Self.noon)
+        self.end = end.map(Self.noon)
         self.repeatsYearly = repeatsYearly
     }
 
@@ -78,6 +80,25 @@ public struct ActivePeriod: Equatable, Sendable {
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = ReducedLimit.timeZone
         return calendar
+    }
+
+    private static func noon(_ date: Date) -> Date {
+        let calendar = Self.calendar
+        let parts = calendar.dateComponents([.year, .month, .day], from: date)
+        return calendar.date(from: DateComponents(year: parts.year, month: parts.month, day: parts.day, hour: 12)) ?? date
+    }
+
+    /// A day as `yyyymmdd` (for example 20211201), the form kept on disk.
+    static func pack(_ date: Date) -> Int32 {
+        let parts = calendar.dateComponents([.year, .month, .day], from: date)
+        return Int32((parts.year ?? 0) * 10_000 + (parts.month ?? 0) * 100 + (parts.day ?? 0))
+    }
+
+    static func unpack(_ packed: Int32) -> Date? {
+        let value = Int(packed)
+        let (year, month, day) = (value / 10_000, value / 100 % 100, value % 100)
+        guard (1...9999).contains(year), (1...12).contains(month), (1...31).contains(day) else { return nil }
+        return calendar.date(from: DateComponents(year: year, month: month, day: day, hour: 12))
     }
 
     public func isActive(at date: Date) -> Bool {

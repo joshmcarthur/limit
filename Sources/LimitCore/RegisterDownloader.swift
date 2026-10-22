@@ -74,19 +74,32 @@ public struct RegisterEndpoint: Equatable, Sendable {
     public static let nzta = RegisterEndpoint(queryURL: URL(string:
         "https://services.arcgis.com/CXBb7LAjgIIdcsPt/ArcGIS/rest/services/SpeedLimitZoneFull__View/FeatureServer/0/query")!)
 
-    /// The layer also holds superseded and expired records (about two thirds of it), so only zones with
-    /// no `whenIneffective` date are requested.
-    public static let inForce = "whenIneffective IS NULL"
+    /// The layer also holds superseded and expired records, so only zones with no `whenIneffective` date
+    /// are requested. It also keeps records whose end date has passed but that were never marked
+    /// ineffective (about a fifth), so those are left out too, apart from recurring seasonal limits whose
+    /// dates are just the first year's. The cut-off is two days back so a record that ended today or
+    /// yesterday still arrives; lookups check the dates themselves.
+    public static func inForce(now: Date = Date()) -> String {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(identifier: "UTC")!
+        let cutoff = calendar.date(byAdding: .day, value: -2, to: now) ?? now
+        let parts = calendar.dateComponents([.year, .month, .day], from: cutoff)
+        let day = String(format: "%04d-%02d-%02d", parts.year ?? 1970, parts.month ?? 1, parts.day ?? 1)
+        return "whenIneffective IS NULL AND (speedLimitZoneEndDate IS NULL "
+            + "OR speedLimitZoneEndDate >= TIMESTAMP '\(day) 00:00:00' OR speedLimitZoneSeasonalRecur = 1)"
+    }
 
     /// Only the fields the app reads; the layer's legal text fields are large.
     public static let outFields = [
         "speedLimitZoneId", "speedLimitZoneName", "speedLimitZoneValue",
         "speedLimitZoneVariableSpeed", "speedLimitZoneVarPrdDesc",
+        "speedCategoryName", "speedLimitZoneStartDate", "speedLimitZoneEndDate", "speedLimitZoneSeasonalRecur",
+        "speedLimitZoneStructureTypeName",
     ]
 
-    public func pageURL(offset: Int) -> URL {
+    public func pageURL(offset: Int, now: Date = Date()) -> URL {
         url([
-            ("where", Self.inForce), ("outFields", Self.outFields.joined(separator: ",")),
+            ("where", Self.inForce(now: now)), ("outFields", Self.outFields.joined(separator: ",")),
             ("returnGeometry", "true"), ("outSR", "4326"), ("geometryPrecision", "6"),
             // Without a stable order, paging by offset can skip or repeat records.
             ("orderByFields", "OBJECTID"),
@@ -103,8 +116,8 @@ public struct RegisterEndpoint: Equatable, Sendable {
         return components.url!
     }
 
-    public func countURL() -> URL {
-        url([("where", Self.inForce), ("returnCountOnly", "true"), ("f", "json")])
+    public func countURL(now: Date = Date()) -> URL {
+        url([("where", Self.inForce(now: now)), ("returnCountOnly", "true"), ("f", "json")])
     }
 
     private func url(_ items: [(String, String)]) -> URL {

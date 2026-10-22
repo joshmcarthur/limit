@@ -9,15 +9,25 @@ public struct SpeedZone: Equatable, Sendable {
     public let limit: Int
     /// A lower limit that applies at set times (a school zone), if the register gives one we can read.
     public let reduced: ReducedLimit?
+    public let kind: ZoneKind
+    public let structure: StructureType
+    /// When the record applies; nil means always.
+    public let period: ActivePeriod?
     public let polygons: [Polygon]
     public let bounds: BoundingBox
 
-    public init?(id: String? = nil, name: String?, limit: Int, reduced: ReducedLimit? = nil, polygons: [Polygon]) {
+    public init?(
+        id: String? = nil, name: String?, limit: Int, reduced: ReducedLimit? = nil, kind: ZoneKind = .permanent,
+        structure: StructureType = .none, period: ActivePeriod? = nil, polygons: [Polygon]
+    ) {
         guard let first = polygons.first else { return nil }
         self.id = id
         self.name = name
         self.limit = limit
         self.reduced = reduced
+        self.kind = kind
+        self.structure = structure
+        self.period = period
         self.polygons = polygons
         var box = first.bounds
         for polygon in polygons.dropFirst() {
@@ -29,6 +39,9 @@ public struct SpeedZone: Equatable, Sendable {
         }
         bounds = box
     }
+
+    /// Whether the record applies at `date`: an ended, not yet started or out-of-season record doesn't.
+    public func isActive(at date: Date) -> Bool { period?.isActive(at: date) ?? true }
 
     /// The limit in force at `date`: the reduced one inside its windows, otherwise the permanent one.
     public func effectiveLimit(at date: Date) -> Int {

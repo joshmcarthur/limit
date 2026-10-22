@@ -47,8 +47,11 @@ public enum GeoJSONZoneParser {
                 continue
             }
             let polygons = polygons(from: feature["geometry"] as? [String: Any])
+            let kind = ZoneKind(category: properties["speedCategoryName"] as? String)
             guard let zone = SpeedZone(id: id(in: properties), name: name(in: properties), limit: limit,
-                                    reduced: reducedLimit(in: properties, permanent: limit), polygons: polygons) else {
+                                    reduced: reducedLimit(in: properties, permanent: limit),
+                                    kind: kind, structure: StructureType(name: properties["speedLimitZoneStructureTypeName"] as? String),
+                                    period: period(in: properties, kind: kind), polygons: polygons) else {
                 result.skippedBadGeometry += 1
                 continue
             }
@@ -75,6 +78,22 @@ public enum GeoJSONZoneParser {
               let windows = SchoolPeriodParser.windows(from: periods)
         else { return nil }
         return ReducedLimit(limit: limit, windows: windows)
+    }
+
+    /// The dates a record applies. The layer uses 1899 and 1900 start dates to mean "always", which are dropped;
+    /// only a seasonal record flagged as recurring repeats every year.
+    static func period(in properties: [String: Any], kind: ZoneKind) -> ActivePeriod? {
+        let start = date(properties["speedLimitZoneStartDate"])
+        let end = date(properties["speedLimitZoneEndDate"])
+        let recurs = kind == .seasonal && double(properties["speedLimitZoneSeasonalRecur"]) == 1
+        return ActivePeriod(start: start, end: end, repeatsYearly: recurs)
+            ?? ActivePeriod(start: start, end: end)
+    }
+
+    /// Dates arrive as milliseconds since 1970; zero or negative is a placeholder.
+    private static func date(_ value: Any?) -> Date? {
+        guard let millis = double(value), millis > 0 else { return nil }
+        return Date(timeIntervalSince1970: millis / 1000)
     }
 
     static func id(in properties: [String: Any]) -> String? {
