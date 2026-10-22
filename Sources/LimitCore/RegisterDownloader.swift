@@ -52,16 +52,26 @@ public struct RegisterEndpoint: Equatable, Sendable {
     public static let nzta = RegisterEndpoint(queryURL: URL(string:
         "https://services.arcgis.com/CXBb7LAjgIIdcsPt/ArcGIS/rest/services/SpeedLimitZoneFull__View/FeatureServer/0/query")!)
 
+    /// The layer also holds superseded and expired records (about two thirds of it), so only zones with
+    /// no `whenIneffective` date are requested.
+    public static let inForce = "whenIneffective IS NULL"
+
+    /// Only the fields the app reads; the layer's legal text fields are large.
+    public static let outFields = ["speedLimitZoneId", "speedLimitZoneName", "speedLimitZoneValue"]
+
     public func pageURL(offset: Int) -> URL {
         url([
-            ("where", "1=1"), ("outFields", "*"), ("returnGeometry", "true"), ("outSR", "4326"),
-            ("geometryPrecision", "6"), ("resultOffset", String(offset)), ("resultRecordCount", String(pageSize)),
+            ("where", Self.inForce), ("outFields", Self.outFields.joined(separator: ",")),
+            ("returnGeometry", "true"), ("outSR", "4326"), ("geometryPrecision", "6"),
+            // Without a stable order, paging by offset can skip or repeat records.
+            ("orderByFields", "OBJECTID"),
+            ("resultOffset", String(offset)), ("resultRecordCount", String(pageSize)),
             ("f", "pgeojson"),
         ])
     }
 
     public func countURL() -> URL {
-        url([("where", "1=1"), ("returnCountOnly", "true"), ("f", "json")])
+        url([("where", Self.inForce), ("returnCountOnly", "true"), ("f", "json")])
     }
 
     private func url(_ items: [(String, String)]) -> URL {

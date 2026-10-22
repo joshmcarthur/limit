@@ -46,9 +46,13 @@ final class RegisterDownloaderTests: XCTestCase {
         XCTAssertEqual(items["resultOffset"], "4")
         XCTAssertEqual(items["resultRecordCount"], "2")
         XCTAssertEqual(items["f"], "pgeojson")
-        XCTAssertEqual(items["outFields"], "*")
+        XCTAssertEqual(items["where"], "whenIneffective IS NULL")
+        XCTAssertEqual(items["orderByFields"], "OBJECTID")
+        XCTAssertEqual(items["outFields"], "speedLimitZoneId,speedLimitZoneName,speedLimitZoneValue")
         XCTAssertEqual(items["outSR"], "4326")
-        XCTAssertTrue(endpoint.countURL().absoluteString.contains("returnCountOnly=true"))
+        let count = URLComponents(url: endpoint.countURL(), resolvingAgainstBaseURL: false)!.queryItems!
+        XCTAssertTrue(count.contains(URLQueryItem(name: "returnCountOnly", value: "true")))
+        XCTAssertTrue(count.contains(URLQueryItem(name: "where", value: "whenIneffective IS NULL")))
     }
 
     func testPagesUntilTheSourceStopsExceeding() async throws {
