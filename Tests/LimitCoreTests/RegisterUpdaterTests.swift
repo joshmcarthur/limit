@@ -107,13 +107,35 @@ final class RegisterUpdaterTests: XCTestCase {
         XCTAssertEqual(metadata.sourceEditedAt, Date(timeIntervalSince1970: 1_700_000_060))
     }
 
-    func testUnreadableLayerFallsBackToDownloading() async throws {
+    func testUnreadableLayerWithACopyDoesNotDownload() async throws {
         let source = Source()
         _ = try await updater(source, at: Date(timeIntervalSince1970: 100)).update()
+        let pagesBefore = source.pageRequests
         source.layerFails = true
-        let outcome = try await updater(source, at: Date(timeIntervalSince1970: 200)).update()
+        do {
+            _ = try await updater(source, at: Date(timeIntervalSince1970: 200)).update()
+            XCTFail("expected failure")
+        } catch {
+            XCTAssertEqual(error as? RegisterSyncError, .sourceUnavailable)
+        }
+        XCTAssertEqual(source.pageRequests, pagesBefore, "a source we can't ask is not asked for everything")
+        XCTAssertEqual(try liveZoneCount(), 1)
+    }
+
+    func testUnreadableLayerWithNoCopyStillDownloads() async throws {
+        let source = Source()
+        source.layerFails = true
+        let outcome = try await updater(source, at: Date(timeIntervalSince1970: 100)).update()
         guard case .downloaded(_, let metadata) = outcome else { return XCTFail("expected a download") }
         XCTAssertNil(metadata.sourceEditedAt)
+    }
+
+    func testALayerWithNoEditDateDownloadsAgain() async throws {
+        let source = Source()
+        _ = try await updater(source, at: Date(timeIntervalSince1970: 100)).update()
+        source.editedAtMillis = nil
+        let outcome = try await updater(source, at: Date(timeIntervalSince1970: 200)).update()
+        guard case .downloaded = outcome else { return XCTFail("expected a download") }
     }
 
     func testCopySavedWithoutASourceEditDownloadsAgain() async throws {
@@ -133,6 +155,100 @@ final class RegisterUpdaterTests: XCTestCase {
         let metadata = try XCTUnwrap(RegisterStore(directory: directory).loadMetadata())
         XCTAssertNil(metadata.sourceEditedAt)
         XCTAssertEqual(metadata.zoneCount, 2)
+    }
+
+    // MARK: Schedule
+
+    private let week: TimeInterval = 7 * 86_400
+
+    private func ran(_ scheduled: ScheduledUpdate) -> RegisterUpdateOutcome? {
+        if case .ran(let outcome) = scheduled { return outcome }
+        return nil
+    }
+
+    func testAutomaticChecksWaitAWeekAndThenCostOnlyTheLayerRequest() async throws {
+        let source = Source()
+        let t0 = Date(timeIntervalSince1970: 1_000_000)
+        let first = try await updater(source, at: t0).updateIfDue()
+        XCTAssertNotNil(ran(first), "first run goes straight away")
+        let requestsAfterFirst = source.requests.count
+
+        // Opening the app any number of times inside the week makes no request at all.
+        for hours in [1.0, 24, 100, 167] {
+            let scheduled = try await updater(source, at: t0.addingTimeInterval(hours * 3_600)).updateIfDue()
+            guard case .notDue(let until) = scheduled else { return XCTFail("expected to wait at \(hours) h") }
+            XCTAssertEqual(until, t0.addingTimeInterval(week))
+        }
+        XCTAssertEqual(source.requests.count, requestsAfterFirst)
+
+        // After a week: one cheap layer request, and no download because nothing changed.
+        let weekLater = try await updater(source, at: t0.addingTimeInterval(week)).updateIfDue()
+        let outcome = try XCTUnwrap(ran(weekLater))
+        guard case .unchanged = outcome else { return XCTFail("expected no download") }
+        XCTAssertEqual(source.requests.count, requestsAfterFirst + 1)
+        XCTAssertEqual(source.pageRequests, 1)
+    }
+
+    func testFailuresBackOffAndSurviveARelaunch() async throws {
+        let source = Source()
+        source.layerFails = true
+        let t0 = Date(timeIntervalSince1970: 1_000_000)
+        // No copy yet, so the first attempt downloads blind; make that fail by returning nothing usable.
+        source.records = 0
+        _ = try? await updater(source, at: t0, policy: .standard).updateIfDue()
+        XCTAssertEqual(RegisterStore(directory: directory).loadAttempts().consecutiveFailures, 1)
+
+        let requests = source.requests.count
+        guard case .notDue(let until) = try await updater(source, at: t0.addingTimeInterval(60)).updateIfDue() else {
+            return XCTFail("expected to back off")
+        }
+        XCTAssertEqual(until, t0.addingTimeInterval(15 * 60))
+        XCTAssertEqual(source.requests.count, requests)
+
+        _ = try? await updater(source, at: t0.addingTimeInterval(15 * 60), policy: .standard).updateIfDue()
+        guard case .notDue(let second) = try await updater(source, at: t0.addingTimeInterval(16 * 60)).updateIfDue() else {
+            return XCTFail("expected a longer back-off")
+        }
+        XCTAssertEqual(second, t0.addingTimeInterval(15 * 60 + 3_600))
+    }
+
+    func testARejectedDownloadBacksOffLikeAnyOtherFailure() async throws {
+        let source = Source()
+        source.records = 10
+        let t0 = Date(timeIntervalSince1970: 1_000_000)
+        _ = try await updater(source, at: t0).updateIfDue()
+        source.records = 3
+        source.editedAtMillis! += 60_000
+        let t1 = t0.addingTimeInterval(week)
+        _ = try? await updater(source, at: t1).updateIfDue()
+        let pages = source.pageRequests
+        guard case .notDue = try await updater(source, at: t1.addingTimeInterval(60)).updateIfDue() else {
+            return XCTFail("expected to back off after a rejection")
+        }
+        XCTAssertEqual(source.pageRequests, pages, "no second full download while the source is broken")
+    }
+
+    func testManualChecksSkipTheWeeklyWaitButNotTheFloor() async throws {
+        let source = Source()
+        let t0 = Date(timeIntervalSince1970: 1_000_000)
+        _ = try await updater(source, at: t0).updateIfDue()
+
+        let tooSoon = try await updater(source, at: t0.addingTimeInterval(60)).updateIfDue(userInitiated: true)
+        guard case .notDue(let until) = tooSoon else { return XCTFail("expected the floor to hold") }
+        XCTAssertEqual(until, t0.addingTimeInterval(5 * 60))
+
+        let allowed = try await updater(source, at: t0.addingTimeInterval(5 * 60)).updateIfDue(userInitiated: true)
+        let outcome = try XCTUnwrap(ran(allowed))
+        guard case .unchanged = outcome else { return XCTFail("expected a cheap check, not a download") }
+    }
+
+    func testAttemptsSurviveClearingAndStagedWrites() throws {
+        let store = RegisterStore(directory: directory)
+        store.saveAttempts(SyncAttempts(lastAttemptAt: Date(timeIntervalSince1970: 100), consecutiveFailures: 2))
+        try store.save(zones: [], metadata: RegisterMetadata(checkedAt: Date(), zoneCount: 0, sourceFeatureCount: 0))
+        XCTAssertEqual(store.loadAttempts().consecutiveFailures, 2)
+        try store.clear()
+        XCTAssertEqual(store.loadAttempts().consecutiveFailures, 2)
     }
 
     // MARK: Verification gate

@@ -46,6 +46,23 @@ public struct RegisterStore: Sendable {
 
     private var pointerURL: URL { directory.appendingPathComponent("current") }
 
+    /// Kept beside the generations, and out of the way of `clear` and the stray-folder sweep, so a
+    /// replaced or damaged register doesn't reset the limits on how often we ask the source.
+    private static let attemptsName = "sync-attempts.json"
+    private var attemptsURL: URL { directory.appendingPathComponent(Self.attemptsName) }
+
+    public func loadAttempts() -> SyncAttempts {
+        guard let data = try? Data(contentsOf: attemptsURL),
+              let attempts = try? Self.decoder.decode(SyncAttempts.self, from: data)
+        else { return SyncAttempts() }
+        return attempts
+    }
+
+    public func saveAttempts(_ attempts: SyncAttempts) {
+        try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        try? Self.encoder.encode(attempts).write(to: attemptsURL, options: .atomic)
+    }
+
     private func zonesURL(_ generation: String) -> URL {
         directory.appendingPathComponent(generation).appendingPathComponent("register.lmtz")
     }
@@ -130,7 +147,8 @@ public struct RegisterStore: Sendable {
 
     public func clear() throws {
         guard FileManager.default.fileExists(atPath: directory.path) else { return }
-        for url in try FileManager.default.contentsOfDirectory(at: directory, includingPropertiesForKeys: nil) {
+        for url in try FileManager.default.contentsOfDirectory(at: directory, includingPropertiesForKeys: nil)
+        where url.lastPathComponent != Self.attemptsName {
             try FileManager.default.removeItem(at: url)
         }
     }
@@ -139,7 +157,7 @@ public struct RegisterStore: Sendable {
     private func removeStrayGenerations() {
         let keep = currentGeneration
         let urls = (try? FileManager.default.contentsOfDirectory(at: directory, includingPropertiesForKeys: nil)) ?? []
-        for url in urls where url.lastPathComponent != "current" && url.lastPathComponent != keep {
+        for url in urls where url.lastPathComponent != "current" && url.lastPathComponent != keep && url.lastPathComponent != Self.attemptsName {
             try? FileManager.default.removeItem(at: url)
         }
     }

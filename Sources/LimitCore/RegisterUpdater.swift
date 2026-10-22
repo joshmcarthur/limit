@@ -10,10 +10,17 @@ public struct SourceEditCheck: Sendable {
         self.fetcher = fetcher
     }
 
-    /// Nil if the layer couldn't be read or doesn't say.
-    public func latestEdit() async -> Date? {
-        guard let data = try? await fetcher.data(from: endpoint.layerURL()) else { return nil }
-        return Self.editDate(in: data)
+    public enum Result: Equatable, Sendable {
+        case edited(Date)
+        /// The layer answered but doesn't say when it last changed.
+        case undated
+        /// The layer couldn't be read.
+        case unreachable
+    }
+
+    public func check() async -> Result {
+        guard let data = try? await fetcher.data(from: endpoint.layerURL()) else { return .unreachable }
+        return Self.editDate(in: data).map(Result.edited) ?? .undated
     }
 
     /// `editingInfo.dataLastEditDate` is milliseconds since 1970. Kept to whole seconds, because the stored
@@ -33,26 +40,68 @@ public enum RegisterUpdateOutcome: Sendable {
     case downloaded(zones: [SpeedZone], metadata: RegisterMetadata)
 }
 
+public enum ScheduledUpdate: Sendable {
+    /// The schedule says it's too soon; no request was made.
+    case notDue(until: Date)
+    case ran(RegisterUpdateOutcome)
+}
+
 /// Brings the stored register up to date: a cheap check first, a full download only when the source changed.
 public struct RegisterUpdater: Sendable {
     public var downloader: RegisterDownloader
     public var store: RegisterStore
     public var policy: RegisterVerificationPolicy
+    public var schedule: SyncSchedule
     public var now: @Sendable () -> Date
 
     public init(downloader: RegisterDownloader = RegisterDownloader(), store: RegisterStore,
-                policy: RegisterVerificationPolicy = .standard, now: @escaping @Sendable () -> Date = { Date() }) {
+                policy: RegisterVerificationPolicy = .standard, schedule: SyncSchedule = .standard,
+                now: @escaping @Sendable () -> Date = { Date() }) {
         self.downloader = downloader
         self.store = store
         self.policy = policy
+        self.schedule = schedule
         self.now = now
     }
 
-    public func update(progress: @Sendable (Double?) -> Void = { _ in }) async throws -> RegisterUpdateOutcome {
-        // Read before downloading: an edit that lands mid-download is then picked up by the next check.
-        let latest = await SourceEditCheck(endpoint: downloader.endpoint, fetcher: downloader.fetcher).latestEdit()
+    /// Whether the schedule allows a request now. `userInitiated` is for a person asking, which skips the
+    /// weekly wait and the back-off but not the short floor between attempts.
+    public func decision(userInitiated: Bool = false) -> SyncSchedule.Decision {
+        schedule.decision(attempts: store.loadAttempts(), lastSuccessAt: (try? store.loadMetadata())?.checkedAt,
+                          now: now(), userInitiated: userInitiated)
+    }
 
-        if let stored = try? store.loadMetadata(), let storedEdit = stored.sourceEditedAt, let latest, latest <= storedEdit {
+    /// Updates only if the schedule allows it. Everything that opens the app or taps Retry goes through here.
+    public func updateIfDue(userInitiated: Bool = false, progress: @Sendable (Double?) -> Void = { _ in }) async throws -> ScheduledUpdate {
+        if case .wait(let until) = decision(userInitiated: userInitiated) { return .notDue(until: until) }
+        return .ran(try await update(progress: progress))
+    }
+
+    /// Updates now, whatever the schedule says, and records the attempt so the schedule can see it.
+    public func update(progress: @Sendable (Double?) -> Void = { _ in }) async throws -> RegisterUpdateOutcome {
+        var attempts = store.loadAttempts()
+        attempts.lastAttemptAt = now()
+        attempts.consecutiveFailures += 1
+        store.saveAttempts(attempts)
+        let outcome = try await perform(progress: progress)
+        attempts.consecutiveFailures = 0
+        store.saveAttempts(attempts)
+        return outcome
+    }
+
+    private func perform(progress: @Sendable (Double?) -> Void) async throws -> RegisterUpdateOutcome {
+        // Read before downloading: an edit that lands mid-download is then picked up by the next check.
+        let check = await SourceEditCheck(endpoint: downloader.endpoint, fetcher: downloader.fetcher).check()
+        let stored = try? store.loadMetadata()
+        var latest: Date?
+        switch check {
+        case .edited(let date): latest = date
+        case .undated: break
+        // With a copy in hand, a source we can't even ask isn't worth a full download to find out.
+        case .unreachable: if stored != nil { throw RegisterSyncError.sourceUnavailable }
+        }
+
+        if let stored, let storedEdit = stored.sourceEditedAt, let latest, latest <= storedEdit {
             try store.updateCheckedAt(now())
             var metadata = stored
             metadata.checkedAt = now()

@@ -136,9 +136,17 @@ final class RegisterDownloaderTests: XCTestCase {
         }
     }
 
-    func testRetriesTransientFailures() async throws {
+    private final class Delays: @unchecked Sendable {
+        private let lock = NSLock()
+        private var values: [TimeInterval] = []
+        func add(_ v: TimeInterval) { lock.lock(); values.append(v); lock.unlock() }
+        var all: [TimeInterval] { lock.lock(); defer { lock.unlock() }; return values }
+    }
+
+    func testRetriesTransientFailuresWithGrowingDelays() async throws {
         final class Counter: @unchecked Sendable { var n = 0 }
         let counter = Counter()
+        let delays = Delays()
         let fetcher = ClosureFetcher { [self] url in
             if isCount(url) { return Data("{\"count\":1}".utf8) }
             counter.n += 1
@@ -146,8 +154,63 @@ final class RegisterDownloaderTests: XCTestCase {
             return page([feature(50)], exceeded: false)
         }
         let wide = RegisterEndpoint(queryURL: endpoint.queryURL, pageSize: 10)
-        let result = try await RegisterDownloader(endpoint: wide, fetcher: fetcher).download()
+        var downloader = RegisterDownloader(endpoint: wide, fetcher: fetcher)
+        downloader.sleep = { delays.add($0) }
+        let result = try await downloader.download()
         XCTAssertEqual(result.zones.count, 1)
         XCTAssertEqual(counter.n, 3)
+        XCTAssertEqual(delays.all, [1, 4])
+    }
+
+    func testABusyOrRefusingSourceIsNeverRetried() async {
+        for failure in [RegisterSyncError.sourceBusy, .requestRefused(status: 403)] {
+            final class Counter: @unchecked Sendable { var n = 0 }
+            let counter = Counter()
+            let delays = Delays()
+            let fetcher = ClosureFetcher { url in
+                counter.n += 1
+                throw failure
+            }
+            var downloader = RegisterDownloader(endpoint: endpoint, fetcher: fetcher)
+            downloader.sleep = { delays.add($0) }
+            let expected = failure
+            do {
+                _ = try await downloader.download()
+                XCTFail("expected failure")
+            } catch {
+                XCTAssertEqual(error as? RegisterSyncError, expected)
+            }
+            XCTAssertEqual(counter.n, 1, "one request, then stop: \(failure)")
+            XCTAssertTrue(delays.all.isEmpty)
+        }
+    }
+
+    func testABusySourceOnTheCountRequestStopsTheSync() async {
+        final class Counter: @unchecked Sendable { var n = 0 }
+        let counter = Counter()
+        let fetcher = ClosureFetcher { [self] url in
+            counter.n += 1
+            if isCount(url) { throw RegisterSyncError.sourceBusy }
+            return page([feature(50)], exceeded: false)
+        }
+        do {
+            _ = try await RegisterDownloader(endpoint: endpoint, fetcher: fetcher).download()
+            XCTFail("expected failure")
+        } catch {
+            XCTAssertEqual(error as? RegisterSyncError, .sourceBusy)
+        }
+        XCTAssertEqual(counter.n, 1, "no page was requested")
+    }
+
+    func testStatusCodesMapToErrors() {
+        XCTAssertEqual(URLSessionFetcher.error(forStatus: 429), .sourceBusy)
+        XCTAssertEqual(URLSessionFetcher.error(forStatus: 503), .sourceBusy)
+        XCTAssertEqual(URLSessionFetcher.error(forStatus: 403), .requestRefused(status: 403))
+        XCTAssertEqual(URLSessionFetcher.error(forStatus: 500), .badResponse)
+    }
+
+    func testUserAgentNamesTheApp() {
+        XCTAssertTrue(LimitCore.userAgent.hasPrefix("Limit-iOS/"))
+        XCTAssertTrue(LimitCore.userAgent.contains("github.com/joshmcarthur/limit"))
     }
 }

@@ -5,6 +5,12 @@ import FoundationNetworking
 
 public enum RegisterSyncError: Error, Equatable {
     case badResponse
+    /// The source said it is busy or limiting us (429 or 503). The sync stops rather than trying again.
+    case sourceBusy
+    /// The source refused the request (another 4xx). Asking again won't change the answer.
+    case requestRefused(status: Int)
+    /// The source can't be reached to see whether anything changed, so nothing was downloaded.
+    case sourceUnavailable
     /// The source returned features but none carried a usable limit, so there's nothing to drive with.
     /// This is a data problem (wrong layer or field), not a network one.
     case noLimitsInSource(featureCount: Int)
@@ -19,23 +25,37 @@ public protocol HTTPFetching: Sendable {
 
 public struct URLSessionFetcher: HTTPFetching, @unchecked Sendable {
     private let session: URLSession
+    private let userAgent: String
 
-    public init(session: URLSession = .shared) {
+    public init(session: URLSession = .shared, userAgent: String = LimitCore.userAgent) {
         self.session = session
+        self.userAgent = userAgent
     }
 
     public func data(from url: URL) async throws -> Data {
-        try await withCheckedThrowingContinuation { continuation in
-            let task = session.dataTask(with: url) { data, response, error in
+        var request = URLRequest(url: url)
+        request.setValue(userAgent, forHTTPHeaderField: "User-Agent")
+        return try await withCheckedThrowingContinuation { continuation in
+            let task = session.dataTask(with: request) { data, response, error in
                 if let error {
                     continuation.resume(throwing: error)
                 } else if let http = response as? HTTPURLResponse, (200..<300).contains(http.statusCode), let data {
                     continuation.resume(returning: data)
+                } else if let http = response as? HTTPURLResponse {
+                    continuation.resume(throwing: Self.error(forStatus: http.statusCode))
                 } else {
                     continuation.resume(throwing: RegisterSyncError.badResponse)
                 }
             }
             task.resume()
+        }
+    }
+
+    static func error(forStatus status: Int) -> RegisterSyncError {
+        switch status {
+        case 429, 503: return .sourceBusy
+        case 400..<500: return .requestRefused(status: status)
+        default: return .badResponse
         }
     }
 }
@@ -105,8 +125,10 @@ public struct DownloadedRegister: Sendable {
 public struct RegisterDownloader: Sendable {
     public var endpoint: RegisterEndpoint
     public var fetcher: HTTPFetching
-    /// Extra attempts per request after the first.
+    /// Extra attempts per request after the first. Each waits four times as long as the last (1 s, 4 s),
+    /// and a busy or refusing source is never retried.
     public var retries = 2
+    public var sleep: @Sendable (TimeInterval) async throws -> Void = { try await Task.sleep(nanoseconds: UInt64($0 * 1_000_000_000)) }
     private let maxPages = 5_000
 
     public init(endpoint: RegisterEndpoint = .nzta, fetcher: HTTPFetching = URLSessionFetcher()) {
@@ -115,7 +137,7 @@ public struct RegisterDownloader: Sendable {
     }
 
     public func download(progress: @Sendable (Double?) -> Void = { _ in }) async throws -> DownloadedRegister {
-        let total = await totalCount()
+        let total = try await totalCount()
         progress(total == nil ? nil : 0)
 
         var zones: [SpeedZone] = []
@@ -148,9 +170,11 @@ public struct RegisterDownloader: Sendable {
         return DownloadedRegister(zones: ZoneDeduplicator.unique(zones), sourceFeatureCount: fetched, expectedFeatureCount: total)
     }
 
-    private func totalCount() async -> Int? {
-        guard let data = try? await fetch(endpoint.countURL()),
-              let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+    /// Nil if the count can't be learned; a source that is busy or refusing us stops the sync here instead.
+    private func totalCount() async throws -> Int? {
+        let data: Data
+        do { data = try await fetch(endpoint.countURL()) } catch { if Self.isFinal(error) { throw error }; return nil }
+        guard let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
               let count = object["count"] as? Int
         else { return nil }
         return count
@@ -160,9 +184,17 @@ public struct RegisterDownloader: Sendable {
         var attempt = 0
         while true {
             do { return try await fetcher.data(from: url) } catch {
-                if attempt >= retries { throw error }
+                if attempt >= retries || Self.isFinal(error) { throw error }
+                try await sleep(pow(4, Double(attempt)))
                 attempt += 1
             }
+        }
+    }
+
+    private static func isFinal(_ error: Error) -> Bool {
+        switch error as? RegisterSyncError {
+        case .sourceBusy?, .requestRefused?: return true
+        default: return error is CancellationError
         }
     }
 }
