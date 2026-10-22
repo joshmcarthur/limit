@@ -67,9 +67,11 @@ struct SyncStatusRow: View {
 
 extension SyncState {
     /// Symbol and colour for the one-line footer on the driving screen.
-    var footerSymbol: String {
+    /// No icon when all is well, so the footer reads as plain text; the other states keep theirs, because a
+    /// warning shouldn't depend on colour alone.
+    var footerSymbol: String? {
         switch self {
-        case .upToDate: return "checkmark.circle"
+        case .upToDate: return nil
         case .updating: return "arrow.triangle.2.circlepath"
         case .stale, .failed, .neverSynced: return "exclamationmark.triangle"
         }

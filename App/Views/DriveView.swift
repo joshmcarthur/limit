@@ -106,9 +106,12 @@ struct DriveView: View {
                 .font(.footnote)
                 .foregroundStyle(Palette.inkMuted)
                 .multilineTextAlignment(.center)
-            Label(FreshnessText.footer(for: model.syncState, now: Date()), systemImage: model.syncState.footerSymbol)
-                .font(.footnote)
-                .foregroundStyle(model.syncState.footerColor)
+            Group {
+                let text = FreshnessText.footer(for: model.syncState, now: Date())
+                if let symbol = model.syncState.footerSymbol { Label(text, systemImage: symbol) } else { Text(text) }
+            }
+            .font(.footnote)
+            .foregroundStyle(model.syncState.footerColor)
         }
     }
 
