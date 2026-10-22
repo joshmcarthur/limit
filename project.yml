@@ -1,0 +1,42 @@
+name: Limit
+options:
+  bundleIdPrefix: com.example
+  deploymentTarget:
+    iOS: "17.0"
+  createIntermediateGroups: true
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "1"
+packages:
+  Limit:
+    path: .
+targets:
+  Limit:
+    type: application
+    platform: iOS
+    sources: [App, Shared]
+    dependencies:
+      - package: Limit
+        product: LimitCore
+    info:
+      path: Config/App-Info.plist
+      properties:
+        CFBundleDisplayName: Limit
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait, UIInterfaceOrientationLandscapeLeft, UIInterfaceOrientationLandscapeRight]
+        NSLocationWhenInUseUsageDescription: Limit uses your location to find the road you’re on and to measure your speed. It never leaves your phone.
+        UIBackgroundModes: [location]
+        NSSupportsLiveActivities: true
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.example.Limit
+        GENERATE_INFOPLIST_FILE: NO
+schemes:
+  Limit:
+    build:
+      targets:
+        Limit: all
+    test:
+      targets: []
