@@ -48,18 +48,23 @@ First release.
 
 ## Screenshots
 
-Raw captures are in `screenshots/6.9-inch/` (see `README.md`). The app is iPhone-only, so there is no iPad set. Suggested order and captions for the framed versions:
+Raw captures are in `screenshots/6.9-inch/` (see `README.md`). The app is iPhone-only, so there is no iPad set. Two framed sets are made from them by `Tools/frame-screenshots.py`, which reads this table:
+
+- `screenshots/6.9-inch-framed/portrait/` (1320 × 2868): five slides, the table below without row 4, which is a wide capture and doesn't suit a tall canvas.
+- `screenshots/6.9-inch-framed/landscape/` (2868 × 1320): all six slides, in the order below.
+
+Whether App Store Connect accepts both orientations in one set isn't confirmed, so they're kept apart. Upload the portrait set as the main one. Order and captions:
 
 | Order | File | Caption |
 | --- | --- | --- |
-| 1 | `01-drive-light.png` | The limit, then your speed |
-| 2 | `02-over-the-limit-104-in-100.png` | Over the limit? You'll see it, not hear it |
-| 3 | `05-lock-screen.png` | Also on your Lock Screen |
-| 4 | `04-landscape-dark.png` | Sign on the left, speed on the right |
-| 5 | `03-drive-dark.png` | Light or dark, the sign stays the same |
-| 6 | `06-welcome.png` | No account, no tracking |
+| 1 | `01-drive-light.png` | The limit for the road you're on |
+| 2 | `02-over-the-limit-104-in-100.png` | See at a glance if you've crept over the limit |
+| 3 | `05-lock-screen.png` | On your Lock Screen too |
+| 4 | `04-landscape-dark.png` | Fits a dash mount, either way up |
+| 5 | `03-drive-dark.png` | Easy on the eyes after dark |
+| 6 | `06-welcome.png` | Made in New Zealand. Set it up before you set off. |
 
-The first three are the ones people see without scrolling, so they carry the idea: what it shows, how it handles going over, and that it follows you to the Lock Screen.
+The first three are the ones people see without scrolling, so they carry the idea: what it shows, what you see when you go over, and that it follows you to the Lock Screen.
 
 ## Other fields
 
