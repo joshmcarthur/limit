@@ -56,7 +56,7 @@ struct DriveView: View {
             VStack(spacing: 2) {
                 Text(headline(state)).font(.title3.weight(.semibold)).foregroundStyle(Palette.ink)
                     .lineLimit(1).minimumScaleFactor(0.7)
-                Text(subheadline(state)).font(.footnote).foregroundStyle(Palette.inkMuted)
+                if let line = subheadline(state) { Text(line).font(.footnote).foregroundStyle(Palette.inkMuted) }
             }
             .multilineTextAlignment(.center)
         }
@@ -66,7 +66,7 @@ struct DriveView: View {
         DriveScreenText.headline(isDriving: model.isDriving, access: model.locationAccess, snapshot: state.snapshot)
     }
 
-    private func subheadline(_ state: DriveState) -> String {
+    private func subheadline(_ state: DriveState) -> String? {
         DriveScreenText.subheadline(isDriving: model.isDriving, access: model.locationAccess, snapshot: state.snapshot)
     }
 
@@ -98,11 +98,17 @@ struct DriveView: View {
         .padding(.bottom, DesignTokens.space2)
     }
 
-    /// When the speed limit data was last checked. Shown in both orientations.
+    /// Where the data comes from and when it was last checked, together. Shown in both orientations.
     private var syncFooter: some View {
-        Label(FreshnessText.footer(for: model.syncState, now: Date()), systemImage: model.syncState.footerSymbol)
-            .font(.footnote)
-            .foregroundStyle(model.syncState.footerColor)
+        VStack(spacing: 4) {
+            Text(LimitCore.attribution)
+                .font(.footnote)
+                .foregroundStyle(Palette.inkMuted)
+                .multilineTextAlignment(.center)
+            Label(FreshnessText.footer(for: model.syncState, now: Date()), systemImage: model.syncState.footerSymbol)
+                .font(.footnote)
+                .foregroundStyle(model.syncState.footerColor)
+        }
     }
 
     private func driveButton(compact: Bool) -> some View {

@@ -9,7 +9,8 @@ public enum LocationAccess: Equatable, Sendable {
     public var isUsable: Bool { self == .authorized }
 }
 
-/// The two lines under the sign on the driving screen. They depend on whether a drive is running, what
+/// The lines under the sign on the driving screen. The register credit isn't one of them: it sits at the
+/// bottom, beside when the data was last checked. They depend on whether a drive is running, what
 /// location access there is, and whether a limit is showing, so the order of those checks is kept here
 /// where it can be tested.
 public enum DriveScreenText {
@@ -20,13 +21,14 @@ public enum DriveScreenText {
         return snapshot.limit == nil ? "Finding your road…" : "Speed limit"
     }
 
-    public static func subheadline(isDriving: Bool, access: LocationAccess, snapshot: DriveSnapshot) -> String {
+    /// Nil when a limit is showing: the road name stands on its own.
+    public static func subheadline(isDriving: Bool, access: LocationAccess, snapshot: DriveSnapshot) -> String? {
         if !isDriving { return "Start a drive to see the limit" }
         switch access {
         case .denied: return "Turn on location for Limit in Settings"
         case .reduced: return "Turn on Precise Location so Limit can find your road"
         case .notDetermined: return "Allow location to see the limit"
-        case .authorized: return snapshot.limit == nil ? "Obey the posted speed limit signs" : LimitCore.attribution
+        case .authorized: return snapshot.limit == nil ? "Obey the posted speed limit signs" : nil
         }
     }
 }

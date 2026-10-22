@@ -6,7 +6,7 @@ final class DriveScreenTextTests: XCTestCase {
     private let limitNoName = DriveSnapshot(sign: .limit(50, isStale: false))
     private let noLimit = DriveSnapshot.searching
 
-    private func text(_ snapshot: DriveSnapshot, driving: Bool = true, access: LocationAccess = .authorized) -> (String, String) {
+    private func text(_ snapshot: DriveSnapshot, driving: Bool = true, access: LocationAccess = .authorized) -> (String, String?) {
         (DriveScreenText.headline(isDriving: driving, access: access, snapshot: snapshot),
          DriveScreenText.subheadline(isDriving: driving, access: access, snapshot: snapshot))
     }
@@ -37,10 +37,10 @@ final class DriveScreenTextTests: XCTestCase {
         }
     }
 
-    func testWithAccessItNamesTheRoadAndCreditsTheRegister() {
+    func testWithAccessItNamesTheRoadAndNothingElse() {
         let (headline, subheadline) = text(withLimit)
         XCTAssertEqual(headline, "Cuba Street")
-        XCTAssertEqual(subheadline, LimitCore.attribution)
+        XCTAssertNil(subheadline, "the register credit lives at the bottom of the screen now")
     }
 
     func testALimitWithNoRoadNameIsStillAnnounced() {

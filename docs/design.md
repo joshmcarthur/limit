@@ -63,3 +63,7 @@ When the limit in force comes from a seasonal or emergency record, a small pill 
 The speed readout also lost the gap between the digits and "km/h" (the font's line box was far taller than its digits). Screenshots 01 to 15 were retaken after that change and the copy pass; they use a 15,957-zone copy of the layer taken part-way through NZTA rebuilding it, so road names and limits shown are real but the coverage isn't complete.
 
 A Live Activity survives the app being killed. The app now ends every activity it owns before starting one and when a drive ends, so relaunching mid-drive gives one card, not two. If the app relaunches and doesn't resume a drive (Lock Screen off, or no location access), a leftover card stays until the next drive.
+
+## Where the register credit sits
+
+On the drive screen the "Data from Waka Kotahi's National Speed Limit Register" line now sits at the bottom, directly above "Speed limits checked today, 9:41 pm", in both orientations, so where the data comes from and how fresh it is read together. The road name under the sign stands on its own while a limit is showing. Drive-screen screenshots 05 to 09, 13 and 14 predate this move and should be retaken before use.
