@@ -88,6 +88,7 @@ final class ReducedLimitWiringTests: XCTestCase {
                 .snapshot.limit
         }
         XCTAssertEqual(limit(at: "2026-10-22T08:45:00+13:00"), 40)
-        XCTAssertEqual(limit(at: "2026-10-22T09:30:00+13:00"), 50)
+        _ = limit(at: "2026-10-22T09:30:00+13:00")  // the change is confirmed by a second sample
+        XCTAssertEqual(limit(at: "2026-10-22T09:30:01+13:00"), 50)
     }
 }

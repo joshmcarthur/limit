@@ -95,3 +95,60 @@ final class DriveEngineTests: XCTestCase {
         XCTAssertFalse(e.ingest(sample(kmh: 32, age: -10), now: now.addingTimeInterval(10)).snapshot.over.isOver)
     }
 }
+
+final class ZoneChangeConfirmationTests: XCTestCase {
+    private func box(_ limit: Int, lon: Double) -> SpeedZone {
+        let ring = Ring(points: [
+            Coordinate(latitude: -41, longitude: lon), Coordinate(latitude: -41, longitude: lon + 1),
+            Coordinate(latitude: -40, longitude: lon + 1), Coordinate(latitude: -40, longitude: lon),
+        ])!
+        return SpeedZone(name: "Z\(limit)", limit: limit, polygons: [Polygon(outer: ring)])!
+    }
+
+    private let west = Coordinate(latitude: -40.5, longitude: 174.5)
+    private let east = Coordinate(latitude: -40.5, longitude: 175.5)
+    private let now = Date(timeIntervalSince1970: 1_000_000)
+
+    private func engine() -> DriveEngine {
+        DriveEngine(register: SpeedLimitRegister(zones: [box(50, lon: 174), box(100, lon: 175)]), registerCheckedAt: now)
+    }
+
+    private func limit(_ e: inout DriveEngine, _ at: Coordinate, second: Double, accuracy: Double = 5) -> Int? {
+        let t = now.addingTimeInterval(second)
+        return e.ingest(LocationSample(coordinate: at, speedMetresPerSecond: 10, horizontalAccuracy: accuracy, timestamp: t), now: t).snapshot.limit
+    }
+
+    func testAZoneIsShownAtOnceWhenNothingWasShownBefore() {
+        var e = engine()
+        XCTAssertEqual(limit(&e, west, second: 0), 50)
+    }
+
+    func testOneStrayFixDoesNotChangeTheLimit() {
+        var e = engine()
+        _ = limit(&e, west, second: 0)
+        XCTAssertEqual(limit(&e, east, second: 1), 50, "a single fix in the next zone")
+        XCTAssertEqual(limit(&e, west, second: 2), 50)
+        XCTAssertEqual(limit(&e, east, second: 3), 50, "the count restarted")
+    }
+
+    func testTwoFixesInARowChangeIt() {
+        var e = engine()
+        _ = limit(&e, west, second: 0)
+        _ = limit(&e, east, second: 1)
+        XCTAssertEqual(limit(&e, east, second: 2), 100)
+    }
+
+    func testTheConfirmationCountCanBeChanged() {
+        var e = engine()
+        e.zoneChangeConfirmations = 1
+        _ = limit(&e, west, second: 0)
+        XCTAssertEqual(limit(&e, east, second: 1), 100)
+    }
+
+    func testALostFixForgetsTheZone() {
+        var e = engine()
+        _ = limit(&e, west, second: 0)
+        XCTAssertNil(limit(&e, west, second: 1, accuracy: 500), "position too poor")
+        XCTAssertEqual(limit(&e, east, second: 2), 100, "taken at once after a gap")
+    }
+}

@@ -77,7 +77,14 @@ public struct DriveEngine {
     public var maxUsableAccuracy: Double = 100
     public var goodAccuracy: Double = 25
 
+    /// How many samples in a row must agree on a different zone before the sign changes. One stray fix
+    /// near a boundary (GPS wander of tens of metres) then can't flip the limit; 2 costs about a second.
+    public var zoneChangeConfirmations = 2
+
     private var lastSample: LocationSample?
+    private var stableMatch: SpeedLimitMatch?
+    private var pendingMatch: SpeedLimitMatch?
+    private var pendingCount = 0
 
     public init(
         register: SpeedLimitRegister = .empty,
@@ -93,6 +100,9 @@ public struct DriveEngine {
 
     public mutating func ingest(_ sample: LocationSample, now: Date = Date()) -> DriveState {
         lastSample = sample
+        if sample.horizontalAccuracy >= 0, sample.horizontalAccuracy <= maxUsableAccuracy {
+            confirm(register.lookup(sample.coordinate, at: now))
+        }
         return state(now: now)
     }
 
@@ -103,11 +113,15 @@ public struct DriveEngine {
               sample.horizontalAccuracy >= 0, sample.horizontalAccuracy <= maxUsableAccuracy
         else {
             _ = evaluator.evaluate(speed: nil, limit: nil)
+            // After a gap the car may be anywhere, so don't hold on to the last zone.
+            stableMatch = nil
+            pendingMatch = nil
+            pendingCount = 0
             return .searching
         }
 
         let speed = Speed.displayed(Speed.kilometresPerHour(fromMetresPerSecond: sample.speedMetresPerSecond))
-        let match = register.lookup(sample.coordinate, at: now)
+        let match = stableMatch
         let age = registerCheckedAt.map { now.timeIntervalSince($0) }
         let sign = SignState.make(limit: match?.limit, dataAge: age, policy: freshness)
         let over = evaluator.evaluate(speed: speed, limit: sign.limit)
@@ -120,5 +134,19 @@ public struct DriveEngine {
         }
         if case .over(let by) = over { snapshot.overBy = by }
         return DriveState(snapshot: snapshot, gps: sample.horizontalAccuracy <= goodAccuracy ? .good : .weak)
+    }
+
+    /// Moves to `raw` only once enough samples in a row agree on it. The first match after having none is
+    /// taken at once.
+    private mutating func confirm(_ raw: SpeedLimitMatch?) {
+        guard let stable = stableMatch else { stableMatch = raw; return }
+        if raw == stable { pendingMatch = nil; pendingCount = 0; return }
+        pendingCount = raw == pendingMatch ? pendingCount + 1 : 1
+        pendingMatch = raw
+        if pendingCount >= max(zoneChangeConfirmations, 1) {
+            stableMatch = raw
+            pendingMatch = nil
+            pendingCount = 0
+        }
     }
 }
