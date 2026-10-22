@@ -28,7 +28,7 @@ struct SyncStatusRow: View {
             }
             Spacer(minLength: 0)
             if showsRetry {
-                Button("Retry", action: retry).buttonStyle(.borderless).foregroundStyle(Palette.tint)
+                Button(retryTitle, action: retry).buttonStyle(.borderless).foregroundStyle(Palette.tint)
             }
         }
         .padding(.vertical, 4)
@@ -37,9 +37,14 @@ struct SyncStatusRow: View {
 
     private var showsRetry: Bool {
         switch state {
-        case .failed, .stale, .neverSynced: return true
-        case .updating, .upToDate: return false
+        case .failed, .stale, .neverSynced, .upToDate: return true
+        case .updating: return false
         }
+    }
+
+    private var retryTitle: String {
+        if case .upToDate = state { return "Check now" }
+        return "Retry"
     }
 
     private var symbol: String {

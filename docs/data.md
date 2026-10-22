@@ -6,7 +6,7 @@ Source: the NZTA speed limit zone layer, an ArcGIS feature service:
 https://services.arcgis.com/CXBb7LAjgIIdcsPt/ArcGIS/rest/services/SpeedLimitZoneFull__View/FeatureServer/0/query
 ```
 
-`RegisterEndpoint.nzta` queries it with `where=1=1`, `outFields=*`, `outSR=4326`, `geometryPrecision=6`, `f=pgeojson`, paged with `resultOffset` / `resultRecordCount` (2,000 per page, which is the service's transfer limit).
+`RegisterEndpoint.nzta` queries it with `where=whenIneffective IS NULL`, the five `outFields` the app reads, `outSR=4326`, `geometryPrecision=6`, `f=pgeojson`, ordered by `OBJECTID` and paged with `resultOffset` / `resultRecordCount` (2,000 per page, which is the service's transfer limit).
 
 ## The layer (checked against the live service, October 2026)
 
@@ -34,7 +34,29 @@ From the live layer, in-force records (it was still being rebuilt when this was 
 
 ## Staying current
 
-`FeatureServer/0?f=json` (about 5 KB compressed) reports `editingInfo.dataLastEditDate`. The stored copy remembers it; a sync downloads only if the source date is newer, otherwise it just refreshes the "checked" date. A missing or unreadable date means download.
+`FeatureServer/0?f=json` (about 5 KB compressed) reports `editingInfo.dataLastEditDate`. The stored copy remembers it; a sync downloads only if the source date is newer, otherwise it just refreshes the "checked" date. A layer that answers without a date means download. A layer that can't be read at all means no download when a copy is stored (see below).
+
+## Being a good API citizen
+
+The source is a public service run for NZTA, so the app limits how often it asks and what it asks for. `SyncSchedule` holds the numbers; the attempt record is stored beside the register (`Register/sync-attempts.json`) so the limits hold across launches and survive a register being replaced.
+
+- **Automatic checks at most weekly** when a copy is stored. Opening the app any number of times in between makes no request. A first run with nothing stored goes straight away. The register changes nightly, but a limit rarely changes on any one road and the sign only warns after 30 days.
+- **A check is the 5 KB layer request.** The full download only happens when the layer's edit date is newer than the stored copy's.
+- **Failures back off:** 15 minutes, 1 hour, 6 hours, then 24 hours between attempts, until one succeeds. A rejected download (the source mid-rebuild) counts the same, so a broken source costs one download per back-off step, not one per launch. An attempt is counted when it starts, so one killed halfway (the app suspended) counts too.
+- **An unreadable layer never causes a download** when a copy is stored. Only a first run with no copy downloads without first reading the layer.
+- **Manual checks** (Retry, Check now) skip the weekly wait and the back-off, but not a 5 minute floor between attempts.
+- **Retries wait** 1 s then 4 s. A 429 or 503 (busy) or any other 4xx (refused) is never retried and stops the sync, including when it's the count request.
+- **Pages are fetched one at a time**, only in-force records, only the fields the app reads.
+- **Requests identify the app:** `User-Agent: Limit-iOS/<version> (+https://github.com/joshmcarthur/limit)`.
+
+### Fetching only what changed (investigated, not built)
+
+Checked against the live layer on 22 October 2026:
+
+- The layer has no per-record edit time, no editor tracking and no change tracking (`capabilities` is `Query,Extract`, `syncEnabled` is false), so ArcGIS's incremental sync and a `last_edited > X` filter are not available.
+- `whenEffective` and `whenIneffective` are legal dates, not edit times, and hold placeholders (a maximum in 2050, a minimum in 1899). A record entered late or corrected in place would be missed, so they are not safe as a cursor.
+- Geometry is almost all of the download: one 2,000-record page is about 2.7 MB over the wire with geometry and 127 KB without. A full download is roughly 35 to 40 MB; the attribute-only data for every in-force record is about 1.5 to 2 MB.
+- So a delta is possible: fetch an attribute-only manifest, compare it with one stored from the last sync, and fetch geometry (by `objectIds`) only for new or changed rows. Cautions: rows repeat heavily with identical ids and `speedLimitZoneGeometryCertId` (compare as a multiset of row hashes, not by zone id); `OBJECTID` isn't stable across rebuilds, so it's only for fetching within one sync; stored zones don't keep their ids; and it isn't proven that the cert id changes when a shape changes. That needs two manifests a few days apart. A forced full refresh every ~90 days would be the backstop.
 
 ## Swapping in new data safely
 
@@ -49,7 +71,7 @@ Anything that fails a step is discarded and the old register stays in use; the a
 
 Why: on 22 October 2026 the NZTA layer was rebuilt while we were testing. It went from about 92,000 records to about 1,250 and then climbed back through 5,000. A plain overwrite would have replaced a good register with a partial one. The 20,000 floor is a guess about how small a legitimate national register could get (it is about 26,000 now); lower it if NZTA ever consolidates records.
 
-Not done: a rejected download still counts as "failed", so the app tries again on the next foreground, which costs a full download each time while the source stays broken. It needs a back-off.
+A rejected download counts as a failure for the back-off above.
 
 ## School zones
 
@@ -61,5 +83,5 @@ Not done: a rejected download still counts as "failed", so the app tries again o
 
 ## To do
 
-- Add a back-off for repeated rejected downloads.
+- Delta sync, once the cert id is shown to track geometry changes (see above).
 - Measure load time and memory on a device.

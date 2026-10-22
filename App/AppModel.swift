@@ -48,7 +48,7 @@ final class AppModel {
     func didBecomeActive() {
         locationAccess = location.access
         if settings.hasCompletedOnboarding, !isDriving, locationAccess.isUsable { beginDrive() }
-        if syncNeeded { syncRegister() }
+        syncRegister()
     }
 
     func requestLocationAccess() {
@@ -58,7 +58,7 @@ final class AppModel {
     func finishOnboarding() {
         settings.hasCompletedOnboarding = true
         if locationAccess.isUsable { beginDrive() }
-        if syncNeeded { syncRegister() }
+        syncRegister()
     }
 
     // MARK: Drive
@@ -108,15 +108,6 @@ final class AppModel {
 
     // MARK: Register
 
-    private var syncNeeded: Bool {
-        switch syncState {
-        case .neverSynced, .failed: return true
-        case .stale: return true
-        case .upToDate(let at): return Date().timeIntervalSince(at) > 86_400
-        case .updating: return false
-        }
-    }
-
     private func loadStoredRegister() {
         do {
             if let stored = try store.load() {
@@ -129,16 +120,23 @@ final class AppModel {
         }
     }
 
-    func syncRegister() {
+    /// Asks for an update. Opening the app calls this every time and the schedule in `RegisterUpdater`
+    /// decides whether anything is actually requested, so it is safe to call as often as is convenient.
+    func syncRegister(userInitiated: Bool = false) {
         guard !isSyncing else { return }
+        let store = store
+        guard case .now = Self.decision(store: store, userInitiated: userInitiated) else { return }
         isSyncing = true
         syncState = .updating(progress: nil)
-        let store = store
         Task {
             defer { isSyncing = false }
             do {
-                let outcome = try await Self.update(store: store) { progress in
+                let scheduled = try await Self.update(store: store, userInitiated: userInitiated) { progress in
                     Task { @MainActor [weak self] in self?.syncState = .updating(progress: progress) }
+                }
+                guard case .ran(let outcome) = scheduled else {
+                    syncState = .resting(checkedAt: engine.registerCheckedAt, now: Date())
+                    return
                 }
                 switch outcome {
                 case .unchanged(let metadata):
@@ -155,11 +153,20 @@ final class AppModel {
         }
     }
 
+    /// The Retry and Check now buttons: skips the weekly wait and the back-off, but not the short floor
+    /// between attempts.
+    func retrySync() { syncRegister(userInitiated: true) }
+
+    private nonisolated static func decision(store: RegisterStore, userInitiated: Bool) -> SyncSchedule.Decision {
+        RegisterUpdater(store: store).decision(userInitiated: userInitiated)
+    }
+
     private nonisolated static func update(
         store: RegisterStore,
+        userInitiated: Bool,
         progress: @escaping @Sendable (Double?) -> Void
-    ) async throws -> RegisterUpdateOutcome {
-        try await RegisterUpdater(store: store).update(progress: progress)
+    ) async throws -> ScheduledUpdate {
+        try await RegisterUpdater(store: store).updateIfDue(userInitiated: userInitiated, progress: progress)
     }
 
     // MARK: Settings

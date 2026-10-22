@@ -20,11 +20,11 @@ struct OnboardingReadyView: View {
                 .padding(.horizontal, DesignTokens.space8)
 
                 VStack(alignment: .leading, spacing: DesignTokens.space2) {
-                    SyncStatusRow(state: model.syncState, retry: model.syncRegister)
+                    SyncStatusRow(state: model.syncState, retry: model.retrySync)
                         .padding(.horizontal, DesignTokens.space4)
                         .padding(.vertical, DesignTokens.space2)
                         .background(Palette.surface, in: RoundedRectangle(cornerRadius: DesignTokens.radiusMedium, style: .continuous))
-                    Text("The app will automatically check for new speed limit data when you open it.")
+                    Text("The app checks for new speed limit data about once a week when you open it.")
                         .font(.footnote).foregroundStyle(Palette.inkMuted).padding(.horizontal, DesignTokens.space4)
                 }
 

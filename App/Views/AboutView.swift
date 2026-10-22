@@ -15,7 +15,7 @@ struct AboutView: View {
                     .font(.body)
             }
             Section("Speed limit data") {
-                SyncStatusRow(state: model.syncState, retry: model.syncRegister)
+                SyncStatusRow(state: model.syncState, retry: model.retrySync)
                 Text("The National Speed Limit Register (NSLR) holds New Zealand’s certified speed limits in one place. It’s updated every night, and emergency limits are added soon after they’re set. Temporary limits, like roadworks, aren’t included.")
                     .font(.body)
                 Text("School zone limits apply on weekdays during school hours. The register doesn’t have term dates, so they also show during school holidays.")

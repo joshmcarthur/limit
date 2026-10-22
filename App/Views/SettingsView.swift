@@ -9,7 +9,7 @@ struct SettingsView: View {
         @Bindable var model = model
         List {
             Section {
-                SyncStatusRow(state: model.syncState, retry: model.syncRegister)
+                SyncStatusRow(state: model.syncState, retry: model.retrySync)
             }
             Section {
                 Toggle("Show on Lock Screen", isOn: $model.settings.showOnLockScreen)
