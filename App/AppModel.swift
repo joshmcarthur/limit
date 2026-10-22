@@ -101,8 +101,8 @@ final class AppModel {
     }
 
     private func apply(_ state: DriveState) {
-        guard state != driveState else { return }
-        driveState = state
+        if state != driveState { driveState = state }
+        // Always offered: the controller re-sends unchanged content on a heartbeat so it can't go stale.
         if settings.showOnLockScreen { activity.update(state.snapshot) }
     }
 
