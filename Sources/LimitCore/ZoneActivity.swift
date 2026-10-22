@@ -91,7 +91,11 @@ public struct ActivePeriod: Equatable, Sendable {
     /// A day as `yyyymmdd` (for example 20211201), the form kept on disk.
     static func pack(_ date: Date) -> Int32 {
         let parts = calendar.dateComponents([.year, .month, .day], from: date)
-        return Int32((parts.year ?? 0) * 10_000 + (parts.month ?? 0) * 100 + (parts.day ?? 0))
+        // Split up: the compiler on CI gives up on this as one expression.
+        let year: Int = parts.year ?? 0
+        let month: Int = parts.month ?? 0
+        let day: Int = parts.day ?? 0
+        return Int32(year * 10_000 + month * 100 + day)
     }
 
     static func unpack(_ packed: Int32) -> Date? {
