@@ -7,7 +7,6 @@ struct DriveView: View {
     @Environment(AppModel.self) private var model
     @Environment(\.verticalSizeClass) private var verticalSizeClass
     @State private var showSettings = false
-    @State private var showAbout = false
 
     private var isLandscape: Bool { verticalSizeClass == .compact }
 
@@ -27,7 +26,6 @@ struct DriveView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Palette.ground.ignoresSafeArea())
         .sheet(isPresented: $showSettings) { NavigationStack { SettingsView() } }
-        .sheet(isPresented: $showAbout) { NavigationStack { AboutView().toolbar { doneButton($showAbout) } } }
     }
 
     // MARK: Layout
@@ -80,9 +78,6 @@ struct DriveView: View {
             Spacer()
             // Ending a drive is a small control while driving; coming back is a big one once it has ended.
             if isLandscape || model.isDriving { driveButton(compact: true) }
-            Button { showAbout = true } label: { Image(systemName: "info.circle").font(.title3) }
-                .frame(width: 44, height: 44)
-                .accessibilityLabel("About the data")
             Button { showSettings = true } label: { Image(systemName: "slider.horizontal.3").font(.title3) }
                 .frame(width: 44, height: 44)
                 .accessibilityLabel("Settings")
@@ -132,10 +127,5 @@ struct DriveView: View {
         .accessibilityHint(model.isDriving
             ? "Turns off location and removes the Lock Screen card"
             : "Turns location back on")
-    }
-
-    @ToolbarContentBuilder
-    private func doneButton(_ isPresented: Binding<Bool>) -> some ToolbarContent {
-        ToolbarItem(placement: .confirmationAction) { Button("Done") { isPresented.wrappedValue = false } }
     }
 }

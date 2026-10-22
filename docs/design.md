@@ -67,3 +67,7 @@ A Live Activity survives the app being killed. The app now ends every activity i
 ## Where the register credit sits
 
 On the drive screen the "Data from Waka Kotahi's National Speed Limit Register" line now sits at the bottom, directly above "Speed limits checked today, 9:41 pm", in both orientations, so where the data comes from and how fresh it is read together. The road name under the sign stands on its own while a limit is showing. Drive-screen screenshots 05 to 09, 13 and 14 predate this move and should be retaken before use.
+
+## Top bar
+
+GPS status on the left; on the right, "End drive" (while driving) and the settings icon. The info icon is gone: "About the data" is a row in Settings, so About is two taps away rather than one. The register credit stays on screen at the bottom.
