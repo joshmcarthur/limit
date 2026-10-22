@@ -16,13 +16,14 @@ public struct SourceEditCheck: Sendable {
         return Self.editDate(in: data)
     }
 
-    /// `editingInfo.dataLastEditDate` is milliseconds since 1970.
+    /// `editingInfo.dataLastEditDate` is milliseconds since 1970. Kept to whole seconds, because the stored
+    /// metadata (ISO 8601) drops the fraction and a stored date would otherwise always look older.
     static func editDate(in data: Data) -> Date? {
         guard let layer = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
               let info = layer["editingInfo"] as? [String: Any],
               let millis = (info["dataLastEditDate"] as? NSNumber)?.doubleValue, millis > 0
         else { return nil }
-        return Date(timeIntervalSince1970: millis / 1000)
+        return Date(timeIntervalSince1970: (millis / 1000).rounded(.down))
     }
 }
 

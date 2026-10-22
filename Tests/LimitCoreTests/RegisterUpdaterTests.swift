@@ -52,10 +52,19 @@ final class RegisterUpdaterTests: XCTestCase {
 
     func testEditDateParsing() {
         XCTAssertEqual(SourceEditCheck.editDate(in: Data("{\"editingInfo\":{\"dataLastEditDate\":1792637751497}}".utf8)),
-                       Date(timeIntervalSince1970: 1_792_637_751.497))
+                       Date(timeIntervalSince1970: 1_792_637_751))
         XCTAssertNil(SourceEditCheck.editDate(in: Data("{\"name\":\"x\"}".utf8)))
         XCTAssertNil(SourceEditCheck.editDate(in: Data("{\"editingInfo\":{}}".utf8)))
         XCTAssertNil(SourceEditCheck.editDate(in: Data("not json".utf8)))
+    }
+
+    /// Found on the live layer: the source date has milliseconds, the stored copy only seconds.
+    func testASourceDateWithMillisecondsIsStillUnchangedNextTime() async throws {
+        let source = Source()
+        source.editedAtMillis = 1_700_000_000_497
+        _ = try await updater(source, at: Date(timeIntervalSince1970: 100)).update()
+        let outcome = try await updater(source, at: Date(timeIntervalSince1970: 200)).update()
+        guard case .unchanged = outcome else { return XCTFail("expected no download") }
     }
 
     func testFirstRunDownloadsAndRemembersTheSourceEdit() async throws {
