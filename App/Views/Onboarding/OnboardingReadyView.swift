@@ -48,7 +48,7 @@ struct OnboardingReadyView: View {
                     }
                     .padding(.horizontal, DesignTokens.space4)
                     .background(Palette.surface, in: RoundedRectangle(cornerRadius: DesignTokens.radiusMedium, style: .continuous))
-                    Text("GPS speed can be a few km/h out, so “over” only shows once you’re past this tolerance.")
+                    Text("GPS speed can be a few km/h out, so “over” only shows once you’re past this. It isn’t a speed you can drive at: the limit is the limit.")
                         .font(.footnote).foregroundStyle(Palette.inkMuted).padding(.horizontal, DesignTokens.space4)
                 }
 

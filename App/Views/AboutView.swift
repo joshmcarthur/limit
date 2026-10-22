@@ -11,6 +11,8 @@ struct AboutView: View {
                     .font(.headline)
                 Text("The register can be out of date or differ from the signs on the road, and GPS speed can be a few km/h out.")
                     .font(.body)
+                Text("A speed limit is a maximum, not a target. Slow down for the conditions, and set up the app before you drive.")
+                    .font(.body)
             }
             Section("Speed limit data") {
                 SyncStatusRow(state: model.syncState, retry: model.syncRegister)

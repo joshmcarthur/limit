@@ -6,6 +6,10 @@ Speed limit data is from the [National Speed Limit Register](https://opendata-nz
 
 It appears in the app, as a Live Activity (Lock Screen and Dynamic Island), and later as a CarPlay widget. Design: the Limit design system (colours, sign, readout, and the driving-surface rules in `docs/design.md`).
 
+## Responsible use
+
+Limit is an aid for staying within the speed limit, not a way to get away with exceeding it. A speed limit is a maximum, not a target, and the app never suggests a speed that is safe or acceptable to drive at. The "over" tolerance exists only to absorb GPS error: it is a display setting, not an allowance. The app has no speed camera or enforcement features, and nothing sounds when you go over. Always obey the posted limits and the NZ Road Code, and set the app up before you drive.
+
 ## Layout
 
 | Path | What |
