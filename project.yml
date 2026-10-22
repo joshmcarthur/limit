@@ -36,6 +36,7 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.joshmcarthur.Limit
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         GENERATE_INFOPLIST_FILE: NO
+        TARGETED_DEVICE_FAMILY: "1"
   LimitWidgets:
     type: app-extension
     platform: iOS
@@ -53,6 +54,7 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.joshmcarthur.Limit.Widgets
         GENERATE_INFOPLIST_FILE: NO
+        TARGETED_DEVICE_FAMILY: "1"
         SKIP_INSTALL: YES
 schemes:
   Limit:
