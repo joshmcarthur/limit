@@ -27,7 +27,7 @@ targets:
       properties:
         CFBundleDisplayName: Limit
         UILaunchScreen: {}
-        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait, UIInterfaceOrientationLandscapeLeft, UIInterfaceOrientationLandscapeRight]
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait, UIInterfaceOrientationPortraitUpsideDown, UIInterfaceOrientationLandscapeLeft, UIInterfaceOrientationLandscapeRight]
         NSLocationWhenInUseUsageDescription: Limit uses your location to find the road you’re on and to measure your speed. It never leaves your phone.
         UIBackgroundModes: [location]
         NSSupportsLiveActivities: true
