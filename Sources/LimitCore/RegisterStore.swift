@@ -28,6 +28,7 @@ public struct StoredRegister: Sendable {
 public struct StagedRegister: Sendable {
     let name: String
     public let metadata: RegisterMetadata
+    let checksum: UInt64
 }
 
 /// Keeps the downloaded register in a directory on disk (the app uses Application Support).
@@ -69,14 +70,28 @@ public struct RegisterStore: Sendable {
         removeStrayGenerations()
         let name = "gen-\(UUID().uuidString)"
         try FileManager.default.createDirectory(at: directory.appendingPathComponent(name), withIntermediateDirectories: false)
+        // Dates are stored to the second (ISO 8601), so keep them that way to read back equal.
+        var metadata = metadata
+        metadata.checkedAt = Date(timeIntervalSince1970: metadata.checkedAt.timeIntervalSince1970.rounded(.down))
+        let encoded = ZoneCodec.encode(zones)
         do {
-            try ZoneCodec.encode(zones).write(to: zonesURL(name), options: .atomic)
+            try encoded.write(to: zonesURL(name), options: .atomic)
             try Self.encoder.encode(metadata).write(to: metadataURL(name), options: .atomic)
         } catch {
             try? FileManager.default.removeItem(at: directory.appendingPathComponent(name))
             throw error
         }
-        return StagedRegister(name: name, metadata: metadata)
+        return StagedRegister(name: name, metadata: metadata, checksum: Checksum.fnv1a64(encoded))
+    }
+
+    /// Reads a staged copy back from disk and confirms it is what `stage` meant to write.
+    public func verifyWritten(_ staged: StagedRegister) -> Bool {
+        guard let data = try? Data(contentsOf: zonesURL(staged.name)), Checksum.fnv1a64(data) == staged.checksum,
+              let metadata = try? Self.decoder.decode(
+                RegisterMetadata.self, from: Data(contentsOf: metadataURL(staged.name))),
+              metadata == staged.metadata
+        else { return false }
+        return true
     }
 
     /// Makes a staged copy the live one, then deletes the old copy.

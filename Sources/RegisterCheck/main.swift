@@ -15,8 +15,14 @@ let store = RegisterStore(directory: directory)
 
 let started = Date()
 let updater = RegisterUpdater(store: store)
-let outcome = try await updater.update { progress in
-    if let progress { FileHandle.standardError.write(Data("\rdownloading \(Int(progress * 100))%  ".utf8)) }
+let outcome: RegisterUpdateOutcome
+do {
+    outcome = try await updater.update { progress in
+        if let progress { FileHandle.standardError.write(Data("\rdownloading \(Int(progress * 100))%  ".utf8)) }
+    }
+} catch RegisterSyncError.rejected(let reason) {
+    print("\ndownload rejected, nothing was replaced: \(reason)")
+    exit(2)
 }
 FileHandle.standardError.write(Data("\n".utf8))
 

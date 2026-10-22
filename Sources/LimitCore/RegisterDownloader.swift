@@ -9,6 +9,8 @@ public enum RegisterSyncError: Error, Equatable {
     /// This is a data problem (wrong layer or field), not a network one.
     case noLimitsInSource(featureCount: Int)
     case emptySource
+    /// The download finished but failed a check, so the register in use was kept.
+    case rejected(RegisterRejection)
 }
 
 public protocol HTTPFetching: Sendable {
@@ -95,6 +97,8 @@ public struct RegisterEndpoint: Equatable, Sendable {
 public struct DownloadedRegister: Sendable {
     public var zones: [SpeedZone]
     public var sourceFeatureCount: Int
+    /// How many records the source said it had when the download began; nil if it couldn't be learned.
+    public var expectedFeatureCount: Int?
 }
 
 /// Downloads every page of the register. Progress is 0...1, or nil if the total couldn't be learned.
@@ -118,6 +122,7 @@ public struct RegisterDownloader: Sendable {
         var fetched = 0
         var offset = 0
         for _ in 0..<maxPages {
+            try Task.checkCancellation()
             let data = try await fetch(endpoint.pageURL(offset: offset))
             let page: ZoneParseResult
             do { page = try GeoJSONZoneParser.parse(data) } catch { throw RegisterSyncError.badResponse }
@@ -140,7 +145,7 @@ public struct RegisterDownloader: Sendable {
         guard fetched > 0 else { throw RegisterSyncError.emptySource }
         guard !zones.isEmpty else { throw RegisterSyncError.noLimitsInSource(featureCount: fetched) }
         progress(1)
-        return DownloadedRegister(zones: ZoneDeduplicator.unique(zones), sourceFeatureCount: fetched)
+        return DownloadedRegister(zones: ZoneDeduplicator.unique(zones), sourceFeatureCount: fetched, expectedFeatureCount: total)
     }
 
     private func totalCount() async -> Int? {

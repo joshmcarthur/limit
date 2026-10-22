@@ -37,12 +37,14 @@ public enum RegisterUpdateOutcome: Sendable {
 public struct RegisterUpdater: Sendable {
     public var downloader: RegisterDownloader
     public var store: RegisterStore
+    public var policy: RegisterVerificationPolicy
     public var now: @Sendable () -> Date
 
     public init(downloader: RegisterDownloader = RegisterDownloader(), store: RegisterStore,
-                now: @escaping @Sendable () -> Date = { Date() }) {
+                policy: RegisterVerificationPolicy = .standard, now: @escaping @Sendable () -> Date = { Date() }) {
         self.downloader = downloader
         self.store = store
+        self.policy = policy
         self.now = now
     }
 
@@ -57,11 +59,26 @@ public struct RegisterUpdater: Sendable {
             return .unchanged(metadata)
         }
 
+        // Download, check, write beside the live copy, read it back, and only then switch. The copy in use
+        // is untouched until the last step, so a cancelled, incomplete or bad download can't replace it.
         let downloaded = try await downloader.download(progress: progress)
+        try Task.checkCancellation()
+        if let rejection = RegisterVerifier.check(downloaded, current: try? store.loadMetadata(), policy: policy) {
+            throw RegisterSyncError.rejected(rejection)
+        }
         let metadata = RegisterMetadata(
             checkedAt: now(), zoneCount: downloaded.zones.count,
             sourceFeatureCount: downloaded.sourceFeatureCount, sourceEditedAt: latest)
-        try store.save(zones: downloaded.zones, metadata: metadata)
-        return .downloaded(zones: downloaded.zones, metadata: metadata)
+        let staged = try store.stage(zones: downloaded.zones, metadata: metadata)
+        guard store.verifyWritten(staged) else {
+            store.discard(staged)
+            throw RegisterSyncError.rejected(.writeMismatch)
+        }
+        if Task.isCancelled {
+            store.discard(staged)
+            throw CancellationError()
+        }
+        try store.commit(staged)
+        return .downloaded(zones: downloaded.zones, metadata: staged.metadata)
     }
 }

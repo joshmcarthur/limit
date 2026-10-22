@@ -139,4 +139,24 @@ final class RegisterStoreTests: XCTestCase {
         XCTAssertNil(try store.load())
         XCTAssertEqual(try FileManager.default.contentsOfDirectory(atPath: directory.path), [])
     }
+
+    func testAStagedCopyReadsBackIntactOrFails() throws {
+        let store = RegisterStore(directory: directory)
+        let staged = try store.stage(zones: zones(), metadata: meta())
+        XCTAssertTrue(store.verifyWritten(staged))
+
+        // A bad write: one byte of the zones file changed.
+        let file = directory.appendingPathComponent(staged.name).appendingPathComponent("register.lmtz")
+        var bytes = try Data(contentsOf: file)
+        bytes[bytes.count - 1] ^= 0xFF
+        try bytes.write(to: file)
+        XCTAssertFalse(store.verifyWritten(staged))
+    }
+
+    func testAMissingStagedFileFailsVerification() throws {
+        let store = RegisterStore(directory: directory)
+        let staged = try store.stage(zones: zones(), metadata: meta())
+        store.discard(staged)
+        XCTAssertFalse(store.verifyWritten(staged))
+    }
 }

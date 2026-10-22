@@ -6,6 +6,10 @@ private final class Source: HTTPFetching, @unchecked Sendable {
     private var _requests: [URL] = []
     var editedAtMillis: Int? = 1_700_000_000_000
     var layerFails = false
+    /// Zones served, each with its own id so none are dropped as repeats.
+    var records = 1
+    /// What the count query says; defaults to `records`.
+    var reportedCount: Int?
 
     var requests: [URL] { lock.lock(); defer { lock.unlock() }; return _requests }
     var pageRequests: Int { requests.filter { $0.absoluteString.contains("resultOffset") }.count }
@@ -13,12 +17,16 @@ private final class Source: HTTPFetching, @unchecked Sendable {
     func data(from url: URL) async throws -> Data {
         lock.lock(); _requests.append(url); lock.unlock()
         let s = url.absoluteString
-        if s.contains("returnCountOnly") { return Data("{\"count\":1}".utf8) }
+        if s.contains("returnCountOnly") { return Data("{\"count\":\(reportedCount ?? records)}".utf8) }
         if s.contains("resultOffset") {
+            let features = (0..<records).map { i in
+                """
+                {"type":"Feature","properties":{"speedLimitZoneId":"z\(i)","speedLimitZoneValue":"50"},
+                 "geometry":{"type":"Polygon","coordinates":[[[174,-41],[175,-41],[175,-40],[174,-40],[174,-41]]]}}
+                """
+            }.joined(separator: ",")
             return Data("""
-            {"type":"FeatureCollection","properties":{"exceededTransferLimit":false},"features":[
-            {"type":"Feature","properties":{"speedLimitZoneId":"a","speedLimitZoneValue":"50"},
-             "geometry":{"type":"Polygon","coordinates":[[[174,-41],[175,-41],[175,-40],[174,-40],[174,-41]]]}}]}
+            {"type":"FeatureCollection","properties":{"exceededTransferLimit":false},"features":[\(features)]}
             """.utf8)
         }
         if layerFails { throw RegisterSyncError.badResponse }
@@ -38,11 +46,12 @@ final class RegisterUpdaterTests: XCTestCase {
         try? FileManager.default.removeItem(at: directory)
     }
 
-    private func updater(_ source: Source, at now: Date) -> RegisterUpdater {
-        let endpoint = RegisterEndpoint(queryURL: URL(string: "https://example.test/FeatureServer/0/query")!, pageSize: 10)
+    /// Small data sets in these tests, so the national-size floor is lowered unless a test sets its own.
+    private func updater(_ source: Source, at now: Date, policy: RegisterVerificationPolicy = .init(minimumZones: 1)) -> RegisterUpdater {
+        let endpoint = RegisterEndpoint(queryURL: URL(string: "https://example.test/FeatureServer/0/query")!, pageSize: 1_000)
         return RegisterUpdater(
             downloader: RegisterDownloader(endpoint: endpoint, fetcher: source),
-            store: RegisterStore(directory: directory), now: { now })
+            store: RegisterStore(directory: directory), policy: policy, now: { now })
     }
 
     func testLayerURLIsTheLayerNotTheQuery() {
@@ -124,5 +133,155 @@ final class RegisterUpdaterTests: XCTestCase {
         let metadata = try XCTUnwrap(RegisterStore(directory: directory).loadMetadata())
         XCTAssertNil(metadata.sourceEditedAt)
         XCTAssertEqual(metadata.zoneCount, 2)
+    }
+
+    // MARK: Verification gate
+
+    private func liveZoneCount() throws -> Int? {
+        try RegisterStore(directory: directory).load()?.register.zoneCount
+    }
+
+    private func rejection(_ block: () async throws -> Void) async -> RegisterRejection? {
+        do { try await block() } catch let error as RegisterSyncError {
+            if case .rejected(let reason) = error { return reason }
+        } catch {}
+        return nil
+    }
+
+    func testAShrunkenSourceDoesNotReplaceTheLiveCopy() async throws {
+        let source = Source()
+        source.records = 10
+        _ = try await updater(source, at: Date(timeIntervalSince1970: 100)).update()
+        XCTAssertEqual(try liveZoneCount(), 10)
+
+        source.records = 3               // the source is mid-rebuild
+        source.editedAtMillis! += 60_000
+        let reason = await rejection { _ = try await updater(source, at: Date(timeIntervalSince1970: 200)).update() }
+        XCTAssertEqual(reason, .muchSmaller(count: 3, current: 10))
+        XCTAssertEqual(try liveZoneCount(), 10, "the old copy is still live")
+        XCTAssertEqual(try RegisterStore(directory: directory).loadMetadata()?.checkedAt, Date(timeIntervalSince1970: 100))
+    }
+
+    func testAnIncompleteDownloadIsRejected() async throws {
+        let source = Source()
+        source.records = 10
+        source.reportedCount = 100        // the source says 100, only 10 came back
+        let reason = await rejection { _ = try await updater(source, at: Date()).update() }
+        XCTAssertEqual(reason, .incomplete(fetched: 10, expected: 100))
+        XCTAssertNil(try liveZoneCount(), "nothing was written")
+    }
+
+    func testTooFewZonesIsRejectedEvenWithNothingToReplace() async throws {
+        let source = Source()
+        source.records = 4
+        let reason = await rejection { _ = try await updater(source, at: Date(), policy: .standard).update() }
+        XCTAssertEqual(reason, .tooFewZones(count: 4, minimum: 20_000))
+        XCTAssertNil(try liveZoneCount())
+    }
+
+    func testARejectedDownloadLeavesNoStrayFolders() async throws {
+        let source = Source()
+        source.records = 4
+        _ = await rejection { _ = try await updater(source, at: Date(), policy: .standard).update() }
+        let leftovers = (try? FileManager.default.contentsOfDirectory(atPath: directory.path)) ?? []
+        XCTAssertTrue(leftovers.filter { $0.hasPrefix("gen-") }.isEmpty)
+    }
+
+    func testAnUnreportedCountCannotShowIncompleteButTheOtherChecksStillApply() async throws {
+        let source = Source()
+        source.records = 4
+        source.reportedCount = nil
+        let reason = await rejection { _ = try await updater(source, at: Date(), policy: .standard).update() }
+        XCTAssertEqual(reason, .tooFewZones(count: 4, minimum: 20_000))
+    }
+
+    func testACancelledDownloadNeverSwaps() async throws {
+        let source = Source()
+        source.records = 10
+        _ = try await updater(source, at: Date(timeIntervalSince1970: 100)).update()
+        source.records = 12
+        source.editedAtMillis! += 60_000
+
+        let task = Task { try await updater(source, at: Date(timeIntervalSince1970: 200)).update() }
+        task.cancel()
+        do { _ = try await task.value; XCTFail("expected cancellation") } catch is CancellationError {} catch {
+            XCTFail("unexpected \(error)")
+        }
+        XCTAssertEqual(try liveZoneCount(), 10)
+        let leftovers = try FileManager.default.contentsOfDirectory(atPath: directory.path).filter { $0.hasPrefix("gen-") }
+        XCTAssertEqual(leftovers.count, 1)
+    }
+
+    /// A real clock has fractions of a second, which the stored metadata drops; that must not look like a bad write.
+    func testARealClockTimeStillPassesTheReadBack() async throws {
+        let source = Source()
+        source.records = 10
+        let outcome = try await updater(source, at: Date(timeIntervalSince1970: 100.987)).update()
+        guard case .downloaded(_, let metadata) = outcome else { return XCTFail("expected a download") }
+        XCTAssertEqual(metadata.checkedAt, Date(timeIntervalSince1970: 100))
+    }
+
+    func testAGoodDownloadReplacesTheLiveCopy() async throws {
+        let source = Source()
+        source.records = 10
+        _ = try await updater(source, at: Date(timeIntervalSince1970: 100)).update()
+        source.records = 9               // 90% of the old size is fine
+        source.editedAtMillis! += 60_000
+        _ = try await updater(source, at: Date(timeIntervalSince1970: 200)).update()
+        XCTAssertEqual(try liveZoneCount(), 9)
+    }
+}
+
+final class RegisterVerifierTests: XCTestCase {
+    private func downloaded(zones: Int, fetched: Int? = nil, expected: Int? = nil) -> DownloadedRegister {
+        let ring = Ring(points: [
+            Coordinate(latitude: -41, longitude: 174), Coordinate(latitude: -41, longitude: 175),
+            Coordinate(latitude: -40, longitude: 175), Coordinate(latitude: -40, longitude: 174),
+        ])!
+        let zone = SpeedZone(name: nil, limit: 50, polygons: [Polygon(outer: ring)])!
+        return DownloadedRegister(zones: Array(repeating: zone, count: zones), sourceFeatureCount: fetched ?? zones,
+                                  expectedFeatureCount: expected)
+    }
+
+    private func current(_ count: Int) -> RegisterMetadata {
+        RegisterMetadata(checkedAt: Date(), zoneCount: count, sourceFeatureCount: count)
+    }
+
+    private let policy = RegisterVerificationPolicy(minimumZones: 100)
+
+    func testAcceptsAHealthyDownload() {
+        XCTAssertNil(RegisterVerifier.check(downloaded(zones: 1_000, expected: 1_000), current: current(1_000), policy: policy))
+    }
+
+    func testThresholdsAreInclusive() {
+        XCTAssertNil(RegisterVerifier.check(downloaded(zones: 800), current: current(1_000), policy: policy), "exactly 80%")
+        XCTAssertNotNil(RegisterVerifier.check(downloaded(zones: 799), current: current(1_000), policy: policy))
+        XCTAssertNil(RegisterVerifier.check(downloaded(zones: 100), current: nil, policy: policy), "exactly the floor")
+        XCTAssertNotNil(RegisterVerifier.check(downloaded(zones: 99), current: nil, policy: policy))
+        XCTAssertNil(RegisterVerifier.check(downloaded(zones: 990, fetched: 990, expected: 1_000), current: nil, policy: policy), "exactly 99%")
+        XCTAssertNotNil(RegisterVerifier.check(downloaded(zones: 989, fetched: 989, expected: 1_000), current: nil, policy: policy))
+    }
+
+    func testGrowthIsFine() {
+        XCTAssertNil(RegisterVerifier.check(downloaded(zones: 5_000), current: current(1_000), policy: policy))
+    }
+
+    func testReasonsAreSpecific() {
+        XCTAssertEqual(RegisterVerifier.check(downloaded(zones: 150, fetched: 150, expected: 1_000), current: nil, policy: policy),
+                       .incomplete(fetched: 150, expected: 1_000))
+        XCTAssertEqual(RegisterVerifier.check(downloaded(zones: 50), current: nil, policy: policy), .tooFewZones(count: 50, minimum: 100))
+        XCTAssertEqual(RegisterVerifier.check(downloaded(zones: 200), current: current(1_000), policy: policy),
+                       .muchSmaller(count: 200, current: 1_000))
+    }
+
+    func testAnEmptyCurrentCopyDoesNotBlockAnything() {
+        XCTAssertNil(RegisterVerifier.check(downloaded(zones: 150), current: current(0), policy: policy))
+    }
+
+    func testChecksumDetectsAChangedByte() {
+        let a = Data([1, 2, 3, 4]), b = Data([1, 2, 3, 5])
+        XCTAssertNotEqual(Checksum.fnv1a64(a), Checksum.fnv1a64(b))
+        XCTAssertEqual(Checksum.fnv1a64(a), Checksum.fnv1a64(Data([1, 2, 3, 4])))
+        XCTAssertEqual(Checksum.fnv1a64(Data()), 0xcbf29ce484222325)
     }
 }
