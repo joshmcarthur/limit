@@ -34,19 +34,23 @@ The screens follow the "Limit — onboarding and main screen" canvas, and the to
 
 ## Screenshots and design check (iPhone 16 Pro Max, iOS 18, simulator)
 
-`docs/screenshots/` holds 1320×2868 captures (the 6.9" App Store size) with the status bar set to 9:41. The driving screens used a saved register and a simulated drive through Wellington; the limit and name shown are real register data.
+`docs/screenshots/` holds captures at the 6.9" App Store size (1320×2868, landscape 2868×1320) with the status bar set to 9:41. The driving screens used a saved register and a simulated drive through Wellington (`xcrun simctl location`); the limits and names are real register data.
+
+| File | Screen |
+| --- | --- |
+| 01–03 | Onboarding: welcome, location, almost ready (03 shows the "couldn't update" state, which is what the app showed when the live source was incomplete and the download was rejected) |
+| 05–07, 09 | Driving: light, over the limit (light and dark), rural 100 in dark |
+| 08 | Driving: searching for GPS |
+| 10, 11, 11b | Settings, About, About's attribution section |
+| 12 | Lock Screen Live Activity |
+| 13 | Driving in landscape (dark) |
 
 Compared with `design/limit-screens.pdf`:
 
-| Screen | Result |
-| --- | --- |
-| Onboarding 1 (welcome), 2 (location) | Match. |
-| Driving: light, over-limit (orange pill, "+8 over"), dark, searching for GPS | Match in layout, colour and copy. The "No GPS yet" dash is a rounded pill where the design has a thin bar. |
-| Onboarding 3 (almost ready) | Differs: the card says "Updating speed limits…" where the design says "Downloading speed limits…" with "42% of [size]"; the "+3 km/h" tolerance sits outside the stepper rather than between − and +; the toggles are system green where the design uses the blue tint; "Done" sits under the content rather than pinned to the bottom. |
-| Settings, About | Not in the design; they follow the design system's tokens. |
-| Lock Screen Live Activity | Shows "No GPS yet" after the app was locked mid-drive, even with a simulated drive running. Unverified whether the simulator doesn't deliver location to a locked app or the activity isn't updating; check on a device. |
-| Landscape | Not captured: nothing here can rotate the simulator. |
+- Onboarding 1 and 2, the driving screens (light, over, dark, searching) and landscape match in layout, colour and structure. The copy is intentionally different now (see the copy pass); the design file's wording is no longer the source of truth.
+- Landscape follows the design (sign left, speed right, End drive in the top bar) with one addition: the "Speed limits checked…" line sits under the content. The design has no footer in landscape.
+- Onboarding 3 still differs from the design: the download card title, the "+3 km/h" tolerance sitting outside the − / + stepper, system-green toggles where the design uses blue, and "Done" not pinned to the bottom.
+- The "No GPS yet" dash is a rounded pill where the design has a thin bar.
+- The road-name line shows the register's zone name, so areas read "Wellington Central" and "Default Speed Limit" where the design shows roads ("State Highway 1"). `speedLimitZoneReasonName` could help tell areas from roads.
 
-Other findings:
-- The road-name line shows the register's zone name, so area zones read "Wellington Central" and "Default Speed Limit" where the design shows a road ("Main North Road", "State Highway 1"). Area names probably shouldn't be shown as roads.
-- Over-limit and dark states look right on the data from the real register.
+Landscape and the Lock Screen were checked in the simulator by rotating with a small throwaway UI test (`XCUIDevice.shared.orientation`), since the simulator's rotate shortcut isn't scriptable from here. The Lock Screen check found and fixed a bug: unchanged content went stale after 10 s.

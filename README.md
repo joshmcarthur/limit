@@ -2,6 +2,8 @@
 
 A small, open-source iOS app that shows the posted speed limit for the road you are on in Aotearoa New Zealand, next to your GPS speed. Limits come from the NZTA National Speed Limit Register, downloaded and kept in sync on the device. Nothing leaves the phone: no account, no analytics.
 
+Speed limit data is from the [National Speed Limit Register](https://opendata-nzta.opendata.arcgis.com/datasets/NZTA::national-speed-limit-register-nslr/about) by Waka Kotahi NZ Transport Agency, licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). We filter it to the limits currently in force, merge repeated records, and read school times from its notes. Waka Kotahi doesn't endorse this app.
+
 It appears in the app, as a Live Activity (Lock Screen and Dynamic Island), and later as a CarPlay widget. Design: the Limit design system (colours, sign, readout, and the driving-surface rules in `docs/design.md`).
 
 ## Layout

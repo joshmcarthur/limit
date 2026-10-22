@@ -2,9 +2,9 @@
 
 ## Verified
 
-- `swift test` passes (150 tests) and the app and widget build for the iOS simulator.
+- `swift test` passes (154 tests) and the app and widget build for the iOS simulator.
 - The live layer was queried: field names, record counts, the update check and a full download were run with `RegisterCheck`.
-- Not yet run: the app on a device or in the simulator with a drive, signing for a device.
+- Run in the iOS 18 simulator with a simulated drive: onboarding, driving (light, dark, over, landscape), settings, about and the Lock Screen Live Activity. Not yet run: a device, CarPlay, signing.
 - CI exists but is left alone to save build minutes.
 
 ## Built

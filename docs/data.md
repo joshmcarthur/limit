@@ -16,6 +16,22 @@ https://services.arcgis.com/CXBb7LAjgIIdcsPt/ArcGIS/rest/services/SpeedLimitZone
 - Geometry is polygons in layers, not road centre-lines: a `DEFAULT SPEED LIMIT` 100 area, urban areas on top (`WELLINGTON CITY UTA`, 50), then zones (`WELLINGTON CENTRAL`, 30), then single streets (`CUBA STREET`, 10, a 12-point polygon). The smallest area containing the point wins, so there is no "nearest line" matching and intersections resolve themselves.
 - Not checked: 3 in-force records have a `whenEffective` in the future; they are included now.
 
+## Licence and attribution
+
+The dataset page ([NSLR on NZTA Open Data](https://opendata-nzta.opendata.arcgis.com/datasets/NZTA::national-speed-limit-register-nslr/about)) credits Waka Kotahi NZ Transport Agency and licenses the data under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). CC BY asks for: appropriate credit, a link to the licence, a note of any changes, and no suggestion of endorsement. The About screen carries all four (name and author, links to the source and the licence, what we changed, and a not-endorsed line), and the drive screen and Live Activity credit the register. Any store listing and the README should carry the same credit.
+
+The dataset's own quality notes matter for the copy: limits were migrated from each council's bylaw, so some differ from what's signed on the road, and temporary limits other than emergency ones aren't included.
+
+## Attributes we don't use yet
+
+From the live layer, in-force records (it was still being rebuilt when this was checked, so counts are small):
+
+- `speedCategoryName`: Permanent, Variable, Seasonal, Temporary. We treat everything in force as permanent apart from the school windows. Seasonal records have start and end dates (`speedLimitZoneStartDate`, `speedLimitZoneEndDate`, `speedLimitZoneSeasonalRecur`) and would show all year; Temporary should probably be left out or looked at.
+- `speedLimitZoneStructureTypeName`: Intersection, Overpass, Underpass. The dataset says these geometries overlap (the bridge and the road under it). "Smallest area wins" can pick the bridge's limit while driving under it.
+- `speedLimitZoneLanePurposeName` and `SeperateLaneSpeeds`: bus lanes and per-lane speeds; empty in the data seen so far.
+- `speedLimitZoneReasonName`: why the limit exists (school, congestion, default area, park and so on). It could help decide when a zone name reads like a road and when it's just an area.
+- `speedLimitZoneMaxValue` and `speedLimitZoneMinValue`: for variable-speed signs on state highways.
+
 ## Staying current
 
 `FeatureServer/0?f=json` (about 5 KB compressed) reports `editingInfo.dataLastEditDate`. The stored copy remembers it; a sync downloads only if the source date is newer, otherwise it just refreshes the "checked" date. A missing or unreadable date means download.
@@ -45,6 +61,5 @@ Not done: a rejected download still counts as "failed", so the app tries again o
 
 ## To do
 
-- Check the licence and attribution requirements, and update the About screen.
 - Add a back-off for repeated rejected downloads.
 - Measure load time and memory on a device.
