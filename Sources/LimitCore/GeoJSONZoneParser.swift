@@ -47,7 +47,8 @@ public enum GeoJSONZoneParser {
                 continue
             }
             let polygons = polygons(from: feature["geometry"] as? [String: Any])
-            guard let zone = SpeedZone(id: id(in: properties), name: name(in: properties), limit: limit, polygons: polygons) else {
+            guard let zone = SpeedZone(id: id(in: properties), name: name(in: properties), limit: limit,
+                                    reduced: reducedLimit(in: properties, permanent: limit), polygons: polygons) else {
                 result.skippedBadGeometry += 1
                 continue
             }
@@ -63,6 +64,17 @@ public enum GeoJSONZoneParser {
             if let limit = limitValue(value) { return limit }
         }
         return nil
+    }
+
+    /// `speedLimitZoneVariableSpeed` is the lower limit as text ("40 km/h"), or a list for highway
+    /// variable-speed signs; only a single, lower value with readable periods is used.
+    static func reducedLimit(in properties: [String: Any], permanent: Int) -> ReducedLimit? {
+        guard let speed = properties["speedLimitZoneVariableSpeed"] as? String,
+              !speed.contains(","), let limit = limitValue(speed), limit < permanent,
+              let periods = properties["speedLimitZoneVarPrdDesc"] as? String,
+              let windows = SchoolPeriodParser.windows(from: periods)
+        else { return nil }
+        return ReducedLimit(limit: limit, windows: windows)
     }
 
     static func id(in properties: [String: Any]) -> String? {

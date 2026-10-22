@@ -48,7 +48,7 @@ final class RegisterDownloaderTests: XCTestCase {
         XCTAssertEqual(items["f"], "pgeojson")
         XCTAssertEqual(items["where"], "whenIneffective IS NULL")
         XCTAssertEqual(items["orderByFields"], "OBJECTID")
-        XCTAssertEqual(items["outFields"], "speedLimitZoneId,speedLimitZoneName,speedLimitZoneValue")
+        XCTAssertEqual(items["outFields"], "speedLimitZoneId,speedLimitZoneName,speedLimitZoneValue,speedLimitZoneVariableSpeed,speedLimitZoneVarPrdDesc")
         XCTAssertEqual(items["outSR"], "4326")
         let count = URLComponents(url: endpoint.countURL(), resolvingAgainstBaseURL: false)!.queryItems!
         XCTAssertTrue(count.contains(URLQueryItem(name: "returnCountOnly", value: "true")))

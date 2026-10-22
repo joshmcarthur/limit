@@ -57,7 +57,10 @@ public struct RegisterEndpoint: Equatable, Sendable {
     public static let inForce = "whenIneffective IS NULL"
 
     /// Only the fields the app reads; the layer's legal text fields are large.
-    public static let outFields = ["speedLimitZoneId", "speedLimitZoneName", "speedLimitZoneValue"]
+    public static let outFields = [
+        "speedLimitZoneId", "speedLimitZoneName", "speedLimitZoneValue",
+        "speedLimitZoneVariableSpeed", "speedLimitZoneVarPrdDesc",
+    ]
 
     public func pageURL(offset: Int) -> URL {
         url([

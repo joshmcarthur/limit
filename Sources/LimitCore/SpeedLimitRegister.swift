@@ -41,7 +41,8 @@ public struct SpeedLimitRegister: Sendable {
 
     /// The limit at a point. Where zones overlap (road corridors meeting at a junction) the one with the
     /// smallest extent wins as the most specific, and the lower limit wins a tie.
-    public func lookup(_ point: Coordinate) -> SpeedLimitMatch? {
+    /// A school zone's reduced limit applies when `date` falls inside its windows.
+    public func lookup(_ point: Coordinate, at date: Date = Date()) -> SpeedLimitMatch? {
         let key = Cell(row: cell(point.latitude), column: cell(point.longitude))
         var best: SpeedZone?
         for index in (grid[key] ?? []) + wide {
@@ -51,7 +52,7 @@ public struct SpeedLimitRegister: Sendable {
             let (a, b) = (zone.bounds.area, current.bounds.area)
             if a < b || (a == b && zone.limit < current.limit) { best = zone }
         }
-        return best.map { SpeedLimitMatch(limit: $0.limit, zoneName: $0.name) }
+        return best.map { SpeedLimitMatch(limit: $0.effectiveLimit(at: date), zoneName: $0.name) }
     }
 
     private func cell(_ degrees: Double) -> Int { Int((degrees / cellSize).rounded(.down)) }

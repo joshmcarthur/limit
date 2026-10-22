@@ -107,7 +107,7 @@ public struct DriveEngine {
         }
 
         let speed = Speed.displayed(Speed.kilometresPerHour(fromMetresPerSecond: sample.speedMetresPerSecond))
-        let match = register.lookup(sample.coordinate)
+        let match = register.lookup(sample.coordinate, at: now)
         let age = registerCheckedAt.map { now.timeIntervalSince($0) }
         let sign = SignState.make(limit: match?.limit, dataAge: age, policy: freshness)
         let over = evaluator.evaluate(speed: speed, limit: sign.limit)

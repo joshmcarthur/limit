@@ -11,12 +11,13 @@ public enum ZoneCodecError: Error, Equatable {
 /// GeoJSON. Coordinates are stored as Int32 millionths of a degree (about 0.1 m), which matches the
 /// precision the download asks for.
 ///
-/// Layout, little endian: `LMTZ`, version u8, zone count u32, then per zone: limit u8, name length u16
-/// (0 = none) and UTF-8 bytes, polygon count u32; per polygon: ring count u32 (first is the outer ring);
+/// Layout, little endian: `LMTZ`, version u8, zone count u32, then per zone: limit u8, reduced limit u8
+/// (0 = none) and, if present, window count u8 with start u16 and end u16 (minutes) for each, name length
+/// u16 (0 = none) and UTF-8 bytes, polygon count u32; per polygon: ring count u32 (first is the outer ring);
 /// per ring: point count u32 then lat i32, lon i32 for each point.
 public enum ZoneCodec {
     static let magic: [UInt8] = Array("LMTZ".utf8)
-    static let version: UInt8 = 1
+    static let version: UInt8 = 2
     static let scale = 1_000_000.0
 
     public static func encode(_ zones: [SpeedZone]) -> Data {
@@ -25,6 +26,16 @@ public enum ZoneCodec {
         put(UInt32(zones.count), to: &out)
         for zone in zones {
             out.append(UInt8(clamping: zone.limit))
+            if let reduced = zone.reduced {
+                out.append(UInt8(clamping: reduced.limit))
+                out.append(UInt8(clamping: reduced.windows.count))
+                for window in reduced.windows {
+                    put(UInt16(window.startMinute), to: &out)
+                    put(UInt16(window.endMinute), to: &out)
+                }
+            } else {
+                out.append(0)
+            }
             let name = Array((zone.name ?? "").utf8.prefix(Int(UInt16.max)))
             put(UInt16(name.count), to: &out)
             out.append(contentsOf: name)
@@ -51,12 +62,26 @@ public enum ZoneCodec {
         guard v == version else { throw ZoneCodecError.unsupportedVersion(v) }
 
         let zoneCount = Int(try r.u32())
-        // Each zone is at least 11 bytes, so a count beyond that is corrupt, not just large.
-        guard zoneCount <= r.remaining / 11 else { throw ZoneCodecError.truncated }
+        // Each zone is at least 12 bytes, so a count beyond that is corrupt, not just large.
+        guard zoneCount <= r.remaining / 12 else { throw ZoneCodecError.truncated }
         var zones: [SpeedZone] = []
         zones.reserveCapacity(zoneCount)
         for _ in 0..<zoneCount {
             let limit = Int(try r.u8())
+            var reduced: ReducedLimit?
+            let reducedLimit = Int(try r.u8())
+            if reducedLimit != 0 {
+                let windowCount = Int(try r.u8())
+                var windows: [TimeWindow] = []
+                for _ in 0..<windowCount {
+                    guard let window = TimeWindow(startMinute: Int(try r.u16()), endMinute: Int(try r.u16())) else {
+                        throw ZoneCodecError.invalid
+                    }
+                    windows.append(window)
+                }
+                guard let value = ReducedLimit(limit: reducedLimit, windows: windows) else { throw ZoneCodecError.invalid }
+                reduced = value
+            }
             let nameLength = Int(try r.u16())
             let name = nameLength == 0 ? nil : String(decoding: try r.bytes(nameLength), as: UTF8.self)
             let polygonCount = Int(try r.u32())
@@ -81,7 +106,7 @@ public enum ZoneCodec {
                 }
                 polygons.append(Polygon(outer: rings[0], holes: Array(rings.dropFirst())))
             }
-            guard let zone = SpeedZone(name: name, limit: limit, polygons: polygons) else { throw ZoneCodecError.invalid }
+            guard let zone = SpeedZone(name: name, limit: limit, reduced: reduced, polygons: polygons) else { throw ZoneCodecError.invalid }
             zones.append(zone)
         }
         return zones
