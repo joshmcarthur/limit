@@ -16,12 +16,10 @@ final class DriveScreenTextTests: XCTestCase {
         for access in [LocationAccess.notDetermined, .denied, .reduced] { XCTAssertFalse(access.isUsable) }
     }
 
-    func testAnEndedDriveWinsOverEverythingElse() {
-        for access in [LocationAccess.notDetermined, .denied, .reduced, .authorized] {
-            let (headline, subheadline) = text(withLimit, driving: false, access: access)
-            XCTAssertEqual(headline, "Drive ended")
-            XCTAssertEqual(subheadline, "Location and the Lock Screen card are off.")
-        }
+    func testAnEndedDriveWithAccessSaysSo() {
+        let (headline, subheadline) = text(withLimit, driving: false, access: .authorized)
+        XCTAssertEqual(headline, "Drive ended")
+        XCTAssertEqual(subheadline, "Location and the Lock Screen card are off.")
     }
 
     func testWithoutUsableAccessItSaysWhatToDoAndNeverShowsARoad() {
@@ -31,9 +29,12 @@ final class DriveScreenTextTests: XCTestCase {
             (.notDetermined, "Allow location to see the limit"),
         ]
         for (access, advice) in cases {
-            let (headline, subheadline) = text(withLimit, access: access)
-            XCTAssertEqual(headline, "Location needed")
-            XCTAssertEqual(subheadline, advice)
+            for driving in [true, false] {
+                // Not driving is what someone sees who said no to location before any drive began.
+                let (headline, subheadline) = text(withLimit, driving: driving, access: access)
+                XCTAssertEqual(headline, "Location needed")
+                XCTAssertEqual(subheadline, advice)
+            }
         }
     }
 
@@ -51,5 +52,12 @@ final class DriveScreenTextTests: XCTestCase {
         let (headline, subheadline) = text(noLimit)
         XCTAssertEqual(headline, "Finding your road…")
         XCTAssertEqual(subheadline, "Obey the posted speed limit signs")
+    }
+
+    func testOutsideNewZealandSaysSoInsteadOfLookingForever() {
+        let outside = DriveSnapshot(roadName: "Outside New Zealand", isOutsideNewZealand: true)
+        let (headline, subheadline) = text(outside)
+        XCTAssertEqual(headline, "Outside New Zealand")
+        XCTAssertEqual(subheadline, "Limit only has New Zealand speed limits. Your speed is still shown.")
     }
 }

@@ -15,20 +15,23 @@ public enum LocationAccess: Equatable, Sendable {
 /// where it can be tested.
 public enum DriveScreenText {
     public static func headline(isDriving: Bool, access: LocationAccess, snapshot: DriveSnapshot) -> String {
-        if !isDriving { return "Drive ended" }
+        // Without location access nothing can start, so say what to do, even before any drive has begun.
         if !access.isUsable { return "Location needed" }
+        if !isDriving { return "Drive ended" }
         if let road = snapshot.roadName { return road }
         return snapshot.limit == nil ? "Finding your road…" : "Speed limit"
     }
 
     /// Nil when a limit is showing: the road name stands on its own.
     public static func subheadline(isDriving: Bool, access: LocationAccess, snapshot: DriveSnapshot) -> String? {
-        if !isDriving { return "Location and the Lock Screen card are off." }
+        if access.isUsable, !isDriving { return "Location and the Lock Screen card are off." }
         switch access {
         case .denied: return "Turn on location for Limit in Settings"
         case .reduced: return "Turn on Precise Location so Limit can find your road"
         case .notDetermined: return "Allow location to see the limit"
-        case .authorized: return snapshot.limit == nil ? "Obey the posted speed limit signs" : nil
+        case .authorized:
+            if snapshot.isOutsideNewZealand { return Coverage.outsideNewZealandDetail }
+            return snapshot.limit == nil ? "Obey the posted speed limit signs" : nil
         }
     }
 }

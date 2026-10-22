@@ -20,3 +20,19 @@ Raw captures for the listing, from the iOS 26.5 simulator on an iPhone 17 Pro Ma
 - **Lock Screen (05) is by hand.** `simctl` can't lock and wake the phone, so the script ends by starting the trip and printing the three steps. Keep the phone awake long enough to capture it.
 - **Framed versions:** `screenshots/6.9-inch-framed/` has the captioned slides, in `portrait/` (1320 × 2868, five slides) and `landscape/` (2868 × 1320, six). They are generated, not edited by hand: change a caption in `listing.md` and run `python3 -I Tools/frame-screenshots.py`, which needs ImageMagick, `rsvg-convert` and fontTools. The whole screen is shown, uncropped, so the register credit and "checked" line stay visible. The output is flattened RGB with no alpha, which the App Store requires.
 - **Not made:** an iPad set (the app is iPhone-only) and other languages.
+
+## Points to try in the simulator
+
+For anyone who can simulate a location (Simulator: Features, Location, Custom Location; or Xcode: Debug, Simulate Location). Each result was read from the app's own register lookup on 23 October 2026 (`RegisterCheck`), so a later register may differ. Drive a short route through a point, since the sign waits for two samples to agree.
+
+| Place | Latitude, longitude | The app shows |
+| --- | --- | --- |
+| Wellington CBD | -41.2865, 174.7762 | 30, "Wellington Central" |
+| Auckland, Queen St | -36.8485, 174.7633 | 30, "Auckland Central Business District" |
+| Christchurch, Gloucester St | -43.5314, 172.6358 | 30, "Christchurch Central" |
+| Desert Road, SH 1 | -39.2941, 175.7408 | 100, "Turangi To Waiouru, SH 1" |
+| Plimmerton, Steyne Ave | -41.0795, 174.8667 | 50, "Porirua City" |
+| Plimmerton, Freshfields Place | -41.0767, 174.8709 | the open-road sign and "Open road": the register has no zone for this street |
+| Cupertino | 37.3349, -122.0090 | a dash and "Outside New Zealand", with the speed still shown |
+
+Anywhere outside New Zealand and the Chatham Islands gives the last row's result. If location access is declined, the screen says "Location needed" and what to turn on.

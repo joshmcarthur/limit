@@ -37,14 +37,18 @@ public struct DriveSnapshot: Equatable, Hashable, Sendable, Codable {
     public var roadName: String?
     /// Set when the limit shown is a seasonal or temporary one.
     public var limitNote: LimitNote?
+    /// The position is outside New Zealand, where there is no data: the limit is unknown for good reason,
+    /// not because the road is still being found.
+    public var isOutsideNewZealand: Bool
 
     public init(sign: SignState = .unknown, speed: Int? = nil, over: OverLimitState = .notOver,
-                roadName: String? = nil, limitNote: LimitNote? = nil) {
+                roadName: String? = nil, limitNote: LimitNote? = nil, isOutsideNewZealand: Bool = false) {
         self.sign = sign
         self.speed = speed
         self.over = over
         self.roadName = roadName
         self.limitNote = limitNote
+        self.isOutsideNewZealand = isOutsideNewZealand
     }
 
     public var limit: Int? { sign.limit }
@@ -124,6 +128,9 @@ public struct DriveEngine {
         if sign.isOpenRoad {
             // The default zone's own name is register jargon, and it carries no limit to qualify.
             snapshot.roadName = "Open road"
+        } else if match == nil, !Coverage.isNewZealand(sample.coordinate) {
+            snapshot.roadName = Coverage.outsideNewZealandName
+            snapshot.isOutsideNewZealand = true
         } else if sign.limit != nil {
             snapshot.roadName = RoadNameFormatter.display(match?.zoneName)
             snapshot.limitNote = LimitNote(kind: match?.kind)

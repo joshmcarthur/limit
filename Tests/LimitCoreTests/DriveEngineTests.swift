@@ -61,6 +61,24 @@ final class DriveEngineTests: XCTestCase {
         XCTAssertEqual(state.snapshot.speed, 140)
     }
 
+    func testOutsideNewZealandSaysSoAndKeepsSpeed() {
+        var e = engine()
+        let cupertino = Coordinate(latitude: 37.3349, longitude: -122.0090)
+        let state = e.ingest(sample(kmh: 60, at: cupertino), now: now)
+        XCTAssertEqual(state.snapshot.sign, .unknown)
+        XCTAssertTrue(state.snapshot.isOutsideNewZealand)
+        XCTAssertEqual(state.snapshot.roadName, "Outside New Zealand")
+        XCTAssertEqual(state.snapshot.speed, 60)
+        XCTAssertEqual(state.snapshot.over, .notOver)
+    }
+
+    func testAGapInTheRegisterInsideNewZealandIsNotCalledOutside() {
+        var e = engine()
+        let state = e.ingest(sample(kmh: 60, at: Coordinate(latitude: -35, longitude: 174)), now: now)
+        XCTAssertFalse(state.snapshot.isOutsideNewZealand)
+        XCTAssertNil(state.snapshot.roadName)
+    }
+
     func testStaleSampleIsLostNotFrozen() {
         var e = engine()
         _ = e.ingest(sample(kmh: 47), now: now)
