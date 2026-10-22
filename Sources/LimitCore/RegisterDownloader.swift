@@ -70,6 +70,14 @@ public struct RegisterEndpoint: Equatable, Sendable {
         ])
     }
 
+    /// The layer's description. Small (about 5 KB compressed), and it carries when the data last changed.
+    public func layerURL() -> URL {
+        var components = URLComponents(url: queryURL, resolvingAgainstBaseURL: false)!
+        components.path = String(components.path.dropLast(queryURL.lastPathComponent.count + 1))
+        components.queryItems = [URLQueryItem(name: "f", value: "json")]
+        return components.url!
+    }
+
     public func countURL() -> URL {
         url([("where", Self.inForce), ("returnCountOnly", "true"), ("f", "json")])
     }

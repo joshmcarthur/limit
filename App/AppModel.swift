@@ -137,27 +137,29 @@ final class AppModel {
         Task {
             defer { isSyncing = false }
             do {
-                let (register, metadata) = try await Self.download(into: store) { progress in
+                let outcome = try await Self.update(store: store) { progress in
                     Task { @MainActor [weak self] in self?.syncState = .updating(progress: progress) }
                 }
-                engine.register = register
-                engine.registerCheckedAt = metadata.checkedAt
-                syncState = .upToDate(checkedAt: metadata.checkedAt)
+                switch outcome {
+                case .unchanged(let metadata):
+                    engine.registerCheckedAt = metadata.checkedAt
+                    syncState = .upToDate(checkedAt: metadata.checkedAt)
+                case .downloaded(let zones, let metadata):
+                    engine.register = SpeedLimitRegister(zones: zones)
+                    engine.registerCheckedAt = metadata.checkedAt
+                    syncState = .upToDate(checkedAt: metadata.checkedAt)
+                }
             } catch {
                 syncState = .failed(lastChecked: engine.registerCheckedAt)
             }
         }
     }
 
-    private nonisolated static func download(
-        into store: RegisterStore,
+    private nonisolated static func update(
+        store: RegisterStore,
         progress: @escaping @Sendable (Double?) -> Void
-    ) async throws -> (SpeedLimitRegister, RegisterMetadata) {
-        let downloaded = try await RegisterDownloader().download(progress: progress)
-        let metadata = RegisterMetadata(
-            checkedAt: Date(), zoneCount: downloaded.zones.count, sourceFeatureCount: downloaded.sourceFeatureCount)
-        try store.save(zones: downloaded.zones, metadata: metadata)
-        return (SpeedLimitRegister(zones: downloaded.zones), metadata)
+    ) async throws -> RegisterUpdateOutcome {
+        try await RegisterUpdater(store: store).update(progress: progress)
     }
 
     // MARK: Settings

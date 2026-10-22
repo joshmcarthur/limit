@@ -6,11 +6,15 @@ public struct RegisterMetadata: Codable, Equatable, Sendable {
     public var zoneCount: Int
     /// Features the source returned, including any skipped for having no usable limit.
     public var sourceFeatureCount: Int
+    /// The source layer's last-edit time when this copy was downloaded. Nil if it wasn't known, or for a
+    /// copy saved before this was recorded; either way the next check downloads again.
+    public var sourceEditedAt: Date?
 
-    public init(checkedAt: Date, zoneCount: Int, sourceFeatureCount: Int) {
+    public init(checkedAt: Date, zoneCount: Int, sourceFeatureCount: Int, sourceEditedAt: Date? = nil) {
         self.checkedAt = checkedAt
         self.zoneCount = zoneCount
         self.sourceFeatureCount = sourceFeatureCount
+        self.sourceEditedAt = sourceEditedAt
     }
 }
 
