@@ -1,8 +1,30 @@
 import Foundation
 
-public struct SpeedLimitMatch: Equatable, Sendable {
+public struct SpeedLimitMatch: Sendable {
     public let limit: Int
     public let zoneName: String?
+    /// Seasonal and emergency limits end, so the driver is told which one they're looking at.
+    public let kind: ZoneKind
+    /// Which zone in the register matched, so the next lookup can prefer staying in it.
+    let zoneID: Int
+
+    public init(limit: Int, zoneName: String?, kind: ZoneKind = .permanent) {
+        self.init(limit: limit, zoneName: zoneName, kind: kind, zoneID: -1)
+    }
+
+    init(limit: Int, zoneName: String?, kind: ZoneKind, zoneID: Int) {
+        self.limit = limit
+        self.zoneName = zoneName
+        self.kind = kind
+        self.zoneID = zoneID
+    }
+}
+
+/// Two matches are the same when the driver would see the same thing; which record they came from doesn't matter.
+extension SpeedLimitMatch: Equatable {
+    public static func == (a: SpeedLimitMatch, b: SpeedLimitMatch) -> Bool {
+        a.limit == b.limit && a.zoneName == b.zoneName && a.kind == b.kind
+    }
 }
 
 /// An in-memory register with a uniform grid index, so a lookup only tests the few zones near the point.
@@ -39,20 +61,50 @@ public struct SpeedLimitRegister: Sendable {
 
     public static let empty = SpeedLimitRegister(zones: [])
 
-    /// The limit at a point. Where zones overlap (road corridors meeting at a junction) the one with the
-    /// smallest extent wins as the most specific, and the lower limit wins a tie.
-    /// A school zone's reduced limit applies when `date` falls inside its windows.
-    public func lookup(_ point: Coordinate, at date: Date = Date()) -> SpeedLimitMatch? {
+    /// The limit at a point and time. Only records that apply at `date` count: an ended record, an
+    /// emergency limit that's over, or a seasonal one out of season is ignored, and a school zone's
+    /// reduced limit applies inside its windows. Of those, an emergency limit beats a seasonal one, which
+    /// beats a permanent or variable one. Among equals the zone with the smallest extent wins as the most
+    /// specific, and the lower limit wins a tie.
+    ///
+    /// Where a bridge and the road under it overlap with different limits, a position can't say which level
+    /// you're on. Then the zone in `previous` wins if it's one of the two (you stay on the road you were on),
+    /// otherwise the lower limit does.
+    public func lookup(_ point: Coordinate, at date: Date = Date(), preferring previous: SpeedLimitMatch? = nil) -> SpeedLimitMatch? {
         let key = Cell(row: cell(point.latitude), column: cell(point.longitude))
-        var best: SpeedZone?
+        var candidates: [Int] = []
         for index in (grid[key] ?? []) + wide {
             let zone = zones[index]
-            guard zone.contains(point) else { continue }
-            guard let current = best else { best = zone; continue }
-            let (a, b) = (zone.bounds.area, current.bounds.area)
-            if a < b || (a == b && zone.limit < current.limit) { best = zone }
+            if zone.contains(point), zone.isActive(at: date) { candidates.append(index) }
         }
-        return best.map { SpeedLimitMatch(limit: $0.effectiveLimit(at: date), zoneName: $0.name) }
+        guard var best = candidates.first else { return nil }
+        for index in candidates.dropFirst() where outranks(index, best, at: date) { best = index }
+
+        if zones[best].structure.isGradeSeparated {
+            let opposite: StructureType = zones[best].structure == .overpass ? .underpass : .overpass
+            let rivals = candidates.filter { zones[$0].structure == opposite && zones[$0].kind.priority == zones[best].kind.priority }
+            if var other = rivals.first {
+                for index in rivals.dropFirst() where outranks(index, other, at: date) { other = index }
+                if zones[other].effectiveLimit(at: date) != zones[best].effectiveLimit(at: date) {
+                    if let previous, previous.zoneID == best || previous.zoneID == other {
+                        best = previous.zoneID
+                    } else if zones[other].effectiveLimit(at: date) < zones[best].effectiveLimit(at: date) {
+                        best = other
+                    }
+                }
+            }
+        }
+        let zone = zones[best]
+        return SpeedLimitMatch(limit: zone.effectiveLimit(at: date), zoneName: zone.name, kind: zone.kind, zoneID: best)
+    }
+
+    /// Whether zone `a` should be shown in preference to zone `b`.
+    private func outranks(_ a: Int, _ b: Int, at date: Date) -> Bool {
+        let (za, zb) = (zones[a], zones[b])
+        if za.kind.priority != zb.kind.priority { return za.kind.priority > zb.kind.priority }
+        let (areaA, areaB) = (za.bounds.area, zb.bounds.area)
+        if areaA != areaB { return areaA < areaB }
+        return za.effectiveLimit(at: date) < zb.effectiveLimit(at: date)
     }
 
     private func cell(_ degrees: Double) -> Int { Int((degrees / cellSize).rounded(.down)) }

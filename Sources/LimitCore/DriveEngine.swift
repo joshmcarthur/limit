@@ -66,7 +66,10 @@ public struct DriveState: Equatable, Sendable {
 /// Turns location samples into drive state. A sample that is too old, or whose position is too poor,
 /// shows as no speed and an unknown limit rather than a frozen last value.
 public struct DriveEngine {
-    public var register: SpeedLimitRegister
+    public var register: SpeedLimitRegister {
+        // A new register numbers its zones afresh, so what was matched in the old one no longer means anything.
+        didSet { stableMatch = nil; pendingMatch = nil; pendingCount = 0 }
+    }
     /// When the register data was last checked against the source; nil if never.
     public var registerCheckedAt: Date?
     public var freshness: FreshnessPolicy
@@ -101,7 +104,7 @@ public struct DriveEngine {
     public mutating func ingest(_ sample: LocationSample, now: Date = Date()) -> DriveState {
         lastSample = sample
         if sample.horizontalAccuracy >= 0, sample.horizontalAccuracy <= maxUsableAccuracy {
-            confirm(register.lookup(sample.coordinate, at: now))
+            confirm(register.lookup(sample.coordinate, at: now, preferring: stableMatch))
         }
         return state(now: now)
     }

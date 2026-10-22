@@ -76,11 +76,11 @@ public struct ActivePeriod: Equatable, Sendable {
         self.repeatsYearly = repeatsYearly
     }
 
-    private static var calendar: Calendar {
+    private static let calendar: Calendar = {
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = ReducedLimit.timeZone
         return calendar
-    }
+    }()
 
     private static func noon(_ date: Date) -> Date {
         let calendar = Self.calendar
