@@ -30,33 +30,24 @@ public enum GPSQuality: Equatable, Sendable {
 }
 
 /// Everything a driving surface (app, Live Activity, widget) needs to draw one frame.
-public struct DriveSnapshot: Equatable, Sendable, Codable {
-    public var limit: Int?
-    public var isLimitStale: Bool
-    public var roadName: String?
+public struct DriveSnapshot: Equatable, Hashable, Sendable, Codable {
+    public var sign: SignState
     public var speed: Int?
-    public var overBy: Int?
+    public var over: OverLimitState
+    public var roadName: String?
     /// Set when the limit shown is a seasonal or temporary one.
     public var limitNote: LimitNote?
 
-    public init(limit: Int? = nil, isLimitStale: Bool = false, roadName: String? = nil, speed: Int? = nil, overBy: Int? = nil,
-                limitNote: LimitNote? = nil) {
-        self.limit = limit
-        self.isLimitStale = isLimitStale
-        self.roadName = roadName
+    public init(sign: SignState = .unknown, speed: Int? = nil, over: OverLimitState = .notOver,
+                roadName: String? = nil, limitNote: LimitNote? = nil) {
+        self.sign = sign
         self.speed = speed
-        self.overBy = overBy
+        self.over = over
+        self.roadName = roadName
         self.limitNote = limitNote
     }
 
-    public var sign: SignState {
-        guard let limit else { return .unknown }
-        return .limit(limit, isStale: isLimitStale)
-    }
-
-    public var over: OverLimitState {
-        overBy.map { .over(by: $0) } ?? .notOver
-    }
+    public var limit: Int? { sign.limit }
 
     public static let searching = DriveSnapshot()
 }
@@ -133,14 +124,11 @@ public struct DriveEngine {
         let sign = SignState.make(limit: match?.limit, dataAge: age, policy: freshness)
         let over = evaluator.evaluate(speed: speed, limit: sign.limit)
 
-        var snapshot = DriveSnapshot(speed: speed)
-        if case .limit(let limit, let isStale) = sign {
-            snapshot.limit = limit
-            snapshot.isLimitStale = isStale
+        var snapshot = DriveSnapshot(sign: sign, speed: speed, over: over)
+        if sign.limit != nil {
             snapshot.roadName = RoadNameFormatter.display(match?.zoneName)
             snapshot.limitNote = LimitNote(kind: match?.kind)
         }
-        if case .over(let by) = over { snapshot.overBy = by }
         return DriveState(snapshot: snapshot, gps: sample.horizontalAccuracy <= goodAccuracy ? .good : .weak)
     }
 

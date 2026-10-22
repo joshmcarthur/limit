@@ -25,10 +25,10 @@ final class LimitNoteTests: XCTestCase {
     }
 
     func testTheNoteSurvivesTheTripToTheLiveActivity() throws {
-        let snapshot = DriveSnapshot(limit: 30, roadName: "Motor Camp", speed: 28, limitNote: .seasonal)
+        let snapshot = DriveSnapshot(sign: .limit(30, isStale: false), speed: 28, roadName: "Motor Camp", limitNote: .seasonal)
         let decoded = try JSONDecoder().decode(DriveSnapshot.self, from: JSONEncoder().encode(snapshot))
         XCTAssertEqual(decoded.limitNote, .seasonal)
-        XCTAssertNotEqual(snapshot, DriveSnapshot(limit: 30, roadName: "Motor Camp", speed: 28), "a note is a change worth sending")
+        XCTAssertNotEqual(snapshot, DriveSnapshot(sign: .limit(30, isStale: false), speed: 28, roadName: "Motor Camp"), "a note is a change worth sending")
     }
 
     // MARK: From the engine

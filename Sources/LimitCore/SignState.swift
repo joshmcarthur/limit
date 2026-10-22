@@ -23,7 +23,7 @@ public struct FreshnessPolicy: Equatable, Sendable {
 }
 
 /// What the speed sign shows.
-public enum SignState: Equatable, Sendable {
+public enum SignState: Hashable, Codable, Sendable {
     case limit(Int, isStale: Bool)
     /// No fix, off the register, or data too old to trust. Never shows the last known limit.
     case unknown

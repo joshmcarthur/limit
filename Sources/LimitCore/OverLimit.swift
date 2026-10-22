@@ -1,4 +1,4 @@
-public enum OverLimitState: Equatable, Sendable {
+public enum OverLimitState: Hashable, Codable, Sendable {
     case notOver
     /// Whole km/h above the limit.
     case over(by: Int)

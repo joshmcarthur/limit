@@ -44,7 +44,7 @@ struct DriveLiveActivity: Widget {
     /// Updates are best-effort and may be throttled. Once the system marks the content stale, show the
     /// unknown state rather than a frozen number.
     private static func snapshot(_ context: ActivityViewContext<DriveActivityAttributes>) -> DriveSnapshot {
-        context.isStale ? .searching : context.state.snapshot
+        context.isStale ? .searching : context.state
     }
 }
 

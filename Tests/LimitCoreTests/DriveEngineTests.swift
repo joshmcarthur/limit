@@ -27,14 +27,13 @@ final class DriveEngineTests: XCTestCase {
         XCTAssertEqual(state.snapshot.limit, 50)
         XCTAssertEqual(state.snapshot.speed, 47)
         XCTAssertEqual(state.snapshot.roadName, "Gloucester Street")
-        XCTAssertNil(state.snapshot.overBy)
+        XCTAssertEqual(state.snapshot.over, .notOver)
         XCTAssertEqual(state.snapshot.sign, .limit(50, isStale: false))
     }
 
     func testOverTheLimit() {
         var e = engine(limit: 30)
         let state = e.ingest(sample(kmh: 38), now: now)
-        XCTAssertEqual(state.snapshot.overBy, 8)
         XCTAssertEqual(state.snapshot.over, .over(by: 8))
     }
 
@@ -44,7 +43,7 @@ final class DriveEngineTests: XCTestCase {
         XCTAssertEqual(state.snapshot.sign, .unknown)
         XCTAssertNil(state.snapshot.roadName)
         XCTAssertEqual(state.snapshot.speed, 60)
-        XCTAssertNil(state.snapshot.overBy)
+        XCTAssertEqual(state.snapshot.over, .notOver)
     }
 
     func testStaleSampleIsLostNotFrozen() {
@@ -150,5 +149,17 @@ final class ZoneChangeConfirmationTests: XCTestCase {
         _ = limit(&e, west, second: 0)
         XCTAssertNil(limit(&e, west, second: 1, accuracy: 500), "position too poor")
         XCTAssertEqual(limit(&e, east, second: 2), 100, "taken at once after a gap")
+    }
+
+    /// The Live Activity carries the snapshot as its content, so every state it can hold must survive encoding.
+    func testSnapshotsRoundTripThroughJSON() throws {
+        let snapshots = [
+            DriveSnapshot.searching,
+            DriveSnapshot(sign: .limit(50, isStale: true), speed: 58, over: .over(by: 8), roadName: "Cuba Street"),
+            DriveSnapshot(sign: .limit(30, isStale: false), speed: 28, limitNote: .temporary),
+        ]
+        for snapshot in snapshots {
+            XCTAssertEqual(try JSONDecoder().decode(DriveSnapshot.self, from: JSONEncoder().encode(snapshot)), snapshot)
+        }
     }
 }
