@@ -75,8 +75,8 @@ struct DriveView: View {
         case .notDetermined: return "Allow location to see the limit"
         case .authorized:
             return state.snapshot.limit == nil
-                ? "Watch for signs until the limit appears"
-                : "Limit from NZTA register"
+                ? "Obey the posted speed limit signs"
+                : "Data from Waka Kotahi’s National Speed Limit Register"
         }
     }
 

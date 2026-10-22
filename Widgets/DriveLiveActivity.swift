@@ -54,7 +54,7 @@ private struct LockScreenView: View {
                     .font(.headline)
                     .lineLimit(1)
                     .foregroundStyle(Palette.ink)
-                Text("Limit from NZTA register")
+                Text("Data from Waka Kotahi’s National Speed Limit Register")
                     .font(.caption)
                     .foregroundStyle(Palette.inkMuted)
             }

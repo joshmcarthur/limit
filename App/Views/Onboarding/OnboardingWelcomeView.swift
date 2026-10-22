@@ -18,15 +18,15 @@ struct OnboardingWelcomeView: View {
             }
             VStack(alignment: .leading, spacing: DesignTokens.space6) {
                 FeatureRow(symbol: "map", title: "Every road, even offline",
-                           detail: "Limits from the NZTA National Speed Limit Register, kept up to date on your phone.")
-                FeatureRow(symbol: "speedometer", title: "Your speed, beside the limit",
-                           detail: "Measured by GPS. Quietly shows when you’re over, no alarms.")
+                           detail: "Limits come from the NZTA National Speed Limit Register. They’re stored on your phone and work offline.")
+                FeatureRow(symbol: "speedometer", title: "Your speed",
+                           detail: "Your GPS speed is shown next to the speed limit.")
                 FeatureRow(symbol: "iphone", title: "On your Lock Screen",
-                           detail: "Follow along in the Dynamic Island without opening the app.")
+                           detail: "You don’t need the app open. Speed limits show on the Lock Screen and in the Dynamic Island.")
             }
             Spacer(minLength: 0)
             VStack(spacing: DesignTokens.space4) {
-                Text("A guide, not a guarantee. Signs on the road always win.")
+                Text("Always obey the posted speed limits and follow the NZ Road Code. Use this app as a guide only.")
                     .font(.footnote)
                     .foregroundStyle(Palette.inkMuted)
                     .multilineTextAlignment(.center)

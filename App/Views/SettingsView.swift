@@ -24,7 +24,7 @@ struct SettingsView: View {
             } header: {
                 Text("While driving")
             } footer: {
-                Text("GPS speed can be a few km/h out. The tolerance stops “over” appearing for small differences.")
+                Text("GPS speed can be a few km/h out, so “over” only shows once you’re past this tolerance.")
             }
             Section {
                 NavigationLink("About the data") { AboutView() }

@@ -12,7 +12,7 @@ struct OnboardingReadyView: View {
             VStack(spacing: DesignTokens.space6) {
                 VStack(spacing: DesignTokens.space2) {
                     Text("Almost ready").font(.title.bold()).foregroundStyle(Palette.ink)
-                    Text("Speed limits are downloading. You can start driving now, but the limit shows as unknown until they’re in.")
+                    Text("The speed limits are downloading. You can start driving straight away, but the limit will be unknown until they’ve finished.")
                         .font(.body)
                         .foregroundStyle(Palette.inkMuted)
                         .multilineTextAlignment(.center)
@@ -24,7 +24,7 @@ struct OnboardingReadyView: View {
                         .padding(.horizontal, DesignTokens.space4)
                         .padding(.vertical, DesignTokens.space2)
                         .background(Palette.surface, in: RoundedRectangle(cornerRadius: DesignTokens.radiusMedium, style: .continuous))
-                    Text("After this, updates happen in the background on Wi‑Fi.")
+                    Text("The app will automatically check for new speed limit data when you open it.")
                         .font(.footnote).foregroundStyle(Palette.inkMuted).padding(.horizontal, DesignTokens.space4)
                 }
 
@@ -48,12 +48,12 @@ struct OnboardingReadyView: View {
                     }
                     .padding(.horizontal, DesignTokens.space4)
                     .background(Palette.surface, in: RoundedRectangle(cornerRadius: DesignTokens.radiusMedium, style: .continuous))
-                    Text("GPS speed can be a few km/h out. The tolerance stops “over” appearing for small differences.")
+                    Text("GPS speed can be a few km/h out, so “over” only shows once you’re past this tolerance.")
                         .font(.footnote).foregroundStyle(Palette.inkMuted).padding(.horizontal, DesignTokens.space4)
                 }
 
                 VStack(spacing: DesignTokens.space3) {
-                    Text("You can change these any time in Settings.")
+                    Text("You can change these in Settings.")
                         .font(.footnote).foregroundStyle(Palette.inkMuted)
                     OnboardingPrimaryButton(title: "Done", action: model.finishOnboarding)
                 }

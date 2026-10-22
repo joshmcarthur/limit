@@ -25,13 +25,13 @@ struct OnboardingLocationView: View {
             }
             VStack(alignment: .leading, spacing: DesignTokens.space6) {
                 FeatureRow(symbol: "iphone", title: "Stays on your phone",
-                           detail: "No account, and your location is never sent anywhere. Speed limits are looked up on the device.",
+                           detail: "You don’t need an account to use this app, and we don’t collect any information. Everything stays on your device.",
                            iconColor: Palette.inkMuted, iconSize: 28)
                 FeatureRow(symbol: "checkmark.circle", title: "“While Using the App” is enough",
-                           detail: "Once you start a drive, your Lock Screen keeps updating until you end it.",
+                           detail: "Once you start driving, the Lock Screen keeps updating until you end it.",
                            iconColor: Palette.inkMuted, iconSize: 28)
                 FeatureRow(symbol: "scope", title: "Precise location needed",
-                           detail: "Approximate location can’t tell which road you’re on, so the limit would show as unknown.",
+                           detail: "Approximate location can’t tell which road you’re on, so the limit will be unknown.",
                            iconColor: Palette.inkMuted, iconSize: 28)
             }
             Spacer(minLength: 0)
