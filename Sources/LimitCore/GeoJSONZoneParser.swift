@@ -22,7 +22,7 @@ public struct ZoneParseResult: Equatable, Sendable {
 /// `speedLimitZoneName`), so this is deliberately tolerant.
 public enum GeoJSONZoneParser {
     public static let limitKeys: Set<String> = [
-        "speedlimit", "speedlimitvalue", "speedlimitkmh", "postedspeedlimit", "speed", "limit", "limitkmh",
+        "speedlimitzonevalue", "speedlimit", "speedlimitvalue", "speedlimitkmh", "postedspeedlimit", "speed", "limit", "limitkmh",
     ]
     public static let nameKeys: Set<String> = ["speedlimitzonename", "zonename", "roadname", "name"]
     /// NZ limits run from 10 to 110 km/h in steps of 5 or 10.
