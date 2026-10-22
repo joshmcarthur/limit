@@ -5,6 +5,8 @@ import LimitCore
 struct SpeedSignView: View {
     let state: SignState
     var diameter: CGFloat = 120
+    /// Read out with the limit when it is a seasonal or temporary one.
+    var note: LimitNote?
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -29,7 +31,7 @@ struct SpeedSignView: View {
             if isStale && SignMetrics.showsStaleBadge(diameter: Double(diameter)) { staleBadge }
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(AccessibilityLabels.sign(state))
+        .accessibilityLabel(AccessibilityLabels.sign(state, note: note))
     }
 
     private var numeral: some View {

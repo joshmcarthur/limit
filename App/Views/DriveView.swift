@@ -51,7 +51,8 @@ struct DriveView: View {
 
     private func signBlock(_ state: DriveState, diameter: CGFloat) -> some View {
         VStack(spacing: DesignTokens.space4) {
-            SpeedSignView(state: state.snapshot.sign, diameter: diameter)
+            SpeedSignView(state: state.snapshot.sign, diameter: diameter, note: state.snapshot.limitNote)
+            if let note = state.snapshot.limitNote { LimitNoteView(note: note) }
             VStack(spacing: 2) {
                 Text(headline(state)).font(.title3.weight(.semibold)).foregroundStyle(Palette.ink)
                     .lineLimit(1).minimumScaleFactor(0.7)

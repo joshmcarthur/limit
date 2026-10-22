@@ -15,7 +15,7 @@ struct DriveLiveActivity: Widget {
             let snapshot = Self.snapshot(context)
             return DynamicIsland {
                 DynamicIslandExpandedRegion(.leading) {
-                    SpeedSignView(state: snapshot.sign, diameter: 56)
+                    SpeedSignView(state: snapshot.sign, diameter: 56, note: snapshot.limitNote)
                 }
                 DynamicIslandExpandedRegion(.trailing) {
                     SpeedReadoutView(speed: snapshot.speed, over: snapshot.over, size: 44, unitFont: .caption)
@@ -26,12 +26,17 @@ struct DriveLiveActivity: Widget {
                         .lineLimit(1)
                         .foregroundStyle(Palette.onIsland)
                 }
+                DynamicIslandExpandedRegion(.bottom) {
+                    if let note = snapshot.limitNote {
+                        Text(note.label).font(.caption.weight(.semibold)).foregroundStyle(Palette.onIsland)
+                    }
+                }
             } compactLeading: {
-                SpeedSignView(state: snapshot.sign, diameter: 24)
+                SpeedSignView(state: snapshot.sign, diameter: 24, note: snapshot.limitNote)
             } compactTrailing: {
                 CompactSpeed(speed: snapshot.speed, over: snapshot.over)
             } minimal: {
-                SpeedSignView(state: snapshot.sign, diameter: 24)
+                SpeedSignView(state: snapshot.sign, diameter: 24, note: snapshot.limitNote)
             }
         }
     }
@@ -48,15 +53,22 @@ private struct LockScreenView: View {
 
     var body: some View {
         HStack(spacing: DesignTokens.space4) {
-            SpeedSignView(state: snapshot.sign, diameter: 56)
+            SpeedSignView(state: snapshot.sign, diameter: 56, note: snapshot.limitNote)
             VStack(alignment: .leading, spacing: 2) {
                 Text(snapshot.roadName ?? "Speed limit")
                     .font(.headline)
                     .lineLimit(1)
                     .foregroundStyle(Palette.ink)
-                Text("Data from Waka Kotahi’s National Speed Limit Register")
-                    .font(.caption)
-                    .foregroundStyle(Palette.inkMuted)
+                if let note = snapshot.limitNote {
+                    // Room is tight, so the note takes the attribution line's place while it's showing.
+                    Text(note.label)
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(Palette.ink)
+                } else {
+                    Text("Data from Waka Kotahi’s National Speed Limit Register")
+                        .font(.caption)
+                        .foregroundStyle(Palette.inkMuted)
+                }
             }
             Spacer(minLength: 0)
             SpeedReadoutView(speed: snapshot.speed, over: snapshot.over, size: 44, unitFont: .caption)

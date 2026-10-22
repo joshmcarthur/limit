@@ -10,6 +10,7 @@ struct DriveActivityAttributes: ActivityAttributes {
         var roadName: String?
         var speed: Int?
         var overBy: Int?
+        var limitNote: LimitNote?
 
         init(_ snapshot: DriveSnapshot) {
             limit = snapshot.limit
@@ -17,10 +18,12 @@ struct DriveActivityAttributes: ActivityAttributes {
             roadName = snapshot.roadName
             speed = snapshot.speed
             overBy = snapshot.overBy
+            limitNote = snapshot.limitNote
         }
 
         var snapshot: DriveSnapshot {
-            DriveSnapshot(limit: limit, isLimitStale: isLimitStale, roadName: roadName, speed: speed, overBy: overBy)
+            DriveSnapshot(limit: limit, isLimitStale: isLimitStale, roadName: roadName, speed: speed, overBy: overBy,
+                          limitNote: limitNote)
         }
     }
 }

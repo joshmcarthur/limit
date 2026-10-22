@@ -36,13 +36,17 @@ public struct DriveSnapshot: Equatable, Sendable, Codable {
     public var roadName: String?
     public var speed: Int?
     public var overBy: Int?
+    /// Set when the limit shown is a seasonal or temporary one.
+    public var limitNote: LimitNote?
 
-    public init(limit: Int? = nil, isLimitStale: Bool = false, roadName: String? = nil, speed: Int? = nil, overBy: Int? = nil) {
+    public init(limit: Int? = nil, isLimitStale: Bool = false, roadName: String? = nil, speed: Int? = nil, overBy: Int? = nil,
+                limitNote: LimitNote? = nil) {
         self.limit = limit
         self.isLimitStale = isLimitStale
         self.roadName = roadName
         self.speed = speed
         self.overBy = overBy
+        self.limitNote = limitNote
     }
 
     public var sign: SignState {
@@ -134,6 +138,7 @@ public struct DriveEngine {
             snapshot.limit = limit
             snapshot.isLimitStale = isStale
             snapshot.roadName = RoadNameFormatter.display(match?.zoneName)
+            snapshot.limitNote = LimitNote(kind: match?.kind)
         }
         if case .over(let by) = over { snapshot.overBy = by }
         return DriveState(snapshot: snapshot, gps: sample.horizontalAccuracy <= goodAccuracy ? .good : .weak)
