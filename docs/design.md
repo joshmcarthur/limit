@@ -31,3 +31,22 @@ The screens follow the "Limit — onboarding and main screen" canvas, and the to
 - Freshness thresholds (stale after 30 days, unknown after 180) are proposals.
 - Over-limit shows from the tolerance upward (`delta >= tolerance`) and clears at `tolerance - 2` (minimum 0).
 - App icon, launch screen and the About screen's licence wording are not designed yet.
+
+## Screenshots and design check (iPhone 16 Pro Max, iOS 18, simulator)
+
+`docs/screenshots/` holds 1320×2868 captures (the 6.9" App Store size) with the status bar set to 9:41. The driving screens used a saved register and a simulated drive through Wellington; the limit and name shown are real register data.
+
+Compared with `design/limit-screens.pdf`:
+
+| Screen | Result |
+| --- | --- |
+| Onboarding 1 (welcome), 2 (location) | Match. |
+| Driving: light, over-limit (orange pill, "+8 over"), dark, searching for GPS | Match in layout, colour and copy. The "No GPS yet" dash is a rounded pill where the design has a thin bar. |
+| Onboarding 3 (almost ready) | Differs: the card says "Updating speed limits…" where the design says "Downloading speed limits…" with "42% of [size]"; the "+3 km/h" tolerance sits outside the stepper rather than between − and +; the toggles are system green where the design uses the blue tint; "Done" sits under the content rather than pinned to the bottom. |
+| Settings, About | Not in the design; they follow the design system's tokens. |
+| Lock Screen Live Activity | Shows "No GPS yet" after the app was locked mid-drive, even with a simulated drive running. Unverified whether the simulator doesn't deliver location to a locked app or the activity isn't updating; check on a device. |
+| Landscape | Not captured: nothing here can rotate the simulator. |
+
+Other findings:
+- The road-name line shows the register's zone name, so area zones read "Wellington Central" and "Default Speed Limit" where the design shows a road ("Main North Road", "State Highway 1"). Area names probably shouldn't be shown as roads.
+- Over-limit and dark states look right on the data from the real register.
