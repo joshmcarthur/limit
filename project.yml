@@ -1,12 +1,13 @@
 name: Limit
 options:
-  bundleIdPrefix: com.example
+  bundleIdPrefix: com.joshmcarthur
   deploymentTarget:
     iOS: "17.0"
   createIntermediateGroups: true
 settings:
   base:
     SWIFT_VERSION: "5.0"
+    DEVELOPMENT_TEAM: T86Z8SF4GG
     MARKETING_VERSION: "0.1.0"
     CURRENT_PROJECT_VERSION: "1"
 packages:
@@ -32,7 +33,7 @@ targets:
         NSSupportsLiveActivities: true
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.example.Limit
+        PRODUCT_BUNDLE_IDENTIFIER: com.joshmcarthur.Limit
         GENERATE_INFOPLIST_FILE: NO
   LimitWidgets:
     type: app-extension
@@ -49,7 +50,7 @@ targets:
           NSExtensionPointIdentifier: com.apple.widgetkit-extension
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.example.Limit.Widgets
+        PRODUCT_BUNDLE_IDENTIFIER: com.joshmcarthur.Limit.Widgets
         GENERATE_INFOPLIST_FILE: NO
         SKIP_INSTALL: YES
 schemes:

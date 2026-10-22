@@ -33,7 +33,7 @@ xcodegen generate
 open Limit.xcodeproj
 ```
 
-Set your own bundle identifiers and team in `project.yml` (`com.example.Limit` is a placeholder).
+Bundle identifiers and the signing team are set in `project.yml`.
 
 ## CI
 
