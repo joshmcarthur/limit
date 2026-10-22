@@ -68,8 +68,8 @@ public enum FreshnessText {
             return Row(title: "Speed limits may be out of date",
                        subtitle: "Last updated \(when(at, now: now, calendar: calendar)) · \(source)")
         case .failed(let last):
-            let using = last.map { "Using data from \(when($0, now: now, calendar: calendar))." } ?? "No speed limits on this phone yet."
-            return Row(title: "Couldn’t update speed limits", subtitle: "\(using) Try again.")
+            let using = last.map { "Still using speed limit data from \(when($0, now: now, calendar: calendar))." } ?? "There's no speed limit data on this phone yet."
+            return Row(title: "Couldn’t update the speed limit database", subtitle: using)
         case .neverSynced:
             return Row(title: "Speed limits not downloaded", subtitle: source)
         }

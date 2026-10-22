@@ -47,7 +47,10 @@ final class SyncStateTests: XCTestCase {
         XCTAssertEqual(row.title, "Updating speed limits…")
         XCTAssertEqual(row.subtitle, "42% · NZTA National Speed Limit Register")
         let failed = FreshnessText.row(for: .failed(lastChecked: date(2026, 10, 3)), now: now, calendar: calendar)
-        XCTAssertEqual(failed.subtitle, "Using data from 3 Oct. Try again.")
+        XCTAssertEqual(failed.subtitle, "Still using speed limit data from 3 Oct.")
+        XCTAssertEqual(failed.title, "Couldn’t update the speed limit database")
         XCTAssertFalse(failed.subtitle.lowercased().contains("error"))
+        let nothingYet = FreshnessText.row(for: .failed(lastChecked: nil), now: now, calendar: calendar)
+        XCTAssertEqual(nothingYet.subtitle, "There's no speed limit data on this phone yet.")
     }
 }

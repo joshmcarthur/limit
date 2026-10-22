@@ -6,10 +6,10 @@ public enum AccessibilityLabels {
     }
 
     public static func readout(speed: Int?, over: OverLimitState) -> String {
-        guard let speed else { return "Your speed unknown, no GPS" }
+        guard let speed else { return "Your speed isn't available, there's no GPS" }
         if case .over(let by) = over {
-            return "Your speed \(speed) kilometres per hour, \(by) over the limit"
+            return "Your speed is \(speed) kilometres per hour, \(by) over the limit"
         }
-        return "Your speed \(speed) kilometres per hour"
+        return "Your speed is \(speed) kilometres per hour"
     }
 }
