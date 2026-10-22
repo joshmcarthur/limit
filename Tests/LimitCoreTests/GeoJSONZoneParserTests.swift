@@ -22,6 +22,18 @@ final class GeoJSONZoneParserTests: XCTestCase {
         XCTAssertTrue(result.zones[0].contains(Coordinate(latitude: -40.5, longitude: 174.5)))
     }
 
+    /// Shaped like a record from the live layer: the limit is a string, with the zone id alongside.
+    func testReadsTheLiveLayersFields() throws {
+        let data = collection("""
+        {"type":"Feature","properties":{"speedLimitZoneId":"73490856-e594","speedLimitZoneName":"CUBA STREET","speedLimitZoneValue":"10"},
+         "geometry":{"type":"Polygon","coordinates":\(square)}}
+        """)
+        let zone = try XCTUnwrap(GeoJSONZoneParser.parse(data).zones.first)
+        XCTAssertEqual(zone.limit, 10)
+        XCTAssertEqual(zone.id, "73490856-e594")
+        XCTAssertEqual(zone.name, "CUBA STREET")
+    }
+
     func testLimitKeyIsCaseAndPunctuationInsensitive() throws {
         for key in ["SPEED_LIMIT", "SpeedLimit", "speed-limit"] {
             let data = collection("""

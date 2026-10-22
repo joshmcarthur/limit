@@ -55,6 +55,19 @@ final class RegisterDownloaderTests: XCTestCase {
         XCTAssertTrue(count.contains(URLQueryItem(name: "where", value: "whenIneffective IS NULL")))
     }
 
+    func testRepeatedRecordsAreDroppedFromTheDownload() async throws {
+        let repeated = """
+        {"type":"Feature","properties":{"speedLimitZoneId":"z1","speedLimitZoneValue":"30"},"geometry":{"type":"Polygon","coordinates":\(square)}}
+        """
+        let fetcher = ClosureFetcher { [self] url in
+            isCount(url) ? Data("{\"count\":3}".utf8) : page([repeated, repeated, repeated], exceeded: false)
+        }
+        let wide = RegisterEndpoint(queryURL: endpoint.queryURL, pageSize: 10)
+        let result = try await RegisterDownloader(endpoint: wide, fetcher: fetcher).download()
+        XCTAssertEqual(result.zones.count, 1)
+        XCTAssertEqual(result.sourceFeatureCount, 3)
+    }
+
     func testPagesUntilTheSourceStopsExceeding() async throws {
         let fetcher = ClosureFetcher { [self] url in
             if isCount(url) { return Data("{\"count\":5}".utf8) }
@@ -132,7 +145,8 @@ final class RegisterDownloaderTests: XCTestCase {
             if counter.n < 3 { throw URLError(.timedOut) }
             return page([feature(50)], exceeded: false)
         }
-        let result = try await RegisterDownloader(endpoint: endpoint, fetcher: fetcher).download()
+        let wide = RegisterEndpoint(queryURL: endpoint.queryURL, pageSize: 10)
+        let result = try await RegisterDownloader(endpoint: wide, fetcher: fetcher).download()
         XCTAssertEqual(result.zones.count, 1)
         XCTAssertEqual(counter.n, 3)
     }

@@ -25,6 +25,7 @@ public enum GeoJSONZoneParser {
         "speedlimitzonevalue", "speedlimit", "speedlimitvalue", "speedlimitkmh", "postedspeedlimit", "speed", "limit", "limitkmh",
     ]
     public static let nameKeys: Set<String> = ["speedlimitzonename", "zonename", "roadname", "name"]
+    public static let idKeys: Set<String> = ["speedlimitzoneid"]
     /// NZ limits run from 10 to 110 km/h in steps of 5 or 10.
     public static let validLimits = 10...110
 
@@ -46,7 +47,7 @@ public enum GeoJSONZoneParser {
                 continue
             }
             let polygons = polygons(from: feature["geometry"] as? [String: Any])
-            guard let zone = SpeedZone(name: name(in: properties), limit: limit, polygons: polygons) else {
+            guard let zone = SpeedZone(id: id(in: properties), name: name(in: properties), limit: limit, polygons: polygons) else {
                 result.skippedBadGeometry += 1
                 continue
             }
@@ -60,6 +61,13 @@ public enum GeoJSONZoneParser {
     static func limit(in properties: [String: Any]) -> Int? {
         for (key, value) in properties where limitKeys.contains(normalise(key)) {
             if let limit = limitValue(value) { return limit }
+        }
+        return nil
+    }
+
+    static func id(in properties: [String: Any]) -> String? {
+        for (key, value) in properties where idKeys.contains(normalise(key)) {
+            if let text = value as? String, !text.isEmpty { return text }
         }
         return nil
     }

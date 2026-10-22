@@ -1,12 +1,15 @@
 /// A region of the register with one posted limit.
 public struct SpeedZone: Equatable, Sendable {
+    /// The register's identifier for the zone. Only used to drop repeated records; not stored on disk.
+    public let id: String?
     public let name: String?
     public let limit: Int
     public let polygons: [Polygon]
     public let bounds: BoundingBox
 
-    public init?(name: String?, limit: Int, polygons: [Polygon]) {
+    public init?(id: String? = nil, name: String?, limit: Int, polygons: [Polygon]) {
         guard let first = polygons.first else { return nil }
+        self.id = id
         self.name = name
         self.limit = limit
         self.polygons = polygons

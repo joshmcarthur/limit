@@ -129,7 +129,7 @@ public struct RegisterDownloader: Sendable {
         guard fetched > 0 else { throw RegisterSyncError.emptySource }
         guard !zones.isEmpty else { throw RegisterSyncError.noLimitsInSource(featureCount: fetched) }
         progress(1)
-        return DownloadedRegister(zones: zones, sourceFeatureCount: fetched)
+        return DownloadedRegister(zones: ZoneDeduplicator.unique(zones), sourceFeatureCount: fetched)
     }
 
     private func totalCount() async -> Int? {
