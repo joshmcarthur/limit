@@ -11,6 +11,7 @@
 
 - `LimitCore`: geometry and point-in-polygon, GeoJSON zone parser, grid-indexed register lookup, binary store, ArcGIS downloader with paging and progress, over-limit hysteresis, sign state and freshness, drive engine, settings, sync copy, VoiceOver labels, design tokens.
 - Data: in-force zones only, repeated records dropped, update check before downloading, a weekly check schedule with back-off, manual checks with a floor, school-zone reduced limits by time of day, zone change confirmed over two samples, and blue-green register swaps with a verification gate.
+- Drive-stop check: CoreMotion travel-mode change and a GPS idle backstop, with a notification to end the drive. Unchecked on a device.
 - App: onboarding (3 screens), driving screen (portrait and landscape), settings, about, sync status, location service, Live Activity controller.
 - Widget extension: Live Activity for Lock Screen and Dynamic Island.
 - CI: macOS core tests, iOS simulator build.

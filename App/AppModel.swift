@@ -11,6 +11,7 @@ final class AppModel {
         didSet {
             persistSettings()
             engine.evaluator.setTolerance(settings.overTolerance)
+            if settings.suggestEndingDrive != oldValue.suggestEndingDrive { suggestingEndChanged() }
             if !settings.showOnLockScreen { activity.end() } else if isDriving { activity.start(driveState.snapshot) }
         }
     }
@@ -22,6 +23,9 @@ final class AppModel {
     @ObservationIgnored private var engine: DriveEngine
     @ObservationIgnored private let location = LocationService()
     @ObservationIgnored private let activity = DriveActivityController()
+    @ObservationIgnored private let motion = MotionService()
+    @ObservationIgnored private let stopNotifier = StopNotifier()
+    @ObservationIgnored private var stopDetector = DriveStopDetector()
     @ObservationIgnored private let store: RegisterStore
     @ObservationIgnored private var ticker: Task<Void, Never>?
     @ObservationIgnored private var syncTask: Task<Void, Never>?
@@ -43,6 +47,9 @@ final class AppModel {
         locationAccess = location.access
         location.onSample = { [weak self] sample in self?.handle(sample) }
         location.onAccessChange = { [weak self] access in self?.locationAccess = access }
+        motion.onChange = { [weak self] mode in self?.travelModeChanged(mode) }
+        stopNotifier.onEnd = { [weak self] in self?.endDrive() }
+        stopNotifier.onKeep = { [weak self] in self?.stopDetector.keepDriving(at: Date()) }
     }
 
     // MARK: Lifecycle
@@ -60,6 +67,7 @@ final class AppModel {
 
     func finishOnboarding() {
         settings.hasCompletedOnboarding = true
+        if settings.suggestEndingDrive { requestStopPermissions() }
         if locationAccess.isUsable { beginDrive() }
         syncRegister()
     }
@@ -71,6 +79,8 @@ final class AppModel {
         isDriving = true
         UIApplication.shared.isIdleTimerDisabled = true
         location.start()
+        stopDetector = DriveStopDetector()
+        if settings.suggestEndingDrive { motion.start() }
         if settings.showOnLockScreen { activity.start(driveState.snapshot) }
         ticker = Task { [weak self] in
             // Age out a stalled GPS so the display shows "–" rather than a frozen number.
@@ -88,6 +98,8 @@ final class AppModel {
         ticker?.cancel()
         ticker = nil
         location.stop()
+        motion.stop()
+        stopNotifier.clear()
         activity.end()
         _ = engine.state(now: .distantFuture)
         driveState = .searching
@@ -101,10 +113,47 @@ final class AppModel {
     private func refresh() {
         guard isDriving else { return }
         apply(engine.state())
+        evaluateStop()
+    }
+
+    // MARK: Drive stop
+
+    private func travelModeChanged(_ mode: TravelMode) {
+        guard isDriving else { return }
+        stopDetector.observe(mode, at: Date())
+        evaluateStop()
+    }
+
+    /// Run every second with the drive's ticker. A ping asks whether the drive is over; an end stops it, so
+    /// location isn't left running in a pocket.
+    private func evaluateStop() {
+        guard settings.suggestEndingDrive else { return }
+        switch stopDetector.evaluate(at: Date()) {
+        case .none: break
+        case .ping: stopNotifier.post()
+        case .end: endDrive()
+        }
+    }
+
+    private func suggestingEndChanged() {
+        if settings.suggestEndingDrive {
+            requestStopPermissions()
+            if isDriving { motion.start() }
+        } else {
+            motion.stop()
+            stopNotifier.clear()
+        }
+    }
+
+    /// Asked while the phone is parked: when the setting is turned on, and at the end of onboarding.
+    private func requestStopPermissions() {
+        stopNotifier.requestAccess()
+        motion.requestAccess()
     }
 
     private func apply(_ state: DriveState) {
         if state != driveState { driveState = state }
+        stopDetector.observe(speedKmh: state.snapshot.speed, at: Date())
         // Always offered: the controller re-sends unchanged content on a heartbeat so it can't go stale.
         if settings.showOnLockScreen { activity.update(state.snapshot) }
     }

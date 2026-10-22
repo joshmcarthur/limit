@@ -29,6 +29,7 @@ targets:
         UILaunchScreen: {}
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait, UIInterfaceOrientationPortraitUpsideDown, UIInterfaceOrientationLandscapeLeft, UIInterfaceOrientationLandscapeRight]
         NSLocationWhenInUseUsageDescription: Limit uses your location to find the road you’re on and to measure your speed. It never leaves your phone.
+        NSMotionUsageDescription: Limit uses Motion & Fitness to notice when you've stopped driving and offer to end the drive, so location isn't left on. It never leaves your phone.
         UIBackgroundModes: [location]
         NSSupportsLiveActivities: true
     settings:

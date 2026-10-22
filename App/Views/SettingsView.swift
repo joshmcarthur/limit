@@ -20,6 +20,11 @@ struct SettingsView: View {
                 Text(ToleranceStepper.footnote)
             }
             Section {
+                Toggle("Suggest ending my drive", isOn: $model.settings.suggestEndingDrive)
+            } footer: {
+                Text("When you get out and walk off, Limit asks whether the drive is over. After 15 minutes without moving it ends the drive by itself, so location isn’t left on.")
+            }
+            Section {
                 NavigationLink("About the data") { AboutView() }
             }
         }

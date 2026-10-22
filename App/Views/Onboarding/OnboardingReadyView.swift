@@ -43,6 +43,15 @@ struct OnboardingReadyView: View {
                         .font(.footnote).foregroundStyle(Palette.inkMuted).padding(.horizontal, DesignTokens.space4)
                 }
 
+                VStack(alignment: .leading, spacing: DesignTokens.space2) {
+                    Toggle("Suggest ending my drive", isOn: $model.settings.suggestEndingDrive)
+                        .frame(minHeight: 52)
+                        .padding(.horizontal, DesignTokens.space4)
+                        .background(Palette.surface, in: RoundedRectangle(cornerRadius: DesignTokens.radiusMedium, style: .continuous))
+                    Text("When you get out and walk off, Limit asks whether the drive is over, so location isn’t left on. It asks to send notifications and read Motion & Fitness when you tap Done.")
+                        .font(.footnote).foregroundStyle(Palette.inkMuted).padding(.horizontal, DesignTokens.space4)
+                }
+
                 VStack(spacing: DesignTokens.space3) {
                     Text("You can change these in Settings.")
                         .font(.footnote).foregroundStyle(Palette.inkMuted)

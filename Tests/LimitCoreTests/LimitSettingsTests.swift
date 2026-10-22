@@ -8,6 +8,7 @@ final class LimitSettingsTests: XCTestCase {
         XCTAssertEqual(s.overTolerance, 3)
         XCTAssertFalse(s.hasCompletedOnboarding)
         XCTAssertEqual(s.toleranceLabel, "+3 km/h")
+        XCTAssertTrue(s.suggestEndingDrive)
     }
 
     func testRoundTrip() throws {
@@ -23,6 +24,16 @@ final class LimitSettingsTests: XCTestCase {
         XCTAssertFalse(s.showOnLockScreen)
         XCTAssertEqual(s.overTolerance, 5)
         XCTAssertTrue(s.hasCompletedOnboarding)
+    }
+
+    /// A copy saved before "Suggest ending my drive" existed keeps its other settings.
+    func testSettingsSavedBeforeTheDriveStopKeyKeepTheRest() {
+        let old = Data("{\"showOnLockScreen\":false,\"overTolerance\":5,\"hasCompletedOnboarding\":true}".utf8)
+        let s = LimitSettings.decode(old)
+        XCTAssertFalse(s.showOnLockScreen)
+        XCTAssertEqual(s.overTolerance, 5)
+        XCTAssertTrue(s.hasCompletedOnboarding)
+        XCTAssertTrue(s.suggestEndingDrive, "defaults on")
     }
 
     func testBadDataGivesDefaults() {
