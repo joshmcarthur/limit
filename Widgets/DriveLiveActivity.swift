@@ -6,9 +6,11 @@ import LimitCore
 /// Lock Screen and Dynamic Island presentation while a drive is active: sign leading, speed trailing,
 /// everywhere. No alerts from the activity.
 struct DriveLiveActivity: Widget {
-    var body: some WidgetConfiguration {
+    var body: some WidgetConfiguration { Self.configuration }
+
+    fileprivate static var configuration: some WidgetConfiguration {
         ActivityConfiguration(for: DriveActivityAttributes.self) { context in
-            LockScreenView(snapshot: Self.snapshot(context))
+            ActivityBody(snapshot: Self.snapshot(context))
                 .activityBackgroundTint(Palette.surface)
                 .activitySystemActionForegroundColor(Palette.ink)
         } dynamicIsland: { context in
@@ -45,6 +47,56 @@ struct DriveLiveActivity: Widget {
     /// unknown state rather than a frozen number.
     private static func snapshot(_ context: ActivityViewContext<DriveActivityAttributes>) -> DriveSnapshot {
         context.isStale ? .searching : context.state
+    }
+}
+
+/// The same activity for iOS 18 and later, which can say it has a small layout. The system uses that on
+/// surfaces too small for the Lock Screen card: the Apple Watch Smart Stack, and CarPlay where it shows
+/// Live Activities. The bundle picks this or `DriveLiveActivity` by OS version.
+@available(iOS 18.0, *)
+struct DriveLiveActivityWithSmallLayout: Widget {
+    var body: some WidgetConfiguration {
+        DriveLiveActivity.configuration.supplementalActivityFamilies([.small])
+    }
+}
+
+/// The Lock Screen card, or the small layout where the system asks for it.
+private struct ActivityBody: View {
+    let snapshot: DriveSnapshot
+
+    var body: some View {
+        if #available(iOS 18.0, *) {
+            FamilyBody(snapshot: snapshot)
+        } else {
+            LockScreenView(snapshot: snapshot)
+        }
+    }
+}
+
+@available(iOS 18.0, *)
+private struct FamilyBody: View {
+    let snapshot: DriveSnapshot
+    @Environment(\.activityFamily) private var family
+
+    var body: some View {
+        switch family {
+        case .small: SmallView(snapshot: snapshot)
+        default: LockScreenView(snapshot: snapshot)
+        }
+    }
+}
+
+/// Sign and speed with its unit, nothing else: the room is small and the driver is moving.
+private struct SmallView: View {
+    let snapshot: DriveSnapshot
+
+    var body: some View {
+        HStack(spacing: DesignTokens.space3) {
+            SpeedSignView(state: snapshot.sign, diameter: 44, note: snapshot.limitNote)
+            Spacer(minLength: 0)
+            SpeedReadoutView(speed: snapshot.speed, over: snapshot.over, size: 32, unitFont: .caption2)
+        }
+        .padding(DesignTokens.space3)
     }
 }
 
@@ -85,9 +137,18 @@ private struct CompactSpeed: View {
     var body: some View {
         HStack(spacing: 2) {
             if over.isOver { Image(systemName: "arrow.up").font(.caption.bold()).accessibilityHidden(true) }
-            Text(speed.map(String.init) ?? "–")
-                .font(.system(size: 17, weight: .heavy, design: .rounded))
-                .monospacedDigit()
+            // The unit goes under the number: CarPlay appears to show this compact view, and a bare number
+            // doesn't say whether it's km/h or mph. Pulled in from the edge, where the Island's corner clips it.
+            VStack(spacing: 0) {
+                Text(speed.map(String.init) ?? "–")
+                    .font(.system(size: 17, weight: .heavy, design: .rounded))
+                    .monospacedDigit()
+                if speed != nil {
+                    Text("km/h").font(.system(size: 8, weight: .semibold)).minimumScaleFactor(0.8)
+                }
+            }
+            .padding(.trailing, 5)
+            .padding(.bottom, 1)
         }
         .foregroundStyle(over.isOver ? Palette.cautionInk : Palette.onIsland)
         .accessibilityElement(children: .ignore)

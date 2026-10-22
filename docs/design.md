@@ -19,6 +19,7 @@ The screens follow the "Limit — onboarding and main screen" canvas, and the to
 
 - Sign, then speed, in that order on every surface.
 - Where the register only has its default area, the sign shows a circle with a diagonal and "Open road", not 100 (`SignState.openRoad`). Checked in the simulator on the drive screen and the Lock Screen card, not the Dynamic Island.
+- The speed always carries its unit, including in the Dynamic Island's compact view, which is what CarPlay showed. On iOS 18 and later the activity also declares a small layout (sign, speed, unit) for surfaces too small for the Lock Screen card. Whether CarPlay uses it is not confirmed: the CarPlay simulator hasn't been run.
 - Never a frozen number: a location sample older than 5 s, or with accuracy worse than 100 m, shows as no speed and an unknown limit (`DriveEngine`). The Live Activity is marked stale after 10 s and falls back to the same state.
 - The sign never shows the last known limit when data is too old (`FreshnessPolicy`).
 - Over the limit is never colour alone: pill, "+N over", and an arrow in the compact Island.
