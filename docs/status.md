@@ -24,4 +24,4 @@
 
 ## Known risks
 
-See `docs/data.md`: the store is 55 MB with 7.1 million vertices, so device load time and memory are the open question.
+See `docs/data.md`: the store is about 23 MB with 3 million vertices, so device load time and memory are still the open question.

@@ -14,16 +14,19 @@ public enum RegisterRejection: Error, Equatable, Sendable {
 
 /// What a download must look like before it can replace the live register.
 public struct RegisterVerificationPolicy: Equatable, Sendable {
-    /// A national register is about 21,000 zones once ended records are left out (about 26,000 with them).
-    /// The NZTA layer was seen mid-rebuild at 1,250, then 5,000, then 13,700, so the floor sits above that.
-    /// Re-measure with `swift run -c release RegisterCheck` whenever the layer changes shape.
+    /// For a first install, where there's no earlier copy to compare with. On 22 October 2026 a complete
+    /// download from the NZTA layer was about 16,000 zones (about 26,000 before ended records were left out
+    /// and the layer was rebuilt), and the layer was seen part-way through that rebuild at 1,250, 5,000 and
+    /// 13,700 records. 12,000 is about three quarters of 16,000: it turns away the badly partial states
+    /// without refusing a healthy register that shrinks a little. An existing install is also held to
+    /// `minimumFractionOfCurrent`. Re-measure with `swift run -c release RegisterCheck` if the layer changes shape.
     public var minimumZones: Int
     /// The new copy must keep at least this fraction of the zones in the one in use.
     public var minimumFractionOfCurrent: Double
     /// The download must contain at least this fraction of the records the source reported at the start.
     public var minimumFractionOfExpected: Double
 
-    public init(minimumZones: Int = 15_000, minimumFractionOfCurrent: Double = 0.8, minimumFractionOfExpected: Double = 0.99) {
+    public init(minimumZones: Int = 12_000, minimumFractionOfCurrent: Double = 0.8, minimumFractionOfExpected: Double = 0.99) {
         self.minimumZones = minimumZones
         self.minimumFractionOfCurrent = minimumFractionOfCurrent
         self.minimumFractionOfExpected = minimumFractionOfExpected

@@ -291,7 +291,7 @@ final class RegisterUpdaterTests: XCTestCase {
         let source = Source()
         source.records = 4
         let reason = await rejection { _ = try await updater(source, at: Date(), policy: .standard).update() }
-        XCTAssertEqual(reason, .tooFewZones(count: 4, minimum: 15_000))
+        XCTAssertEqual(reason, .tooFewZones(count: 4, minimum: 12_000))
         XCTAssertNil(try liveZoneCount())
     }
 
@@ -308,7 +308,7 @@ final class RegisterUpdaterTests: XCTestCase {
         source.records = 4
         source.reportedCount = nil
         let reason = await rejection { _ = try await updater(source, at: Date(), policy: .standard).update() }
-        XCTAssertEqual(reason, .tooFewZones(count: 4, minimum: 15_000))
+        XCTAssertEqual(reason, .tooFewZones(count: 4, minimum: 12_000))
     }
 
     func testACancelledDownloadNeverSwaps() async throws {
