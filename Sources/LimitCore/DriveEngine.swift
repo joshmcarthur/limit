@@ -63,7 +63,7 @@ public struct DriveState: Equatable, Sendable {
 public struct DriveEngine {
     public var register: SpeedLimitRegister {
         // A new register numbers its zones afresh, so what was matched in the old one no longer means anything.
-        didSet { stableMatch = nil; pendingMatch = nil; pendingCount = 0 }
+        didSet { zone.reset() }
     }
     /// When the register data was last checked against the source; nil if never.
     public var registerCheckedAt: Date?
@@ -80,9 +80,7 @@ public struct DriveEngine {
     public var zoneChangeConfirmations = 2
 
     private var lastSample: LocationSample?
-    private var stableMatch: SpeedLimitMatch?
-    private var pendingMatch: SpeedLimitMatch?
-    private var pendingCount = 0
+    private var zone = ZoneConfirmer()
 
     public init(
         register: SpeedLimitRegister = .empty,
@@ -99,7 +97,7 @@ public struct DriveEngine {
     public mutating func ingest(_ sample: LocationSample, now: Date = Date()) -> DriveState {
         lastSample = sample
         if sample.horizontalAccuracy >= 0, sample.horizontalAccuracy <= maxUsableAccuracy {
-            confirm(register.lookup(sample.coordinate, at: now, preferring: stableMatch))
+            zone.observe(register.lookup(sample.coordinate, at: now, preferring: zone.current), confirmations: zoneChangeConfirmations)
         }
         return state(now: now)
     }
@@ -112,14 +110,12 @@ public struct DriveEngine {
         else {
             _ = evaluator.evaluate(speed: nil, limit: nil)
             // After a gap the car may be anywhere, so don't hold on to the last zone.
-            stableMatch = nil
-            pendingMatch = nil
-            pendingCount = 0
+            zone.reset()
             return .searching
         }
 
         let speed = Speed.displayed(Speed.kilometresPerHour(fromMetresPerSecond: sample.speedMetresPerSecond))
-        let match = stableMatch
+        let match = zone.current
         let age = registerCheckedAt.map { now.timeIntervalSince($0) }
         let sign = SignState.make(limit: match?.limit, dataAge: age, policy: freshness)
         let over = evaluator.evaluate(speed: speed, limit: sign.limit)
@@ -130,19 +126,5 @@ public struct DriveEngine {
             snapshot.limitNote = LimitNote(kind: match?.kind)
         }
         return DriveState(snapshot: snapshot, gps: sample.horizontalAccuracy <= goodAccuracy ? .good : .weak)
-    }
-
-    /// Moves to `raw` only once enough samples in a row agree on it. The first match after having none is
-    /// taken at once.
-    private mutating func confirm(_ raw: SpeedLimitMatch?) {
-        guard let stable = stableMatch else { stableMatch = raw; return }
-        if raw == stable { pendingMatch = nil; pendingCount = 0; return }
-        pendingCount = raw == pendingMatch ? pendingCount + 1 : 1
-        pendingMatch = raw
-        if pendingCount >= max(zoneChangeConfirmations, 1) {
-            stableMatch = raw
-            pendingMatch = nil
-            pendingCount = 0
-        }
     }
 }
