@@ -17,6 +17,7 @@ struct DriveView: View {
             topBar(state)
             if isLandscape {
                 landscapeContent(state)
+                syncFooter.padding(.bottom, DesignTokens.space2)
             } else {
                 portraitContent(state)
                 bottomBar
@@ -103,11 +104,16 @@ struct DriveView: View {
     private var bottomBar: some View {
         VStack(spacing: DesignTokens.space3) {
             driveButton(compact: false)
-            Label(FreshnessText.footer(for: model.syncState, now: Date()), systemImage: model.syncState.footerSymbol)
-                .font(.footnote)
-                .foregroundStyle(model.syncState.footerColor)
+            syncFooter
         }
         .padding(.bottom, DesignTokens.space2)
+    }
+
+    /// When the speed limit data was last checked. Shown in both orientations.
+    private var syncFooter: some View {
+        Label(FreshnessText.footer(for: model.syncState, now: Date()), systemImage: model.syncState.footerSymbol)
+            .font(.footnote)
+            .foregroundStyle(model.syncState.footerColor)
     }
 
     private func driveButton(compact: Bool) -> some View {
