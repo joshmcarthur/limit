@@ -43,7 +43,7 @@ Bundle identifiers and the signing team are set in `project.yml`.
 
 ## CI
 
-`.github/workflows/ci.yml` builds and tests the core on Linux and macOS, and builds the app for the iOS simulator.
+`.github/workflows/ci.yml` builds and tests the core on macOS, and builds the app for the iOS simulator.
 
 ## Status
 

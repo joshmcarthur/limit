@@ -11,15 +11,6 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  core-linux:
-    name: LimitCore (Linux)
-    runs-on: ubuntu-latest
-    container: swift:6.0-noble
-    steps:
-      - uses: actions/checkout@v4
-      - run: swift build --build-tests
-      - run: swift test
-
   core-macos:
     name: LimitCore (macOS)
     runs-on: macos-15

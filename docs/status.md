@@ -13,7 +13,7 @@
 - Data: in-force zones only, repeated records dropped, update check before downloading, a weekly check schedule with back-off, manual checks with a floor, school-zone reduced limits by time of day, zone change confirmed over two samples, and blue-green register swaps with a verification gate.
 - App: onboarding (3 screens), driving screen (portrait and landscape), settings, about, sync status, location service, Live Activity controller.
 - Widget extension: Live Activity for Lock Screen and Dynamic Island.
-- CI: Linux and macOS core tests, iOS simulator build.
+- CI: macOS core tests, iOS simulator build.
 
 ## Not built
 
