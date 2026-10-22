@@ -8,12 +8,12 @@ final class LiveActivityRefreshTests: XCTestCase {
 
     func testUnchangedContentIsResentBeforeItGoesStale() {
         XCTAssertFalse(LiveActivityRefresh.shouldSend(changed: false, secondsSinceLastSend: 1))
-        XCTAssertFalse(LiveActivityRefresh.shouldSend(changed: false, secondsSinceLastSend: 4.9))
-        XCTAssertTrue(LiveActivityRefresh.shouldSend(changed: false, secondsSinceLastSend: 5))
+        XCTAssertFalse(LiveActivityRefresh.shouldSend(changed: false, secondsSinceLastSend: 2.9))
+        XCTAssertTrue(LiveActivityRefresh.shouldSend(changed: false, secondsSinceLastSend: 3))
     }
 
-    func testTheHeartbeatBeatsTheStaleTime() {
-        XCTAssertLessThan(LiveActivityRefresh.heartbeat, LiveActivityRefresh.staleAfter)
+    func testTheHeartbeatBeatsTheDimAndStaleTimes() {
+        XCTAssertLessThan(LiveActivityRefresh.heartbeat, LiveActivityRefresh.dimAfter)
     }
 
     func testNothingSentYetMeansSend() {

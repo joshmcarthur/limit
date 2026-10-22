@@ -9,10 +9,10 @@ final class DriveActivityController {
     private var lastState: DriveSnapshot?
     private var lastSent: Date?
 
-    /// Updates are best-effort. Marking content stale after a few seconds lets the widget fall back to "–"
-    /// instead of a frozen number if updates stop arriving.
-    private func content(_ snapshot: DriveSnapshot) -> ActivityContent<DriveSnapshot> {
-        ActivityContent(state: snapshot, staleDate: Date().addingTimeInterval(LiveActivityRefresh.staleAfter))
+    /// Updates are best-effort. There is no stale date: the widget dims a speed itself, from `sentAt`, if
+    /// updates stop arriving.
+    private func content(_ snapshot: DriveSnapshot) -> ActivityContent<DriveActivityContent> {
+        ActivityContent(state: DriveActivityContent(snapshot: snapshot, sentAt: Date()), staleDate: nil)
     }
 
     func start(_ snapshot: DriveSnapshot) {

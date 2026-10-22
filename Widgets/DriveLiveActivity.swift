@@ -10,17 +10,18 @@ struct DriveLiveActivity: Widget {
 
     fileprivate static var configuration: some WidgetConfiguration {
         ActivityConfiguration(for: DriveActivityAttributes.self) { context in
-            ActivityBody(snapshot: Self.snapshot(context))
+            ActivityBody(snapshot: Self.snapshot(context), receivedAt: context.state.sentAt)
                 .activityBackgroundTint(Palette.surface)
                 .activitySystemActionForegroundColor(Palette.ink)
         } dynamicIsland: { context in
             let snapshot = Self.snapshot(context)
+            let receivedAt = context.state.sentAt
             return DynamicIsland {
                 DynamicIslandExpandedRegion(.leading) {
                     SpeedSignView(state: snapshot.sign, diameter: 56, note: snapshot.limitNote)
                 }
                 DynamicIslandExpandedRegion(.trailing) {
-                    SpeedReadoutView(speed: snapshot.speed, over: snapshot.over, size: 44, unitFont: .caption)
+                    SpeedReadoutView(speed: snapshot.speed, over: snapshot.over, size: 44, unitFont: .caption, receivedAt: receivedAt)
                 }
                 DynamicIslandExpandedRegion(.center) {
                     Text(snapshot.roadName ?? "Speed limit")
@@ -36,17 +37,15 @@ struct DriveLiveActivity: Widget {
             } compactLeading: {
                 SpeedSignView(state: snapshot.sign, diameter: 24, note: snapshot.limitNote)
             } compactTrailing: {
-                CompactSpeed(speed: snapshot.speed, over: snapshot.over)
+                CompactSpeed(speed: snapshot.speed, over: snapshot.over, receivedAt: receivedAt)
             } minimal: {
                 SpeedSignView(state: snapshot.sign, diameter: 24, note: snapshot.limitNote)
             }
         }
     }
 
-    /// Updates are best-effort and may be throttled. Once the system marks the content stale, show the
-    /// unknown state rather than a frozen number.
     private static func snapshot(_ context: ActivityViewContext<DriveActivityAttributes>) -> DriveSnapshot {
-        context.isStale ? .searching : context.state
+        context.state.snapshot
     }
 }
 
@@ -63,12 +62,13 @@ struct DriveLiveActivityWithSmallLayout: Widget {
 /// The Lock Screen card, or the small layout where the system asks for it.
 private struct ActivityBody: View {
     let snapshot: DriveSnapshot
+    let receivedAt: Date
 
     var body: some View {
         if #available(iOS 18.0, *) {
-            FamilyBody(snapshot: snapshot)
+            FamilyBody(snapshot: snapshot, receivedAt: receivedAt)
         } else {
-            LockScreenView(snapshot: snapshot)
+            LockScreenView(snapshot: snapshot, receivedAt: receivedAt)
         }
     }
 }
@@ -76,12 +76,13 @@ private struct ActivityBody: View {
 @available(iOS 18.0, *)
 private struct FamilyBody: View {
     let snapshot: DriveSnapshot
+    let receivedAt: Date
     @Environment(\.activityFamily) private var family
 
     var body: some View {
         switch family {
-        case .small: SmallView(snapshot: snapshot)
-        default: LockScreenView(snapshot: snapshot)
+        case .small: SmallView(snapshot: snapshot, receivedAt: receivedAt)
+        default: LockScreenView(snapshot: snapshot, receivedAt: receivedAt)
         }
     }
 }
@@ -89,12 +90,13 @@ private struct FamilyBody: View {
 /// Sign and speed with its unit, nothing else: the room is small and the driver is moving.
 private struct SmallView: View {
     let snapshot: DriveSnapshot
+    let receivedAt: Date
 
     var body: some View {
         HStack(spacing: DesignTokens.space3) {
             SpeedSignView(state: snapshot.sign, diameter: 44, note: snapshot.limitNote)
             Spacer(minLength: 0)
-            SpeedReadoutView(speed: snapshot.speed, over: snapshot.over, size: 32, unitFont: .caption2)
+            SpeedReadoutView(speed: snapshot.speed, over: snapshot.over, size: 32, unitFont: .caption2, receivedAt: receivedAt)
         }
         .padding(DesignTokens.space3)
     }
@@ -102,6 +104,7 @@ private struct SmallView: View {
 
 private struct LockScreenView: View {
     let snapshot: DriveSnapshot
+    let receivedAt: Date
 
     var body: some View {
         HStack(spacing: DesignTokens.space4) {
@@ -123,7 +126,7 @@ private struct LockScreenView: View {
                 }
             }
             Spacer(minLength: 0)
-            SpeedReadoutView(speed: snapshot.speed, over: snapshot.over, size: 44, unitFont: .caption)
+            SpeedReadoutView(speed: snapshot.speed, over: snapshot.over, size: 44, unitFont: .caption, receivedAt: receivedAt)
         }
         .padding(DesignTokens.space4)
     }
@@ -133,6 +136,7 @@ private struct LockScreenView: View {
 private struct CompactSpeed: View {
     let speed: Int?
     let over: OverLimitState
+    var receivedAt: Date?
 
     var body: some View {
         HStack(spacing: 2) {
@@ -140,9 +144,12 @@ private struct CompactSpeed: View {
             // The unit goes under the number: CarPlay appears to show this compact view, and a bare number
             // doesn't say whether it's km/h or mph. Pulled in from the edge, where the Island's corner clips it.
             VStack(spacing: 0) {
-                Text(speed.map(String.init) ?? "–")
-                    .font(.system(size: 17, weight: .heavy, design: .rounded))
-                    .monospacedDigit()
+                let font = Font.system(size: 17, weight: .heavy, design: .rounded)
+                if let receivedAt, let speed, !over.isOver {
+                    DimmingText(text: String(speed), font: font, color: Palette.onIsland, receivedAt: receivedAt)
+                } else {
+                    Text(speed.map(String.init) ?? "–").font(font).monospacedDigit()
+                }
                 if speed != nil {
                     Text("km/h").font(.system(size: 8, weight: .semibold)).minimumScaleFactor(0.8)
                 }

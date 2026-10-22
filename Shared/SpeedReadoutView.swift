@@ -8,14 +8,15 @@ struct SpeedReadoutView: View {
     let over: OverLimitState
     var size: CGFloat = 112
     var unitFont: Font = .body
+    /// When the speed was received (Live Activity only). The number dims by itself `LiveActivityRefresh.dimAfter`
+    /// later, so a number that has stopped updating doesn't look live even before the system marks it stale.
+    var receivedAt: Date?
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         VStack(spacing: DesignTokens.space1) {
-            Text(speed.map(String.init) ?? "–")
-                .font(.system(size: size, weight: .heavy, design: .rounded))
-                .monospacedDigit()
+            number
                 .lineLimit(1)
                 .minimumScaleFactor(0.5)
                 .foregroundStyle(numberColor)
@@ -40,6 +41,15 @@ struct SpeedReadoutView: View {
         .accessibilityLabel(AccessibilityLabels.readout(speed: speed, over: over))
     }
 
+    @ViewBuilder private var number: some View {
+        let font = Font.system(size: size, weight: .heavy, design: .rounded)
+        if let receivedAt, let speed, !over.isOver {
+            DimmingText(text: String(speed), font: font, color: numberColor, receivedAt: receivedAt)
+        } else {
+            Text(speed.map(String.init) ?? "–").font(font).monospacedDigit()
+        }
+    }
+
     private var numberColor: Color {
         if over.isOver { return Palette.onCaution }
         return speed == nil ? Palette.inkMuted : Palette.ink
@@ -49,7 +59,7 @@ struct SpeedReadoutView: View {
         if case .over(let by) = over {
             Text("+\(by) over").font(unitFont.weight(.semibold)).foregroundStyle(Palette.cautionInk)
         } else if speed == nil {
-            Text("No GPS yet").font(unitFont).foregroundStyle(Palette.inkMuted)
+            Text("No GPS").font(unitFont).foregroundStyle(Palette.inkMuted)
         } else {
             Text("km/h").font(unitFont).foregroundStyle(Palette.inkMuted)
         }

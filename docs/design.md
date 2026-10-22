@@ -20,7 +20,9 @@ The screens follow the "Limit — onboarding and main screen" canvas, and the to
 - Sign, then speed, in that order on every surface.
 - Where the register only has its default area, the sign shows a circle with a diagonal and "Open road", not 100 (`SignState.openRoad`). Checked in the simulator on the drive screen and the Lock Screen card, not the Dynamic Island.
 - The speed always carries its unit, including in the Dynamic Island's compact view, which is what CarPlay showed. On iOS 18 and later the activity also declares a small layout (sign, speed, unit) for surfaces too small for the Lock Screen card. Whether CarPlay uses it is not confirmed: the CarPlay simulator hasn't been run.
-- Never a frozen number: a location sample older than 5 s, or with accuracy worse than 100 m, shows as no speed and an unknown limit (`DriveEngine`). The Live Activity is marked stale after 10 s and falls back to the same state.
+- Never a frozen number: a location sample older than 5 s, or with accuracy worse than 100 m, shows as no speed and an unknown limit (`DriveEngine`), and the app sends that to the Live Activity at once.
+- A speed dims by itself 5 s after it was sent (`DimmingText`, `LiveActivityRefresh.dimAfter`), with no update from the app: a Live Activity can't change at a set time, but a `ProgressView(timerInterval:)` keeps moving on its own, so the number is drawn through one that empties at 5 s. The app re-sends every 3 s while nothing changes (`heartbeat`), so a live number never dims. Checked in the simulator on the Lock Screen by freezing the app; not on a device.
+- Late is not the same as no GPS. "No GPS" is sent by the app within 5 s of the last fix. A speed that has stopped arriving (the system throttles updates, or the app was suspended or killed) is only dimmed, by the rule above. There is no age shown.
 - The sign never shows the last known limit when data is too old (`FreshnessPolicy`).
 - Over the limit is never colour alone: pill, "+N over", and an arrow in the compact Island.
 - Calm motion: only numeric transitions and a short fade, removed under Reduce Motion.
@@ -43,7 +45,7 @@ What differs from the design, as last checked:
 - The copy is intentionally different now, so the design file's wording is no longer the source of truth.
 - Landscape follows the design (sign left, speed right, End drive in the top bar) with one addition: the credit and "Speed limits checked…" lines sit under the content. The design has no footer in landscape.
 - Onboarding 3 still differs from the design: the download card title, the tolerance sitting outside the − / + stepper, system-green toggles where the design uses blue, and "Done" not pinned to the bottom.
-- The "No GPS yet" dash is a rounded pill where the design has a thin bar.
+- The "No GPS" dash is a rounded pill where the design has a thin bar.
 - The road-name line shows the register's zone name, so areas read "Wellington Central" and "Default Speed Limit" where the design shows roads ("State Highway 1"). `speedLimitZoneReasonName` could help tell areas from roads.
 
 Landscape and the Lock Screen were checked by rotating with a throwaway UI test (`XCUIDevice.shared.orientation`), since the simulator's rotate shortcut can't be scripted. The Lock Screen check found and fixed a bug: unchanged content went stale after 10 s.

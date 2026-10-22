@@ -1,13 +1,18 @@
 import Foundation
 
-/// When to push content to the Live Activity. Content is marked stale a few seconds after it's sent so a
-/// dead GPS can't leave a frozen number up, which means steady driving (same limit, same speed) has to
-/// be re-sent too, or the activity falls back to "No GPS yet" while everything is fine.
+/// When to push content to the Live Activity. The card dims a speed a few seconds after it was sent so a
+/// number that has stopped updating can't pass for a live one, which means steady driving (same limit,
+/// same speed) has to be re-sent too, or the card dims while everything is fine.
+///
+/// "Late" and "no GPS" are different: no GPS is sent by the app (it knows within a few seconds), while
+/// late is shown by the card itself, which dims a speed `dimAfter` seconds after it was sent when the
+/// app's updates stop arriving (the system throttles them, or the app was suspended or killed).
 public enum LiveActivityRefresh {
-    /// Seconds between sends when nothing has changed. Comfortably inside the stale time.
-    public static let heartbeat: TimeInterval = 5
-    /// How long after a send the content is marked stale.
-    public static let staleAfter: TimeInterval = 10
+    /// Seconds between sends when nothing has changed. Comfortably inside `dimAfter`.
+    public static let heartbeat: TimeInterval = 3
+    /// How long after a speed is received the card dims it, on its own, if nothing newer has arrived.
+    /// Longer than the heartbeat, or steady driving would dim between sends.
+    public static let dimAfter: TimeInterval = 5
 
     public static func shouldSend(changed: Bool, secondsSinceLastSend: TimeInterval?) -> Bool {
         guard !changed else { return true }
