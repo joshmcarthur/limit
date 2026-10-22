@@ -116,9 +116,11 @@ final class RegisterUpdaterTests: XCTestCase {
     }
 
     func testOldMetadataFilesStillDecode() throws {
-        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        let generation = directory.appendingPathComponent("gen-old")
+        try FileManager.default.createDirectory(at: generation, withIntermediateDirectories: true)
         try Data("{\"checkedAt\":\"2026-10-01T00:00:00Z\",\"zoneCount\":2,\"sourceFeatureCount\":3}".utf8)
-            .write(to: directory.appendingPathComponent("register.json"))
+            .write(to: generation.appendingPathComponent("register.json"))
+        try Data("gen-old".utf8).write(to: directory.appendingPathComponent("current"))
         let metadata = try XCTUnwrap(RegisterStore(directory: directory).loadMetadata())
         XCTAssertNil(metadata.sourceEditedAt)
         XCTAssertEqual(metadata.zoneCount, 2)
