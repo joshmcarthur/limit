@@ -26,13 +26,17 @@ The limits come from the NZTA National Speed Limit Register. Limit downloads the
 
 If you go over, your speed turns amber and tells you by how much, for example "+8 over". Nothing beeps and nothing flashes while you drive. There's a small tolerance to allow for GPS error, which you can change in Settings.
 
-The sign also appears on your Lock Screen and in the Dynamic Island.
+The sign also appears on your Lock Screen and in the Dynamic Island. If the speed stops updating, the Lock Screen dims it, so you're not reading a number that's out of date.
 
 Some roads have no limit of their own in the register. For those, Limit shows an open-road sign (a circle with a diagonal line) and says "Open road".
 
 School zones follow the time of day. Seasonal and temporary limits say "obey the posted signs". If the GPS is weak or the data is too old, Limit shows a dash, not a number it can't vouch for.
 
-There's no account and no analytics. Your location stays on your phone.
+When you get out of the car and walk away, Limit asks whether the drive is over, so your phone isn't left tracking location in your pocket. If you don't answer, or you stay put for a while, it ends the drive itself. You can turn this off in Settings.
+
+Outside New Zealand there are no limits to show. Limit says so, and still shows your speed.
+
+There's no account and no analytics. Your location and your movement stay on your phone.
 
 Limit is an aid, not permission. A limit is a maximum, not a target, so there are no speed camera or enforcement features. Set it up before you drive, and obey the posted signs and the Road Code.
 
@@ -72,7 +76,7 @@ The first three are the ones people see without scrolling, so they carry the ide
 
 - **Category:** Navigation (primary), Travel (secondary).
 - **Age rating:** 4+. No user content, no web access beyond downloading the register, no gambling or mature themes.
-- **Privacy ("App Privacy" answers):** Data Not Collected. Location is used on the device to find the road and measure speed, and is never sent anywhere. The only network request is the register download, which carries no user data.
+- **Privacy ("App Privacy" answers):** Data Not Collected. Location is used on the device to find the road and measure speed, and Motion & Fitness is used on the device to notice when the person has got out and walked away. Neither is ever sent anywhere. The only network request is the register download, which carries no user data.
 - **Copyright:** the licence holder's name and year, to be filled in at submission.
 - **Support URL and privacy policy URL:** not set up yet. Both are required. A page in the repo's GitHub Pages would do.
 
@@ -84,7 +88,11 @@ The first three are the ones people see without scrolling, so they carry the ide
 >
 > The app has no speed camera, police or enforcement features and gives no alerts or sounds while driving.
 >
-> The app only has data for New Zealand, so outside the country there is nothing to show. A screen recording of a drive is attached. To try it yourself, simulate a location in New Zealand, for example Wellington (-41.2865, 174.7762). The first launch downloads the register, about 24 MB, which took about 36 seconds in our testing.
+> The app only has data for New Zealand. Outside the country it shows "Outside New Zealand" and still shows the GPS speed, which is expected. A screen recording of a drive in New Zealand is attached. To try it yourself, simulate a location in New Zealand, for example Wellington (-41.2865, 174.7762); `AppStore/README.md` lists more points with the result at each. The first launch downloads the register, about 24 MB, which took about 36 seconds in our testing.
+>
+> Motion & Fitness and notifications: both are asked for at the end of onboarding, and the app works if either is declined. They exist for one feature, "Suggest ending my drive" (on by default, off in Settings). When the phone detects the user has got out and walked away, the app sends a notification asking whether to end the drive, so location isn't left on in a pocket. After 15 minutes without moving it ends the drive by itself. Motion data is read on the device and not stored or sent.
+>
+> If location access is declined, the app says "Location needed" and what to turn on.
 
 ## To check before submitting
 
@@ -94,5 +102,8 @@ The first three are the ones people see without scrolling, so they carry the ide
 - The welcome screen says "Every road, even offline" and "anywhere in Aotearoa New Zealand". That is in-app copy that overclaims, given the known gaps in the register, and it shows in the framed welcome slide. Reword it in the app before submitting.
 - The App Review note says a screen recording is attached. Make one (a short simulated drive) and attach it in App Store Connect.
 - `MARKETING_VERSION` is `0.1.0` in `project.yml`. Set it to `1.0.0` for the first release.
+- "Suggest ending my drive" paragraph and the Motion & Fitness review note: the CoreMotion walk-off, the notification and its two buttons, and the 15 minute ending have not been run on a device (`docs/status.md`). Try them on a real drive, or soften the copy.
+- "If the speed stops updating, the Lock Screen dims it": checked in the simulator by freezing the app, not on a device, where the system may throttle updates differently.
+- Add the Motion & Fitness usage string (`NSMotionUsageDescription` in `project.yml`) to any App Privacy answers App Store Connect asks for.
 - "Background location is on only while a drive is running": matches `LocationService`, which turns it off when a drive ends. Confirm on a device.
 - The register copy the screenshots came from was incomplete (see `README.md` here). The description says nothing about coverage, so re-check the claim "limit for the road you're on" against the live register before launch.
