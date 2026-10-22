@@ -1,16 +1,6 @@
 import CoreLocation
 import LimitCore
 
-enum LocationAccess: Equatable {
-    case notDetermined
-    case denied
-    /// Approximate location can't say which road you're on, so limits would show as unknown.
-    case reduced
-    case authorized
-
-    var isUsable: Bool { self == .authorized }
-}
-
 /// Thin wrapper over CLLocationManager. "While Using the App" is enough: once a drive starts, background
 /// location keeps the Lock Screen updating until it ends.
 @MainActor

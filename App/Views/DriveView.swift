@@ -63,23 +63,11 @@ struct DriveView: View {
     }
 
     private func headline(_ state: DriveState) -> String {
-        if !model.isDriving { return "Drive ended" }
-        if !model.locationAccess.isUsable { return "Location needed" }
-        if let road = state.snapshot.roadName { return road }
-        return state.snapshot.limit == nil ? "Finding your road…" : "Speed limit"
+        DriveScreenText.headline(isDriving: model.isDriving, access: model.locationAccess, snapshot: state.snapshot)
     }
 
     private func subheadline(_ state: DriveState) -> String {
-        if !model.isDriving { return "Start a drive to see the limit" }
-        switch model.locationAccess {
-        case .denied: return "Turn on location for Limit in Settings"
-        case .reduced: return "Turn on Precise Location so Limit can find your road"
-        case .notDetermined: return "Allow location to see the limit"
-        case .authorized:
-            return state.snapshot.limit == nil
-                ? "Obey the posted speed limit signs"
-                : LimitCore.attribution
-        }
+        DriveScreenText.subheadline(isDriving: model.isDriving, access: model.locationAccess, snapshot: state.snapshot)
     }
 
     // MARK: Bars
