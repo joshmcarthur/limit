@@ -22,14 +22,20 @@ The dataset page ([NSLR on NZTA Open Data](https://opendata-nzta.opendata.arcgis
 
 The dataset's own quality notes matter for the copy: limits were migrated from each council's bylaw, so some differ from what's signed on the road, and temporary limits other than emergency ones aren't included.
 
+## Seasonal, emergency and ended records
+
+Each record has a category (`speedCategoryName`: Permanent, Variable, Seasonal, and "Temporary", which are emergency limits such as a diversion after a closure), start and end dates, and a "recurs" flag.
+
+- **Ended records.** About a fifth of in-force records have an end date in the past but were never marked ineffective (a superseded "Default Speed Limit 100", old Rotorua state highway records). They are left out of the download, and lookups also check the dates, so one that ends while the phone is offline stops applying.
+- **Which limit wins.** Only records active now count. An emergency limit beats a seasonal one, which beats a permanent or variable one (the register's own overlap rules); then the smallest zone, then the lower limit.
+- **Seasonal limits.** Records flagged as recurring repeat every year on the same month and day, whatever year their dates are in (Lake Brunner Motor Camp, 1 December to 30 April). Some, like Ohangai Road, have a row per school holiday per year, so repeating them yearly is only approximate and errs towards the lower limit. The drive screen and Live Activity say when the limit is seasonal or temporary.
+- **Placeholders.** Start dates in 1899 and 1900 mean "always".
+- **Overpass and underpass.** The dataset says a bridge and the road under it are separate overlapping records. On the layer as checked, 300 of 390 bridges have a road under them at a different limit, so a position alone can't tell the level. The engine stays on the level you were already on; with none to go on it takes the lower limit. Heading (`CLLocation.course`) could help later.
+
 ## Attributes we don't use yet
 
-From the live layer, in-force records (it was still being rebuilt when this was checked, so counts are small):
-
-- `speedCategoryName`: Permanent, Variable, Seasonal, Temporary. We treat everything in force as permanent apart from the school windows. Seasonal records have start and end dates (`speedLimitZoneStartDate`, `speedLimitZoneEndDate`, `speedLimitZoneSeasonalRecur`) and would show all year; Temporary should probably be left out or looked at.
-- `speedLimitZoneStructureTypeName`: Intersection, Overpass, Underpass. The dataset says these geometries overlap (the bridge and the road under it). "Smallest area wins" can pick the bridge's limit while driving under it.
 - `speedLimitZoneLanePurposeName` and `SeperateLaneSpeeds`: bus lanes and per-lane speeds; empty in the data seen so far.
-- `speedLimitZoneReasonName`: why the limit exists (school, congestion, default area, park and so on). It could help decide when a zone name reads like a road and when it's just an area.
+- `speedLimitZoneReasonName`: why the limit exists (school, congestion, default area, park and so on). It could help tell a road from an area when showing the name.
 - `speedLimitZoneMaxValue` and `speedLimitZoneMinValue`: for variable-speed signs on state highways.
 
 ## Staying current
@@ -63,13 +69,13 @@ Checked against the live layer on 22 October 2026:
 The register is stored blue-green. Each copy sits in its own folder under `Register/` and a small `current` file names the one in use. An update:
 
 1. downloads everything in memory (a cancelled or failed run writes nothing);
-2. checks it: at least 99% of the records the source reported at the start, at least 20,000 zones, and at least 80% of the zones in the copy now in use;
+2. checks it: at least 99% of the records the source reported at the start, at least 15,000 zones, and at least 80% of the zones in the copy now in use;
 3. writes it to a new folder beside the live one and reads it back against a checksum;
 4. moves `current` to the new folder (one atomic write), then deletes the old folder.
 
 Anything that fails a step is discarded and the old register stays in use; the app shows the usual "couldn't update" state. Folders left by a crash are cleared on the next write.
 
-Why: on 22 October 2026 the NZTA layer was rebuilt while we were testing. It went from about 92,000 records to about 1,250 and then climbed back through 5,000. A plain overwrite would have replaced a good register with a partial one. The 20,000 floor is a guess about how small a legitimate national register could get (it is about 26,000 now); lower it if NZTA ever consolidates records.
+Why: on 22 October 2026 the NZTA layer was rebuilt while we were testing. It went from about 92,000 records to about 1,250 and then climbed back through 5,000. A plain overwrite would have replaced a good register with a partial one. The 15,000 floor is a guess about how small a legitimate national register could get. It is about 21,000 zones once ended records are left out (about 26,000 with them), and the layer was mid-rebuild at 16,000 when this was set, so re-measure with `RegisterCheck` once NZTA has finished and adjust.
 
 A rejected download counts as a failure for the back-off above.
 

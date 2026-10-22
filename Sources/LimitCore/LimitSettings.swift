@@ -5,19 +5,9 @@ public struct LimitSettings: Equatable, Codable, Sendable {
     public var showOnLockScreen = true
     /// Show "over" from this many km/h above the limit.
     public var overTolerance = OverLimitEvaluator.defaultTolerance
-    /// A single chime when the limit changes. Off by default; nothing ever sounds when going over.
-    public var chimeOnLimitChange = false
     public var hasCompletedOnboarding = false
 
     public init() {}
-
-    public mutating func stepTolerance(by delta: Int) {
-        let range = OverLimitEvaluator.toleranceRange
-        overTolerance = min(max(overTolerance + delta, range.lowerBound), range.upperBound)
-    }
-
-    public var canDecreaseTolerance: Bool { overTolerance > OverLimitEvaluator.toleranceRange.lowerBound }
-    public var canIncreaseTolerance: Bool { overTolerance < OverLimitEvaluator.toleranceRange.upperBound }
 
     /// "+3 km/h"
     public var toleranceLabel: String { "+\(overTolerance) km/h" }

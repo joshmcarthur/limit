@@ -122,10 +122,6 @@ public struct RegisterStore: Sendable {
         try? FileManager.default.removeItem(at: directory.appendingPathComponent(staged.name))
     }
 
-    public func save(zones: [SpeedZone], metadata: RegisterMetadata) throws {
-        try commit(try stage(zones: zones, metadata: metadata))
-    }
-
     /// Records a successful check that changed nothing.
     public func updateCheckedAt(_ date: Date) throws {
         guard let generation = currentGeneration, var metadata = try loadMetadata() else { return }

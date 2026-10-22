@@ -19,7 +19,6 @@
 
 - CarPlay widget (the design system recommends checking current CarPlay support first).
 - Background register refresh (`BGAppRefreshTask`); it checks on foreground, at most weekly.
-- Chime on limit change (the setting exists but does nothing).
 - App icon, launch screen, localisation, UI tests, snapshot tests.
 - Signing, bundle identifiers, App Store metadata.
 
