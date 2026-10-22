@@ -9,7 +9,6 @@ public struct ZoneParseResult: Equatable, Sendable {
     public var featureCount = 0
     /// Features with no usable numeric limit. If every feature lands here, the source has no limit field.
     public var skippedWithoutLimit = 0
-    public var skippedBadGeometry = 0
     /// ArcGIS sets this when more pages exist.
     public var exceededTransferLimit = false
 }
@@ -17,17 +16,12 @@ public struct ZoneParseResult: Equatable, Sendable {
 /// Reads speed limit zones from a GeoJSON FeatureCollection (the `pgeojson` output of the register's
 /// ArcGIS feature service).
 ///
-/// The limit is read from the first property whose name, ignoring case and punctuation, is one of
-/// `limitKeys`. The register layer's field name has not been confirmed (the sample dump only carried
-/// `speedLimitZoneName`), so this is deliberately tolerant.
+/// Fields are read by their names in the live layer (`speedLimitZoneValue`, `speedLimitZoneName`,
+/// `speedLimitZoneId` and the rest), not guessed at. If the layer renames the limit field, every feature
+/// lands in `skippedWithoutLimit` and the download fails with `noLimitsInSource` rather than showing wrong limits.
 public enum GeoJSONZoneParser {
-    public static let limitKeys: Set<String> = [
-        "speedlimitzonevalue", "speedlimit", "speedlimitvalue", "speedlimitkmh", "postedspeedlimit", "speed", "limit", "limitkmh",
-    ]
-    public static let nameKeys: Set<String> = ["speedlimitzonename", "zonename", "roadname", "name"]
-    public static let idKeys: Set<String> = ["speedlimitzoneid"]
     /// NZ limits run from 10 to 110 km/h in steps of 5 or 10.
-    public static let validLimits = 10...110
+    private static let validLimits = 10...110
 
     public static func parse(_ data: Data) throws -> ZoneParseResult {
         guard let root = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
@@ -42,32 +36,22 @@ public enum GeoJSONZoneParser {
         for case let feature as [String: Any] in features {
             result.featureCount += 1
             let properties = feature["properties"] as? [String: Any] ?? [:]
-            guard let limit = limit(in: properties) else {
+            guard let limit = properties["speedLimitZoneValue"].flatMap(limitValue) else {
                 result.skippedWithoutLimit += 1
                 continue
             }
             let polygons = polygons(from: feature["geometry"] as? [String: Any])
             let kind = ZoneKind(category: properties["speedCategoryName"] as? String)
-            guard let zone = SpeedZone(id: id(in: properties), name: name(in: properties), limit: limit,
+            guard let zone = SpeedZone(id: text(properties["speedLimitZoneId"]), name: text(properties["speedLimitZoneName"]), limit: limit,
                                     reduced: reducedLimit(in: properties, permanent: limit),
                                     kind: kind, structure: StructureType(name: properties["speedLimitZoneStructureTypeName"] as? String),
-                                    period: period(in: properties, kind: kind), polygons: polygons) else {
-                result.skippedBadGeometry += 1
-                continue
-            }
+                                    period: period(in: properties, kind: kind), polygons: polygons) else { continue }
             result.zones.append(zone)
         }
         return result
     }
 
     // MARK: Properties
-
-    static func limit(in properties: [String: Any]) -> Int? {
-        for (key, value) in properties where limitKeys.contains(normalise(key)) {
-            if let limit = limitValue(value) { return limit }
-        }
-        return nil
-    }
 
     /// `speedLimitZoneVariableSpeed` is the lower limit as text ("40 km/h"), or a list for highway
     /// variable-speed signs; only a single, lower value with readable periods is used.
@@ -96,25 +80,10 @@ public enum GeoJSONZoneParser {
         return Date(timeIntervalSince1970: millis / 1000)
     }
 
-    static func id(in properties: [String: Any]) -> String? {
-        for (key, value) in properties where idKeys.contains(normalise(key)) {
-            if let text = value as? String, !text.isEmpty { return text }
-        }
-        return nil
-    }
-
-    static func name(in properties: [String: Any]) -> String? {
-        for (key, value) in properties where nameKeys.contains(normalise(key)) {
-            if let text = value as? String {
-                let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
-                if !trimmed.isEmpty { return trimmed }
-            }
-        }
-        return nil
-    }
-
-    private static func normalise(_ key: String) -> String {
-        String(key.lowercased().filter { $0.isLetter || $0.isNumber })
+    /// A trimmed, non-empty string, or nil.
+    private static func text(_ value: Any?) -> String? {
+        guard let text = (value as? String)?.trimmingCharacters(in: .whitespacesAndNewlines), !text.isEmpty else { return nil }
+        return text
     }
 
     private static func limitValue(_ value: Any) -> Int? {

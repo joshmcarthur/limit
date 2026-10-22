@@ -17,7 +17,7 @@ final class RegisterDownloaderTests: XCTestCase {
     private let square = "[[[174,-41],[175,-41],[175,-40],[174,-40],[174,-41]]]"
 
     private func feature(_ limit: Int?, name: String = "X") -> String {
-        let limitProp = limit.map { ",\"speedLimit\":\($0)" } ?? ""
+        let limitProp = limit.map { ",\"speedLimitZoneValue\":\($0)" } ?? ""
         return """
         {"type":"Feature","properties":{"speedLimitZoneName":"\(name)"\(limitProp)},"geometry":{"type":"Polygon","coordinates":\(square)}}
         """
