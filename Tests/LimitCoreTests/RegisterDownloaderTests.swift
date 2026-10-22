@@ -87,8 +87,8 @@ final class RegisterDownloaderTests: XCTestCase {
         let result = try await RegisterDownloader(endpoint: endpoint, fetcher: fetcher).download { recorder.add($0) }
         XCTAssertEqual(result.zones.map(\.limit), [50, 60, 30, 40, 100])
         XCTAssertEqual(result.sourceFeatureCount, 5)
-        XCTAssertEqual(recorder.all.last ?? nil, 1)
-        XCTAssertEqual(recorder.all.first ?? 99, 0)
+        XCTAssertEqual(recorder.all.last, .some(1))
+        XCTAssertEqual(recorder.all.first, .some(0))
     }
 
     func testProgressIsNilWhenCountUnavailable() async throws {
@@ -100,7 +100,8 @@ final class RegisterDownloaderTests: XCTestCase {
         downloader.retries = 0
         let recorder = Recorder()
         _ = try await downloader.download { recorder.add($0) }
-        XCTAssertNil(recorder.all.first ?? 0)
+        guard let first = recorder.all.first else { return XCTFail("expected a progress report") }
+        XCTAssertNil(first, "no count, so the total is unknown")
     }
 
     func testSourceWithoutLimitsFailsFastAndHonestly() async {
