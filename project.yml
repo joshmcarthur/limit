@@ -18,6 +18,7 @@ targets:
     platform: iOS
     sources: [App, Shared]
     dependencies:
+      - target: LimitWidgets
       - package: Limit
         product: LimitCore
     info:
@@ -33,6 +34,24 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.example.Limit
         GENERATE_INFOPLIST_FILE: NO
+  LimitWidgets:
+    type: app-extension
+    platform: iOS
+    sources: [Widgets, Shared]
+    dependencies:
+      - package: Limit
+        product: LimitCore
+    info:
+      path: Config/Widgets-Info.plist
+      properties:
+        CFBundleDisplayName: Limit
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.example.Limit.Widgets
+        GENERATE_INFOPLIST_FILE: NO
+        SKIP_INSTALL: YES
 schemes:
   Limit:
     build:
