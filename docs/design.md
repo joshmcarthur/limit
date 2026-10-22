@@ -44,6 +44,7 @@ The screens follow the "Limit — onboarding and main screen" canvas, and the to
 | 10, 11, 11b | Settings, About, About's attribution section |
 | 12 | Lock Screen Live Activity |
 | 13 | Driving in landscape (dark) |
+| 14 | Driving with the "Seasonal limit, obey the posted signs" label (a demo register, not real data) |
 
 Compared with `design/limit-screens.pdf`:
 
@@ -54,3 +55,11 @@ Compared with `design/limit-screens.pdf`:
 - The road-name line shows the register's zone name, so areas read "Wellington Central" and "Default Speed Limit" where the design shows roads ("State Highway 1"). `speedLimitZoneReasonName` could help tell areas from roads.
 
 Landscape and the Lock Screen were checked in the simulator by rotating with a small throwaway UI test (`XCUIDevice.shared.orientation`), since the simulator's rotate shortcut isn't scriptable from here. The Lock Screen check found and fixed a bug: unchanged content went stale after 10 s.
+
+## Seasonal and temporary limit label (not in the original design)
+
+When the limit in force comes from a seasonal or emergency record, a small pill sits between the sign and the road name: "Seasonal limit, obey the posted signs" or "Temporary limit, obey the posted signs" (`LimitNote`, `LimitNoteView`). In the Live Activity it takes the attribution line's place while it's showing, and the Dynamic Island's expanded view shows it underneath. VoiceOver reads the sign as "Speed limit 30 kilometres per hour, seasonal". School zones and permanent limits carry none. Checked in the simulator on the drive screen (screenshot 14) and on the Lock Screen after a clean install.
+
+The speed readout also lost the gap between the digits and "km/h" (the font's line box was far taller than its digits); screenshots 05 to 13 predate that change and should be retaken before they're used in a store listing.
+
+Found while checking: after the app is killed and relaunched mid-drive, the old Live Activity stays on the Lock Screen with its old content and the app starts a second one rather than ending or adopting the first. Not fixed.
