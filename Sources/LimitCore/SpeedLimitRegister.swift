@@ -5,6 +5,13 @@ public struct SpeedLimitMatch: Sendable {
     public let zoneName: String?
     /// Seasonal and emergency limits end, so the driver is told which one they're looking at.
     public let kind: ZoneKind
+    /// The register's catch-all record (`DEFAULT SPEED LIMIT`, and its `- INTERSECTION n` variants), which
+    /// covers anywhere no zone is recorded. It is the national open-road limit, not a limit set for this
+    /// road, so a street the register has missed (Freshfields Place, Plimmerton) matches it too.
+    public var isDefaultArea: Bool {
+        zoneName?.trimmingCharacters(in: .whitespaces).uppercased().hasPrefix("DEFAULT SPEED LIMIT") == true
+    }
+
     /// Which zone in the register matched, so the next lookup can prefer staying in it.
     let zoneID: Int
 

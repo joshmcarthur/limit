@@ -13,8 +13,10 @@ struct SpeedSignView: View {
     private var limit: Int? { state.limit }
 
     private var isStale: Bool {
-        if case .limit(_, let stale) = state { return stale }
-        return false
+        switch state {
+        case .limit(_, let stale), .openRoad(let stale): return stale
+        case .unknown: return false
+        }
     }
 
     var body: some View {
@@ -24,7 +26,7 @@ struct SpeedSignView: View {
                 limit == nil ? Palette.unknown : Palette.signRing,
                 lineWidth: CGFloat(SignMetrics.ringWidth(diameter: Double(diameter)))
             )
-            numeral
+            if state.isOpenRoad { openRoadStroke } else { numeral }
         }
         .frame(width: diameter, height: diameter)
         .overlay(alignment: .topTrailing) {
@@ -32,6 +34,15 @@ struct SpeedSignView: View {
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(AccessibilityLabels.sign(state, note: note))
+    }
+
+    /// The "no limit" circle-and-diagonal, in the unknown colour so it never reads as a limit.
+    private var openRoadStroke: some View {
+        let ring = CGFloat(SignMetrics.ringWidth(diameter: Double(diameter)))
+        return Capsule()
+            .fill(Palette.unknown)
+            .frame(width: ring * 0.8, height: diameter * 0.7)
+            .rotationEffect(.degrees(45))
     }
 
     private var numeral: some View {

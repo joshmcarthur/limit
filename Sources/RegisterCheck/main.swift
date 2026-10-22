@@ -82,10 +82,12 @@ let places: [(String, Double, Double)] = [
     ("Wellington, Cuba St", -41.2926, 174.7757), ("Wellington CBD", -41.2865, 174.7762),
     ("Auckland, Queen St", -36.8485, 174.7633), ("Christchurch, Gloucester St", -43.5314, 172.6358),
     ("SH1 near Otaki", -40.7550, 175.1450), ("Rural, central Otago", -45.0, 169.3),
+    // The register has no urban zone for Freshfields Place, so it falls to the default; Steyne Ave is inside one.
+    ("Plimmerton, Freshfields Place", -41.0767268, 174.8708714), ("Plimmerton, Steyne Ave", -41.0795, 174.8667),
 ]
 for (name, lat, lon) in places {
     let match = register.lookup(Coordinate(latitude: lat, longitude: lon))
-    print("\(name): \(match.map { "\($0.limit) km/h \($0.zoneName ?? "")" } ?? "no zone")")
+    print("\(name): \(match.map { "\($0.limit) km/h \($0.zoneName ?? "")\($0.isDefaultArea ? " (default area, shown as open road)" : "")" } ?? "no zone")")
 }
 
 var hits = 0

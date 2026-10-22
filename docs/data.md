@@ -16,6 +16,12 @@ https://services.arcgis.com/CXBb7LAjgIIdcsPt/ArcGIS/rest/services/SpeedLimitZone
 - Geometry is polygons in layers, not road centre-lines: a `DEFAULT SPEED LIMIT` 100 area, urban areas on top (`WELLINGTON CITY UTA`, 50), then zones (`WELLINGTON CENTRAL`, 30), then single streets (`CUBA STREET`, 10, a 12-point polygon). The smallest area containing the point wins, so there is no "nearest line" matching and intersections resolve themselves.
 - Not checked: 3 in-force records have a `whenEffective` in the future; they are included now.
 
+## Streets the register hasn't zoned (checked 23 October 2026)
+
+Freshfields Place, Plimmerton showed 100 on a drive. The live layer has only `DEFAULT SPEED LIMIT` (100, reason "Default Area") covering it: `PORIRUA CITY UTA` (50) covers Steyne Ave nearby but not Freshfields Place or Motuhara Rd. `RegisterCheck` against a fresh download gives the same answer, so this is a gap in the source, not a miss in our lookup.
+
+The default records (about 2,000: `DEFAULT SPEED LIMIT` and its `- INTERSECTION n` variants) are the national open-road limit, not a limit set for the road. The app therefore shows an open-road sign with no number and "Open road" for them, never 100, and never flags over-the-limit against them. Detection is by name (`SpeedLimitMatch.isDefaultArea`), pinned by a test, so a rename at the source would bring the 100 back. The cost: a real rural road on the default also shows no number.
+
 ## Licence and attribution
 
 The dataset page ([NSLR on NZTA Open Data](https://opendata-nzta.opendata.arcgis.com/datasets/NZTA::national-speed-limit-register-nslr/about)) credits Waka Kotahi NZ Transport Agency and licenses the data under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). CC BY asks for: appropriate credit, a link to the licence, a note of any changes, and no suggestion of endorsement. The About screen carries all four (name and author, links to the source and the licence, what we changed, and a not-endorsed line), and the drive screen and Live Activity credit the register. Any store listing and the README should carry the same credit.

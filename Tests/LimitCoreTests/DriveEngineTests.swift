@@ -46,6 +46,21 @@ final class DriveEngineTests: XCTestCase {
         XCTAssertEqual(state.snapshot.over, .notOver)
     }
 
+    func testDefaultAreaShowsOpenRoadAndNeverOver() {
+        let ring = Ring(points: [
+            Coordinate(latitude: -41.1, longitude: 173.9), Coordinate(latitude: -41.1, longitude: 174.1),
+            Coordinate(latitude: -40.9, longitude: 174.1), Coordinate(latitude: -40.9, longitude: 173.9),
+        ])!
+        let zone = SpeedZone(name: "DEFAULT SPEED LIMIT", limit: 100, polygons: [Polygon(outer: ring)])!
+        var e = DriveEngine(register: SpeedLimitRegister(zones: [zone]), registerCheckedAt: now.addingTimeInterval(-3_600), tolerance: 3)
+        let state = e.ingest(sample(kmh: 140), now: now)
+        XCTAssertEqual(state.snapshot.sign, .openRoad(isStale: false))
+        XCTAssertNil(state.snapshot.limit)
+        XCTAssertEqual(state.snapshot.roadName, "Open road")
+        XCTAssertEqual(state.snapshot.over, .notOver, "nothing to be over")
+        XCTAssertEqual(state.snapshot.speed, 140)
+    }
+
     func testStaleSampleIsLostNotFrozen() {
         var e = engine()
         _ = e.ingest(sample(kmh: 47), now: now)

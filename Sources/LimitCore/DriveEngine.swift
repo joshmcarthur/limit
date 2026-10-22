@@ -117,11 +117,14 @@ public struct DriveEngine {
         let speed = Speed.displayed(Speed.kilometresPerHour(fromMetresPerSecond: sample.speedMetresPerSecond))
         let match = zone.current
         let age = registerCheckedAt.map { now.timeIntervalSince($0) }
-        let sign = SignState.make(limit: match?.limit, dataAge: age, policy: freshness)
+        let sign = SignState.make(limit: match?.limit, dataAge: age, isDefaultArea: match?.isDefaultArea ?? false, policy: freshness)
         let over = evaluator.evaluate(speed: speed, limit: sign.limit)
 
         var snapshot = DriveSnapshot(sign: sign, speed: speed, over: over)
-        if sign.limit != nil {
+        if sign.isOpenRoad {
+            // The default zone's own name is register jargon, and it carries no limit to qualify.
+            snapshot.roadName = "Open road"
+        } else if sign.limit != nil {
             snapshot.roadName = RoadNameFormatter.display(match?.zoneName)
             snapshot.limitNote = LimitNote(kind: match?.kind)
         }

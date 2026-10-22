@@ -25,6 +25,9 @@ public struct FreshnessPolicy: Equatable, Sendable {
 /// What the speed sign shows.
 public enum SignState: Hashable, Codable, Sendable {
     case limit(Int, isStale: Bool)
+    /// The register has only its national default here, which says nothing about this road: it is what
+    /// covers any street no council has recorded a zone for. Shows no number, so the driver reads the signs.
+    case openRoad(isStale: Bool)
     /// No fix, off the register, or data too old to trust. Never shows the last known limit.
     case unknown
 
@@ -33,11 +36,17 @@ public enum SignState: Hashable, Codable, Sendable {
         return nil
     }
 
-    public static func make(limit: Int?, dataAge: TimeInterval?, policy: FreshnessPolicy = .standard) -> SignState {
+    public var isOpenRoad: Bool {
+        if case .openRoad = self { return true }
+        return false
+    }
+
+    public static func make(limit: Int?, dataAge: TimeInterval?, isDefaultArea: Bool = false,
+                            policy: FreshnessPolicy = .standard) -> SignState {
         guard let limit, let dataAge else { return .unknown }
         switch policy.level(forAge: dataAge) {
-        case .fresh: return .limit(limit, isStale: false)
-        case .stale: return .limit(limit, isStale: true)
+        case .fresh: return isDefaultArea ? .openRoad(isStale: false) : .limit(limit, isStale: false)
+        case .stale: return isDefaultArea ? .openRoad(isStale: true) : .limit(limit, isStale: true)
         case .tooOld: return .unknown
         }
     }
