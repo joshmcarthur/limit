@@ -17,6 +17,8 @@ final class DriveActivityController {
 
     func start(_ snapshot: DriveSnapshot) {
         guard activity == nil, ActivityAuthorizationInfo().areActivitiesEnabled else { return }
+        // A card from a killed app outlives it, and we only hold the one we start, so clear any before starting.
+        endAll()
         let state = DriveActivityAttributes.ContentState(snapshot)
         activity = try? Activity.request(attributes: DriveActivityAttributes(), content: content(state), pushType: nil)
         lastState = state
@@ -36,10 +38,16 @@ final class DriveActivityController {
     }
 
     func end() {
-        guard let activity else { return }
-        self.activity = nil
+        activity = nil
         lastState = nil
         lastSent = nil
-        Task { await activity.end(nil, dismissalPolicy: .immediate) }
+        endAll()
+    }
+
+    /// Ends every activity this app owns, including ones left behind by an earlier launch.
+    private func endAll() {
+        for existing in Activity<DriveActivityAttributes>.activities {
+            Task { await existing.end(nil, dismissalPolicy: .immediate) }
+        }
     }
 }

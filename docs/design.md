@@ -62,4 +62,4 @@ When the limit in force comes from a seasonal or emergency record, a small pill 
 
 The speed readout also lost the gap between the digits and "km/h" (the font's line box was far taller than its digits); screenshots 05 to 13 predate that change and should be retaken before they're used in a store listing.
 
-Found while checking: after the app is killed and relaunched mid-drive, the old Live Activity stays on the Lock Screen with its old content and the app starts a second one rather than ending or adopting the first. Not fixed.
+A Live Activity survives the app being killed. The app now ends every activity it owns before starting one and when a drive ends, so relaunching mid-drive gives one card, not two. If the app relaunches and doesn't resume a drive (Lock Screen off, or no location access), a leftover card stays until the next drive.
