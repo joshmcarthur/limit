@@ -1,0 +1,24 @@
+name: Rotate
+options:
+  deploymentTarget:
+    iOS: "17.0"
+targets:
+  Dummy:
+    type: application
+    platform: iOS
+    sources: [Dummy]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: rotate.dummy
+        GENERATE_INFOPLIST_FILE: YES
+  RotateUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources: [Tests]
+    dependencies:
+      - target: Dummy
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: rotate.uitests
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_TARGET_NAME: Dummy

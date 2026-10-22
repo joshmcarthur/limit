@@ -14,7 +14,8 @@ Raw captures for the listing, from the iOS 26.5 simulator on an iPhone 17 Pro Ma
 ## Things to know
 
 - **Optics:** every shot is at or under the limit except 02, which is a small, realistic 4 km/h over. Keep it that way if you retake them.
-- **Data:** road names and limits are real, from a copy of the NZTA layer taken on 22 October 2026 while NZTA was rebuilding it, so coverage was not complete. Nothing shown is made up. (The seasonal-limit label screenshots in `docs/screenshots` use a made-up demo zone and are deliberately not here.)
+- **Data:** road names and limits are real, from a copy of the NZTA layer taken on 22 October 2026 while NZTA was rebuilding it, so coverage was not complete. Nothing shown is made up. Shots of the seasonal-limit label would need a made-up demo zone, so there are none here.
 - **Status bar:** 9:41, full signal, charging. The Lock Screen shot shows "Carrier" on the left because the simulator ignores the status bar override there.
-- **Retaking:** `docs/screenshots` holds the larger set used to check the build against the design; see `docs/design.md`. These store shots were scripted with `xcrun simctl` (location, appearance) and a throwaway UI test for rotation.
+- **Retaking:** run `Tools/store-screenshots.sh` (needs Xcode, XcodeGen and an iPhone 17 Pro Max simulator, and downloads the register into `data/register-check` the first time; `REFRESH=1` fetches it again). It builds the app, installs it on a clean simulator, drives simulated trips with `xcrun simctl location`, and turns the phone with a small UI test in `Tools/screenshots/rotate` because the Simulator's rotate shortcut can't be scripted. It takes a few minutes and rewrites 01 to 04 and 06.
+- **Lock Screen (05) is by hand.** `simctl` can't lock and wake the phone, so the script ends by starting the trip and printing the three steps. Keep the phone awake long enough to capture it.
 - **Not made:** an iPad set, other languages, and the caption text and frames the store page would normally add.
