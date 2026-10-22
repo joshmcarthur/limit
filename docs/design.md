@@ -11,7 +11,7 @@ The screens follow the "Limit — onboarding and main screen" canvas, and the to
 | SpeedReadout | `SpeedReadoutView`, hysteresis in `OverLimitEvaluator` |
 | SyncStatus | `SyncStatusRow`, state and copy in `SyncState` / `FreshnessText` |
 | LiveActivity | `Widgets/DriveLiveActivity.swift`, state in `DriveActivityAttributes` |
-| CarPlayWidget | Not built yet |
+| CarPlayWidget | The same Live Activity: CarPlay shows it as a card on the dashboard (iOS 26 and later). No separate widget, and no CarPlay entitlement |
 | Onboarding 1–3 | `OnboardingWelcomeView`, `OnboardingLocationView`, `OnboardingReadyView` |
 | Driving: light, dark, over, finding location, landscape | `DriveView` (one view; state and size class choose the variant) |
 
@@ -19,7 +19,7 @@ The screens follow the "Limit — onboarding and main screen" canvas, and the to
 
 - Sign, then speed, in that order on every surface.
 - Where the register only has its default area, the sign shows a circle with a diagonal and "Open road", not 100 (`SignState.openRoad`). Checked in the simulator on the drive screen and the Lock Screen card, not the Dynamic Island.
-- The speed always carries its unit, including in the Dynamic Island's compact view, which is what CarPlay showed. On iOS 18 and later the activity also declares a small layout (sign, speed, unit) for surfaces too small for the Lock Screen card. Whether CarPlay uses it is not confirmed: the CarPlay simulator hasn't been run.
+- The speed always carries its unit, including in the Dynamic Island's compact view, which is what CarPlay showed. On iOS 18 and later the activity also declares a small layout (sign, speed, unit) for surfaces too small for the Lock Screen card. CarPlay does show the Live Activity: it was seen on a car's dashboard on 23 October 2026 (sign and speed, from photos). Which layout it used isn't established, because the photos show no unit and may predate it. The CarPlay simulator hasn't been run.
 - A drive that looks over doesn't keep location running (`DriveStopDetector`). CoreMotion reports when the phone goes from driving to walking, running or cycling; a minute of that sends a notification asking whether to end the drive (End drive / Keep driving), and ten minutes unanswered ends it. With or without motion data, 15 minutes of near-zero GPS speed ends it silently. "Keep driving" stops the pings until the phone is seen driving again. All of it follows the "Suggest ending my drive" setting (on by default). Motion & Fitness and notification access are asked for when the person taps Done in onboarding, or when they turn the setting on; a "no" to either just leaves the other signals to do the work. CoreMotion doesn't run in the simulator, so the motion path has only been checked by unit tests of the detector.
 - Outside New Zealand (`Coverage`: boxes round the main islands and the Chathams), no zone matching shows "Outside New Zealand" and "Limit only has New Zealand speed limits. Your speed is still shown.", not "Finding your road…" forever. The sign stays a dash. Without usable location access the screen says "Location needed" and what to do, even before any drive has started.
 - Never a frozen number: a location sample older than 5 s, or with accuracy worse than 100 m, shows as no speed and an unknown limit (`DriveEngine`), and the app sends that to the Live Activity at once.

@@ -4,7 +4,7 @@ A small, open-source iOS app that shows the posted speed limit for the road you 
 
 Speed limit data is from the [National Speed Limit Register](https://opendata-nzta.opendata.arcgis.com/datasets/NZTA::national-speed-limit-register-nslr/about) by Waka Kotahi NZ Transport Agency, licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). We filter it to the limits currently in force, merge repeated records, and read school times from its notes. Waka Kotahi doesn't endorse this app.
 
-It appears in the app, as a Live Activity (Lock Screen and Dynamic Island), and later as a CarPlay widget. Design: the Limit design system (colours, sign, readout, and the driving-surface rules in `docs/design.md`).
+It appears in the app, and as a Live Activity on the Lock Screen, in the Dynamic Island and on the CarPlay dashboard. Design: the Limit design system (colours, sign, readout, and the driving-surface rules in `docs/design.md`).
 
 ## Responsible use
 
