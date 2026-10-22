@@ -44,7 +44,7 @@ The screens follow the "Limit — onboarding and main screen" canvas, and the to
 | 10, 11, 11b | Settings, About, About's attribution section |
 | 12 | Lock Screen Live Activity |
 | 13 | Driving in landscape (dark) |
-| 14 | Driving with the "Seasonal limit, obey the posted signs" label (a demo register, not real data) |
+| 14, 15 | Driving and Lock Screen with the "Seasonal limit, obey the posted signs" label (a demo register with one made-up seasonal zone, not real data) |
 
 Compared with `design/limit-screens.pdf`:
 
@@ -60,6 +60,6 @@ Landscape and the Lock Screen were checked in the simulator by rotating with a s
 
 When the limit in force comes from a seasonal or emergency record, a small pill sits between the sign and the road name: "Seasonal limit, obey the posted signs" or "Temporary limit, obey the posted signs" (`LimitNote`, `LimitNoteView`). In the Live Activity it takes the attribution line's place while it's showing, and the Dynamic Island's expanded view shows it underneath. VoiceOver reads the sign as "Speed limit 30 kilometres per hour, seasonal". School zones and permanent limits carry none. Checked in the simulator on the drive screen (screenshot 14) and on the Lock Screen after a clean install.
 
-The speed readout also lost the gap between the digits and "km/h" (the font's line box was far taller than its digits); screenshots 05 to 13 predate that change and should be retaken before they're used in a store listing.
+The speed readout also lost the gap between the digits and "km/h" (the font's line box was far taller than its digits). Screenshots 01 to 15 were retaken after that change and the copy pass; they use a 15,957-zone copy of the layer taken part-way through NZTA rebuilding it, so road names and limits shown are real but the coverage isn't complete.
 
 A Live Activity survives the app being killed. The app now ends every activity it owns before starting one and when a drive ends, so relaunching mid-drive gives one card, not two. If the app relaunches and doesn't resume a drive (Lock Screen off, or no location access), a leftover card stays until the next drive.
