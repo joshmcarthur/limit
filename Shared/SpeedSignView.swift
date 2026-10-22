@@ -39,9 +39,10 @@ struct SpeedSignView: View {
     /// The "no limit" circle-and-diagonal, in the unknown colour so it never reads as a limit.
     private var openRoadStroke: some View {
         let ring = CGFloat(SignMetrics.ringWidth(diameter: Double(diameter)))
-        return Capsule()
+        // Runs ring to ring, ending in the middle of the ring so no gap or cap shows.
+        return Rectangle()
             .fill(Palette.unknown)
-            .frame(width: ring * 0.8, height: diameter * 0.7)
+            .frame(width: ring * 0.6, height: diameter - ring)
             .rotationEffect(.degrees(45))
     }
 
