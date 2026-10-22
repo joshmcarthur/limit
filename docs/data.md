@@ -8,23 +8,27 @@ https://services.arcgis.com/CXBb7LAjgIIdcsPt/ArcGIS/rest/services/SpeedLimitZone
 
 `RegisterEndpoint.nzta` queries it with `where=1=1`, `outFields=*`, `outSR=4326`, `geometryPrecision=6`, `f=pgeojson`, paged with `resultOffset` / `resultRecordCount` (2,000 per page, which is the service's transfer limit).
 
-## What the sample dump showed
+## The layer (checked against the live service, October 2026)
 
-A gzipped GeoJSON dump (one page, 2,000 features) was used to shape the parser:
+- Limit field: `speedLimitZoneValue`, a string such as `"50"`. Other fields we read: `speedLimitZoneId`, `speedLimitZoneName`, `speedLimitZoneVariableSpeed` (the reduced school limit, e.g. `"40 km/h"`, or a list for highway variable-speed signs) and `speedLimitZoneVarPrdDesc` (free text for when it applies).
+- 91,912 records, but 64,048 have `whenIneffective` set (superseded or expired). The download asks for `whenIneffective IS NULL`: 27,864 records.
+- Records repeat: the same zone id with the same shape appears several times. After removing exact repeats, 25,975 zones remain.
+- Geometry is polygons in layers, not road centre-lines: a `DEFAULT SPEED LIMIT` 100 area, urban areas on top (`WELLINGTON CITY UTA`, 50), then zones (`WELLINGTON CENTRAL`, 30), then single streets (`CUBA STREET`, 10, a 12-point polygon). The smallest area containing the point wins, so there is no "nearest line" matching and intersections resolve themselves.
+- Not checked: 3 in-force records have a `whenEffective` in the future; they are included now.
 
-- Geometry is `Polygon` (1,916) and `MultiPolygon` (84): zones with area, not centre-lines.
-- The only property is `speedLimitZoneName` (for example `GLOUCESTER STREET`, `WELLINGTON CITY UTA`, `OHANGAI ROAD SEASONAL SPEED LIMIT`).
-- `properties.exceededTransferLimit` is `true`, so there are more pages.
-- **There is no numeric speed limit field in the dump.** The curl used `outFields=` (empty), which may have returned only the default field.
+## Staying current
 
-## Consequences
+`FeatureServer/0?f=json` (about 5 KB compressed) reports `editingInfo.dataLastEditDate`. The stored copy remembers it; a sync downloads only if the source date is newer, otherwise it just refreshes the "checked" date. A missing or unreadable date means download.
 
-- `GeoJSONZoneParser` reads the limit from the first property whose name (ignoring case and punctuation) is one of `speedlimit`, `speedlimitvalue`, `speedlimitkmh`, `postedspeedlimit`, `speed`, `limit`, `limitkmh`, and accepts a number or a string like `"60 km/h"` between 10 and 110 in steps of 5. **This list is a guess.**
-- Features with no usable limit are counted, never given a made-up value. If the first page has features but none carry a limit, the download stops with `RegisterSyncError.noLimitsInSource`, and the app shows "Couldn't update speed limits".
-- Overlapping zones: the one with the smallest bounding box wins, then the lower limit. Unverified against real overlaps.
+## School zones
+
+`speedLimitZoneVarPrdDesc` is free text with 876 distinct wordings across 5,917 records. `SchoolPeriodParser` reads the clock times when there are one or two plain windows (3,120 records on the last check) and the zone then shows its reduced limit on weekdays in those windows, in NZ time. It deliberately skips: wording relative to the bell ("35 minutes before the start of school"), lists of several schools, times that differ by day, and highway variable-speed notices. Those zones keep their permanent limit. There are no term dates in the data, so school holidays still show the reduced limit in the windows.
+
+## Size and speed (`swift run -c release RegisterCheck`, on a Mac)
+
+25,975 zones, 7.1 million vertices, 55 MB stored, loaded in 0.9 s, a lookup in about 10 microseconds. Full download about 75 s. Memory and load time on a phone are unmeasured; simplifying polygons is the obvious way to shrink it if they matter.
 
 ## To do
 
-- Inspect the layer's fields (`.../FeatureServer/0?f=json`) and replace the guessed key list with the real one.
 - Check the licence and attribution requirements, and update the About screen.
-- Measure the full register's size and load time on a device. If it is too large, simplify polygons on download or tile the store.
+- Measure load time and memory on a device.
