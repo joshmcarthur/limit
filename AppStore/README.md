@@ -21,6 +21,14 @@ Raw captures for the listing, from the iOS 26.5 simulator on an iPhone 17 Pro Ma
 - **Framed versions:** `screenshots/6.9-inch-framed/` has the captioned slides, in `portrait/` (1320 × 2868, five slides) and `landscape/` (2868 × 1320, six). They are generated, not edited by hand: change a caption in `listing.md` and run `python3 -I Tools/frame-screenshots.py`, which needs ImageMagick, `rsvg-convert` and fontTools. The whole screen is shown, uncropped, so the register credit and "checked" line stay visible. The output is flattened RGB with no alpha, which the App Store requires.
 - **Not made:** an iPad set (the app is iPhone-only) and other languages.
 
+## Header and search results image
+
+Optional, and only shown to people on iOS 27 or later. One universal 16:9 image (5244 × 2950, PNG, no alpha) covers both placements, and App Store Connect's preview tool shows how each one crops it.
+
+`creative-assets/signs-16x9.png` is three real drive screens side by side: 30 in Wellington Central, 50 in Porirua City and 100 on the Desert Road, at 28, 47 and 96 km/h. It has no text. It also leaves out the register credit, which the listing and the app carry. The three panels sit well inside the area that the 21:9 and 3:2 crops share (about 4405 × 2247 px, if the crops are centred).
+
+To regenerate it, run `Tools/creative-asset-capture.sh`. It needs what the screenshot script needs, takes a few minutes, and retakes the raw captures into `creative-assets/raw/`. Then run `python3 -I Tools/frame-creative-asset.py`; add `--preview DIR` to also write centred 21:9 and 3:2 crops. Check the road name, sign and speed in each raw capture first, because a change to the register can move a route into a different zone.
+
 ## Points to try in the simulator
 
 For anyone who can simulate a location (Simulator: Features, Location, Custom Location; or Xcode: Debug, Simulate Location). Each result was read from the app's own register lookup on 23 October 2026 (`RegisterCheck`), so a later register may differ. Drive a short route through a point, since the sign waits for two samples to agree.

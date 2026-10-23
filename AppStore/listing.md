@@ -77,6 +77,7 @@ The first three are the ones people see without scrolling, so they carry the ide
 - **Category:** Navigation (primary), Travel (secondary).
 - **Age rating:** 4+. No user content, no web access beyond downloading the register, no gambling or mature themes.
 - **Privacy ("App Privacy" answers):** Data Not Collected. Location is used on the device to find the road and measure speed, and Motion & Fitness is used on the device to notice when the person has got out and walked away. Neither is ever sent anywhere. The only network request is the register download, which carries no user data.
+- **Header and search results image:** optional, shown on iOS 27 and later, and uploaded from Asset Library without a new app version. `creative-assets/signs-16x9.png` is ready (see `README.md`). Check the crops in App Store Connect's preview tool before submitting it.
 - **Copyright:** the licence holder's name and year, to be filled in at submission.
 - **Support URL and privacy policy URL:** not set up yet. Both are required. A page in the repo's GitHub Pages would do.
 
