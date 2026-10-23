@@ -26,7 +26,7 @@ The limits come from the NZTA National Speed Limit Register. Limit downloads the
 
 If you go over, your speed turns amber and tells you by how much, for example "+8 over". Nothing beeps and nothing flashes while you drive. There's a small tolerance to allow for GPS error, which you can change in Settings.
 
-The sign also appears on your Lock Screen and in the Dynamic Island. If the speed stops updating, the Lock Screen dims it, so you're not reading a number that's out of date.
+The sign also appears on your Lock Screen and in the Dynamic Island. In cars that support it, Limit also shows on your CarPlay dashboard (iOS 26 or later). If the speed stops updating, the Lock Screen dims it, so you're not reading a number that's out of date.
 
 Some roads have no limit of their own in the register. For those, Limit shows an open-road sign (a circle with a diagonal line) and says "Open road".
 
@@ -88,6 +88,8 @@ The first three are the ones people see without scrolling, so they carry the ide
 >
 > The app has no speed camera, police or enforcement features and gives no alerts or sounds while driving.
 >
+> CarPlay: the Live Activity shows on the CarPlay dashboard by itself, on supported cars with iOS 26 or later. The app is not a CarPlay app and has no CarPlay entitlement.
+>
 > The app only has data for New Zealand. Outside the country it shows "Outside New Zealand" and still shows the GPS speed, which is expected. A screen recording of a drive in New Zealand is attached. To try it yourself, simulate a location in New Zealand, for example Wellington (-41.2865, 174.7762); `AppStore/README.md` lists more points with the result at each. The first launch downloads the register, about 24 MB, which took about 36 seconds in our testing.
 >
 > Motion & Fitness and notifications: both are asked for at the end of onboarding, and the app works if either is declined. They exist for one feature, "Suggest ending my drive" (on by default, off in Settings). When the phone detects the user has got out and walked away, the app sends a notification asking whether to end the drive, so location isn't left on in a pocket. After 15 minutes without moving it ends the drive by itself. Motion data is read on the device and not stored or sent.
@@ -105,5 +107,7 @@ The first three are the ones people see without scrolling, so they carry the ide
 - "Suggest ending my drive" paragraph and the Motion & Fitness review note: the CoreMotion walk-off, the notification and its two buttons, and the 15 minute ending have not been run on a device (`docs/status.md`). Try them on a real drive, or soften the copy.
 - "If the speed stops updating, the Lock Screen dims it": checked in the simulator by freezing the app, not on a device, where the system may throttle updates differently.
 - Add the Motion & Fitness usage string (`NSMotionUsageDescription` in `project.yml`) to any App Privacy answers App Store Connect asks for.
+- CarPlay line: Apple says Live Activities show on the CarPlay dashboard from iOS 26, with no CarPlay app needed, but names no car models, hence "in cars that support it". Check which layout CarPlay uses (the compact Dynamic Island view or the small one) and whether the Lock Screen dimming also happens there. The CarPlay simulator hasn't been run (`docs/status.md`).
+- "CarPlay" is Apple's mark. It is in the description only to say the app works with it. It is not in the keywords: Guideline 2.3.7 warns against trademarked terms there, and I couldn't confirm that Apple's own marks are exempt. Say if you want it in the keywords in place of "offline", and read the guideline and Apple's trademark rules first.
 - "Background location is on only while a drive is running": matches `LocationService`, which turns it off when a drive ends. Confirm on a device.
 - The register copy the screenshots came from was incomplete (see `README.md` here). The description says nothing about coverage, so re-check the claim "limit for the road you're on" against the live register before launch.
