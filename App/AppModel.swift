@@ -34,6 +34,13 @@ final class AppModel {
     var syncState: SyncState { syncStatus.state(now: Date()) }
 
     private static let settingsKey = "settings.v1"
+    private static let driveEndedByDriverKey = "drive.endedByDriver"
+
+    /// Kept apart from the settings: it's what happened last, not a preference.
+    private var driveEndedByDriver: Bool {
+        get { UserDefaults.standard.bool(forKey: Self.driveEndedByDriverKey) }
+        set { UserDefaults.standard.set(newValue, forKey: Self.driveEndedByDriverKey) }
+    }
 
     init() {
         let settings = LimitSettings.decode(UserDefaults.standard.data(forKey: Self.settingsKey))
@@ -48,16 +55,17 @@ final class AppModel {
         location.onSample = { [weak self] sample in self?.handle(sample) }
         location.onAccessChange = { [weak self] access in self?.locationAccess = access }
         motion.onChange = { [weak self] mode in self?.travelModeChanged(mode) }
-        stopNotifier.onEnd = { [weak self] in self?.endDrive() }
+        stopNotifier.onEnd = { [weak self] in self?.endDrive(byDriver: true) }
         stopNotifier.onKeep = { [weak self] in self?.stopDetector.keepDriving(at: Date()) }
     }
 
     // MARK: Lifecycle
 
-    /// Call when the app becomes active.
+    /// Call when the app becomes active. Opening the app starts a drive, unless the driver ended the last one
+    /// themselves: then it waits for Start again, even after a relaunch.
     func didBecomeActive() {
         locationAccess = location.access
-        if settings.hasCompletedOnboarding, !isDriving, locationAccess.isUsable { beginDrive() }
+        if settings.hasCompletedOnboarding, !isDriving, !driveEndedByDriver, locationAccess.isUsable { beginDrive() }
         syncRegister()
     }
 
@@ -77,6 +85,7 @@ final class AppModel {
     func beginDrive() {
         guard !isDriving else { return }
         isDriving = true
+        driveEndedByDriver = false
         UIApplication.shared.isIdleTimerDisabled = true
         location.start()
         stopDetector = DriveStopDetector()
@@ -91,9 +100,11 @@ final class AppModel {
         }
     }
 
-    func endDrive() {
+    /// `byDriver` is false when the drive is ended for them (it looked over), so the next open starts one.
+    func endDrive(byDriver: Bool) {
         guard isDriving else { return }
         isDriving = false
+        driveEndedByDriver = byDriver
         UIApplication.shared.isIdleTimerDisabled = false
         ticker?.cancel()
         ticker = nil
@@ -131,7 +142,7 @@ final class AppModel {
         switch stopDetector.evaluate(at: Date()) {
         case .none: break
         case .ping: stopNotifier.post()
-        case .end: endDrive()
+        case .end: endDrive(byDriver: false)
         }
     }
 

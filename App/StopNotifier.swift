@@ -1,3 +1,4 @@
+import Foundation
 import UserNotifications
 
 /// The "Looks like you've stopped driving" notification, with End drive and Keep driving buttons. It shows
@@ -38,14 +39,22 @@ final class StopNotifier: NSObject, UNUserNotificationCenterDelegate {
         center.removeDeliveredNotifications(withIdentifiers: [Self.request])
     }
 
-    nonisolated func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification) async -> UNNotificationPresentationOptions {
-        [.banner]
+    // The completion-handler forms, not the async ones: for an async delegate method the system's completion
+    // handler is called from whatever thread the task ends on, and UIKit asserts it's the main thread when a
+    // notification action is answered (a TestFlight crash on tapping End drive or Keep driving).
+    nonisolated func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification,
+                                            withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
+        DispatchQueue.main.async { completionHandler([.banner]) }
     }
 
-    nonisolated func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse) async {
+    nonisolated func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse,
+                                            withCompletionHandler completionHandler: @escaping () -> Void) {
         let action = response.actionIdentifier
-        await MainActor.run {
-            if action == ActionID.end { onEnd?() } else if action == ActionID.keep { onKeep?() }
+        DispatchQueue.main.async {
+            MainActor.assumeIsolated {
+                if action == ActionID.end { self.onEnd?() } else if action == ActionID.keep { self.onKeep?() }
+            }
+            completionHandler()
         }
     }
 }

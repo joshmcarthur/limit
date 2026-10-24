@@ -112,7 +112,7 @@ struct DriveView: View {
 
     private func driveButton(compact: Bool) -> some View {
         let title = model.isDriving ? "End drive" : "Start again"
-        let action = { model.isDriving ? model.endDrive() : model.beginDrive() }
+        let action = { model.isDriving ? model.endDrive(byDriver: true) : model.beginDrive() }
         return Group {
             if compact {
                 Button(title, action: action).font(.headline).frame(minHeight: 44).padding(.horizontal, DesignTokens.space3)
