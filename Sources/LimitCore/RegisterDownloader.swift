@@ -74,18 +74,21 @@ public struct RegisterEndpoint: Equatable, Sendable {
     public static let nzta = RegisterEndpoint(queryURL: URL(string:
         "https://services.arcgis.com/CXBb7LAjgIIdcsPt/ArcGIS/rest/services/SpeedLimitZoneFull__View/FeatureServer/0/query")!)
 
-    /// The layer also holds superseded and expired records, so only zones with no `whenIneffective` date
-    /// are requested. It also keeps records whose end date has passed but that were never marked
-    /// ineffective (about a fifth), so those are left out too, apart from recurring seasonal limits whose
-    /// dates are just the first year's. The cut-off is two days back so a record that ended today or
-    /// yesterday still arrives; lookups check the dates themselves.
+    /// The layer also holds superseded and expired records, so a zone whose `whenIneffective` date has
+    /// passed is left out. That date is often in the future (it mirrors a scheduled end date) or the 1899
+    /// placeholder for no date, and those records are still in force, so they are kept. The layer also
+    /// keeps records whose end date has passed but that were never marked ineffective (about a fifth), so
+    /// those are left out too, apart from recurring seasonal limits whose dates are just the first year's.
+    /// The cut-off is two days back so a record that ended today or yesterday still arrives; lookups check
+    /// the dates themselves.
     public static func inForce(now: Date = Date()) -> String {
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = TimeZone(identifier: "UTC")!
         let cutoff = calendar.date(byAdding: .day, value: -2, to: now) ?? now
         let parts = calendar.dateComponents([.year, .month, .day], from: cutoff)
         let day = String(format: "%04d-%02d-%02d", parts.year ?? 1970, parts.month ?? 1, parts.day ?? 1)
-        return "whenIneffective IS NULL AND (speedLimitZoneEndDate IS NULL "
+        return "(whenIneffective IS NULL OR whenIneffective < TIMESTAMP '1901-01-01 00:00:00' "
+            + "OR whenIneffective >= TIMESTAMP '\(day) 00:00:00') AND (speedLimitZoneEndDate IS NULL "
             + "OR speedLimitZoneEndDate >= TIMESTAMP '\(day) 00:00:00' OR speedLimitZoneSeasonalRecur = 1)"
     }
 
