@@ -68,7 +68,7 @@ class RegisterStore(val directory: Path) {
     val currentGeneration: String?
         get() {
             val text = try {
-                Files.readString(pointer)
+                String(Files.readAllBytes(pointer), Charsets.UTF_8)
             } catch (_: Exception) {
                 return null
             }
