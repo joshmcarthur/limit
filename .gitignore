@@ -10,3 +10,10 @@ iOS/Config/*.plist
 
 # The App Review demo video is made per version and uploaded by hand
 /iOS/AppStore/review-video/
+
+# Android
+android/.gradle/
+android/**/build/
+*.iml
+local.properties
+.idea/
