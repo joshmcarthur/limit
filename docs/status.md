@@ -10,7 +10,11 @@
 ## Verified (Android)
 
 - `./gradlew -p android :core:test` and `:app:assembleDebug` on JDK 21.
-- Emulator `Medium_Phone_Play_Store` (API 36), 31 October 2026: Setup (location and notifications granted), Done, Start drive, `adb emu geo fix 174.77557 -41.29346` (Cuba Street, Wellington). GPS good. Sign 30, road name Wellington Central (the current register area, not a 10). Speed 0 km/h. Ongoing FGS notification. End drive stops the service. Start again restores the same sign. Landscape: sign left, speed right, FAB icon-only. Sign ring stays `#c8102e`. The copied `data/register-check` LMTZ loads after `largeHeap` and an IO decode.
+- Emulator `Medium_Phone_Play_Store` (API 36), 31 October 2026: Setup (location and notifications granted), Done, Start drive, `adb emu geo fix 174.77557 -41.29346` (Cuba Street, Wellington). GPS good. Sign 30, road name Wellington Central (the current register area, not a 10). End drive stops the service. Start again restores the same sign. Landscape: sign left, speed right, FAB icon-only.
+- Over-limit on that emulator: `geo fix` velocity 30 knots → 56 km/h, +26 over, caution container (not red). Notification shade: “Limit · Driving”, “30 km/h · Wellington Central”, “Your speed 56 km/h · 26 over”, End drive, sign large icon.
+- Dark theme: chrome uses the Material background after wrapping `RootScreen` in a `Surface`. Sign ring stays `#c8102e`.
+- Notifications denied (`POST_NOTIFICATIONS` revoked): Setup still offers Allow, Done stays enabled, drive starts, the location foreground service still runs.
+- The copied `data/register-check` LMTZ loads after `largeHeap` and an IO decode (about a minute on this AVD).
 - `Medium_Phone` AVD was rebuilt onto API 36 `google_apis` (the old image was missing android-32).
 
 ## Built (Android)
@@ -23,11 +27,10 @@
 ## Unverified (Android)
 
 - Phone hardware, manufacturer notification shade, and Play Store listing.
-- Android Auto on a car head unit and a full DHU pairing session.
+- Android Auto on a car head unit. DHU 2.0 is installed. ADB transport to port 5277 connects, then drops: this Play Store image ships an Android Auto stub with no head-unit server.
 - Live Updates promoted ongoing chip on API 36.
 - Home widget and Quick Settings tile on a real launcher.
 - NZTA download on the emulator (the live fetch failed; the copied register was used).
-- Over-limit hysteresis on device (unit tests cover it; emulator GPS speed stayed 0).
 
 ## Built
 
@@ -46,4 +49,4 @@
 
 ## Known risks
 
-See `docs/data.md`: the store is about 23 MB with 3 million vertices, so device load time and memory are still the open question.
+See `docs/data.md`: the store is about 23 MB with 3 million vertices, so device load time and memory are still the open question. On the API 36 emulator the copied 36 MB LMTZ takes about a minute to decode, and the first frame can show only the sign.
