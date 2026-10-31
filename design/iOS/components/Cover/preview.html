@@ -1,0 +1,32 @@
+<!-- @dsCard height=288 -->
+<!doctype html><html><head><meta charset="utf-8"><title>Cover</title>
+<style>
+body{margin:0;background:var(--ground)}
+.cv{position:relative;width:960px;height:288px;overflow:hidden;background:var(--ground)}
+.cv svg{position:absolute;left:0;top:0}
+.b-ink{fill:var(--ink)} .b-ring{fill:var(--sign-ring)} .b-caution{fill:var(--caution)} .b-tint{fill:var(--tint)}
+.disc{fill:var(--sign-face);stroke:var(--sign-ring);stroke-width:6px}
+.annulus{fill:none;stroke:var(--sign-face);stroke-width:24px}
+.txt{position:absolute;left:48px;bottom:40px;max-width:440px}
+.nm{font-family:var(--font-display);font-weight:800;font-size:120px;line-height:.92;letter-spacing:-.03em;color:var(--ink)}
+.tg{font-family:var(--font-sans);font-size:14px;line-height:18px;color:var(--ink-muted);margin-top:12px}
+</style></head><body>
+<div class="cv">
+<svg width="960" height="288" viewBox="0 0 960 288" aria-hidden="true">
+<!-- blocks: ink slab 160x288 (5x space-8), sign-ring 320x144, caution 200x144, tint 120x144: the sign red, the over-limit amber, the app tint, ink
+     arrangement: one tall ink slab bleeding top and bottom, a two-row modular grid to its right bleeding off the right edge
+     pattern: literal motif, the speed sign: four sign discs down the slab at a 64px pitch (2x space-8) and one oversized sign-face annulus over the red block; chosen because the round regulatory sign is the one shape this app is about
+     scales: space-8 (32) multiples for block sides and pitch; square corners because the chrome is the system's -->
+<rect class="b-ink" x="480" y="0" width="160" height="288"/>
+<rect class="b-ring" x="640" y="0" width="320" height="144"/>
+<rect class="b-caution" x="640" y="144" width="200" height="144"/>
+<rect class="b-tint" x="840" y="144" width="120" height="144"/>
+<circle class="annulus" cx="912" cy="32" r="96"/>
+<circle class="disc" cx="560" cy="48" r="24"/>
+<circle class="disc" cx="560" cy="112" r="24"/>
+<circle class="disc" cx="560" cy="176" r="24"/>
+<circle class="disc" cx="560" cy="240" r="24"/>
+</svg>
+<div class="txt"><div class="nm">Limit</div><div class="tg">Speed limits for Aotearoa New Zealand roads, at a glance.</div></div>
+</div>
+</body></html>
