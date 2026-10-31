@@ -79,6 +79,7 @@ fun DriveScreen(model: DriveModel, onSettings: () -> Unit) {
         val previous = announced
         announced = snapshot.sign
         if (previous != null && previous != snapshot.sign && isDriving) {
+            @Suppress("DEPRECATION")
             view.announceForAccessibility(AccessibilityLabels.sign(snapshot.sign, snapshot.limitNote))
         }
     }
