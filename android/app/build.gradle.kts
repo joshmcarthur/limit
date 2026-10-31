@@ -55,4 +55,8 @@ dependencies {
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.material.icons)
+    implementation(libs.androidx.car.app)
+    implementation(libs.androidx.car.app.projected)
+    implementation(libs.androidx.glance)
+    implementation(libs.androidx.glance.material3)
 }
