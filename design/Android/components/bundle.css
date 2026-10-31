@@ -1,0 +1,65 @@
+/* Limit for Android — preview styles mirroring the Compose components. Sizes in px = dp. */
+body{margin:0;background:var(--surface);color:var(--on-surface);font-family:var(--font-text);-webkit-font-smoothing:antialiased}
+.ms{font-family:"Material Symbols Rounded";font-weight:normal;font-style:normal;font-size:24px;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;white-space:nowrap;direction:ltr;-webkit-font-feature-settings:"liga";font-feature-settings:"liga";font-variation-settings:"FILL" 0,"wght" 400,"GRAD" 0,"opsz" 24;flex:none}
+.ms--fill{font-variation-settings:"FILL" 1,"wght" 400,"GRAD" 0,"opsz" 24}
+.la-row{display:flex;align-items:center;gap:var(--space-6);flex-wrap:wrap;padding:var(--space-4)}
+.la-col{display:flex;flex-direction:column;align-items:center;gap:var(--space-2)}
+.la-cap{font:500 12px/16px var(--font-text);letter-spacing:.5px;color:var(--on-surface-variant)}
+
+/* SpeedSign */
+.la-sign{--size:96px;position:relative;box-sizing:border-box;width:var(--size);height:var(--size);border-radius:50%;background:var(--sign-face);border:calc(var(--size)*.11) solid var(--sign-ring);display:grid;place-items:center;font-family:var(--font-numerals);font-weight:700;font-stretch:80%;font-variation-settings:"wdth" 80;font-size:calc(var(--size)*.42);letter-spacing:-.01em;color:var(--sign-ink);line-height:1;font-variant-numeric:tabular-nums;flex:none}
+.la-sign--3{font-size:calc(var(--size)*.34)}
+.la-sign--unknown{border-color:var(--unknown);color:var(--unknown)}
+.la-sign__badge{position:absolute;right:calc(var(--size)*-.04);bottom:calc(var(--size)*-.04);width:calc(var(--size)*.32);height:calc(var(--size)*.32);border-radius:50%;background:var(--caution);color:var(--on-caution);display:grid;place-items:center;box-shadow:0 0 0 3px var(--surface)}
+.la-sign__badge .ms{font-size:calc(var(--size)*.2)}
+.la-mono{box-sizing:border-box;width:24px;height:24px;border-radius:50%;border:3px solid currentColor;display:grid;place-items:center;font:800 9px/1 var(--font-numerals);font-stretch:80%;font-variation-settings:"wdth" 80}
+
+/* SpeedReadout */
+.la-readout{display:flex;flex-direction:column;align-items:center;gap:var(--space-1)}
+.la-readout__v{font-family:var(--font-numerals);font-weight:900;font-stretch:112%;font-variation-settings:"wdth" 112;font-size:96px;line-height:1;font-variant-numeric:tabular-nums;color:var(--on-surface);padding:8px 24px;border-radius:var(--corner-extra-large)}
+.la-readout__u{font:500 14px/20px var(--font-text);letter-spacing:.1px;color:var(--on-surface-variant)}
+.la-readout--over .la-readout__v{background:var(--caution);color:var(--on-caution)}
+.la-readout--over .la-readout__u{color:var(--caution-ink)}
+.la-readout--nofix .la-readout__v{color:var(--on-surface-variant)}
+
+/* Buttons & FAB */
+.la-fab{display:inline-flex;align-items:center;gap:12px;height:56px;padding:0 20px 0 16px;border:0;border-radius:var(--corner-large);background:var(--primary-container);color:var(--on-primary-container);font:500 14px/20px var(--font-text);letter-spacing:.1px;box-shadow:0 1px 3px rgba(0,0,0,.3),0 4px 8px 3px rgba(0,0,0,.15);cursor:pointer}
+.la-fab--end{background:var(--secondary-container);color:var(--on-secondary-container)}
+.la-fab--icon{width:56px;padding:0;justify-content:center}
+.la-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:40px;padding:0 24px;border-radius:var(--corner-full);border:0;font:500 14px/20px var(--font-text);letter-spacing:.1px;cursor:pointer;background:var(--primary);color:var(--on-primary)}
+.la-btn--tonal{background:var(--secondary-container);color:var(--on-secondary-container)}
+.la-btn--outlined{background:transparent;color:var(--primary);border:1px solid var(--outline)}
+.la-btn--text{background:transparent;color:var(--primary);padding:0 12px}
+
+/* SetupStep */
+.la-step{box-sizing:border-box;width:380px;display:flex;gap:16px;padding:16px;border-radius:var(--corner-large);background:var(--surface-container-low)}
+.la-step__icon{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;background:var(--primary-container);color:var(--on-primary-container);flex:none}
+.la-step__icon--done{background:var(--surface-container-high);color:var(--on-surface-variant)}
+.la-step__icon--warn{background:var(--surface-container-high);color:var(--caution-ink)}
+.la-step__t{font:500 16px/24px var(--font-text);letter-spacing:.15px}
+.la-step__s{font:400 14px/20px var(--font-text);letter-spacing:.25px;color:var(--on-surface-variant);margin-top:2px}
+.la-step__a{display:flex;gap:8px;margin-top:12px}
+.la-progress{height:4px;border-radius:2px;background:var(--surface-container-high);margin-top:12px;overflow:hidden}
+.la-progress i{display:block;height:100%;background:var(--primary);border-radius:2px}
+
+/* DriveNotification */
+.la-notif{box-sizing:border-box;width:380px;border-radius:24px;background:var(--surface-container);padding:16px 16px 8px}
+.la-notif__head{display:flex;align-items:center;gap:8px;font:400 12px/16px var(--font-text);color:var(--on-surface-variant)}
+.la-notif__body{display:flex;gap:12px;align-items:center;margin-top:8px}
+.la-notif__t{font:500 16px/22px var(--font-text);color:var(--on-surface)}
+.la-notif__s{font:400 14px/20px var(--font-text);color:var(--on-surface-variant);margin-top:2px}
+.la-notif__acts{display:flex;gap:4px;margin-top:8px}
+.la-chip{display:inline-flex;align-items:center;gap:4px;height:24px;padding:0 10px 0 4px;border-radius:12px;background:#000;color:#fff;font:500 13px/1 var(--font-text)}
+
+/* HomeWidget */
+.la-w{box-sizing:border-box;border-radius:24px;background:var(--surface-container);color:var(--on-surface);padding:16px;display:flex}
+.la-w--2x2{width:172px;height:172px;flex-direction:column;justify-content:space-between}
+.la-w--4x1{width:360px;height:84px;align-items:center;gap:12px;padding:12px 12px 12px 14px}
+.la-w__num{font-family:var(--font-numerals);font-weight:900;font-stretch:112%;font-variation-settings:"wdth" 112;font-size:44px;line-height:1;font-variant-numeric:tabular-nums}
+.la-w__num.over{background:var(--caution);color:var(--on-caution);border-radius:var(--corner-small);padding:2px 8px}
+
+/* QuickSettingsTile */
+.la-tile{box-sizing:border-box;width:176px;height:72px;border-radius:9999px;display:flex;align-items:center;gap:12px;padding:0 16px;background:var(--surface-container-high);color:var(--on-surface)}
+.la-tile--on{background:var(--primary);color:var(--on-primary)}
+.la-tile__t{font:500 14px/20px var(--font-text)}
+.la-tile__s{font:400 12px/16px var(--font-text);opacity:.85}
