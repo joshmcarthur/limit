@@ -68,8 +68,11 @@ class ReducedLimit private constructor(
  * the zone just keeps its permanent limit rather than showing a guess.
  */
 object SchoolPeriodParser {
+    // Android ICU treats `[:` as a POSIX property class, so `[:.]` plus a later `:]`
+    // is "Incorrect Unicode property". JVM java.util.regex does not. Put the colon
+    // second (`[.:]`). ICU also rejects \\d/\\s in lookaround; use ASCII digits there.
     private val time = Regex(
-        """(?<![\d.])(\d{1,2})(?:[:.](\d{2}))?(?![\d:])[ \t\n\r]*(am|pm|a\.m\.|p\.m\.)?(?![ \t\n\r]*(?:min|km|hour|second))""",
+        """(?<![0-9.])([0-9]{1,2})(?:[.:]([0-9]{2}))?(?![0-9:])\s*(am|pm|a\.m\.|p\.m\.)?""",
         RegexOption.IGNORE_CASE,
     )
 
