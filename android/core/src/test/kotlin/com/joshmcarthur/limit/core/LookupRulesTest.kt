@@ -230,4 +230,83 @@ class LookupRulesTest {
             SpeedLimitMatch(limit = 50, zoneName = "A", kind = ZoneKind.seasonal),
         )
     }
+
+    private fun sample(at: Coordinate, second: Long): Pair<LocationSample, Instant> {
+        val t = now.plusSeconds(second)
+        return LocationSample(
+            coordinate = at,
+            speedMetresPerSecond = 10.0,
+            horizontalAccuracy = 5.0,
+            timestamp = t,
+        ) to t
+    }
+
+    @Test
+    fun theEngineStaysOnTheRoadItArrivedOn() {
+        val register = SpeedLimitRegister(
+            zones = listOf(
+                SpeedZone(
+                    name = "ROAD UNDER",
+                    limit = 50,
+                    structure = StructureType.underpass,
+                    polygons = listOf(
+                        Polygon(
+                            outer = Ring(
+                                listOf(
+                                    Coordinate(latitude = -41.0, longitude = 174.0),
+                                    Coordinate(latitude = -41.0, longitude = 174.3),
+                                    Coordinate(latitude = -40.9, longitude = 174.3),
+                                    Coordinate(latitude = -40.9, longitude = 174.0),
+                                ),
+                            )!!,
+                        ),
+                    ),
+                )!!,
+                SpeedZone(
+                    name = "BRIDGE",
+                    limit = 80,
+                    structure = StructureType.overpass,
+                    polygons = listOf(
+                        Polygon(
+                            outer = Ring(
+                                listOf(
+                                    Coordinate(latitude = -41.2, longitude = 174.1),
+                                    Coordinate(latitude = -41.2, longitude = 174.2),
+                                    Coordinate(latitude = -40.7, longitude = 174.2),
+                                    Coordinate(latitude = -40.7, longitude = 174.1),
+                                ),
+                            )!!,
+                        ),
+                    ),
+                )!!,
+            ),
+        )
+        val roadOnly = Coordinate(latitude = -40.95, longitude = 174.02)
+        val bridgeOnly = Coordinate(latitude = -40.75, longitude = 174.15)
+        val crossing = Coordinate(latitude = -40.95, longitude = 174.15)
+        fun limit(from: Coordinate): Int? {
+            val engine = DriveEngine(register = register, registerCheckedAt = now)
+            var out: Int? = null
+            for ((i, point) in listOf(from, from, crossing, crossing, crossing).withIndex()) {
+                val (sample, t) = sample(point, i.toLong())
+                out = engine.ingest(sample, now = t).snapshot.limit
+            }
+            return out
+        }
+        assertEquals(50, limit(roadOnly))
+        assertEquals(80, limit(bridgeOnly))
+    }
+
+    @Test
+    fun replacingTheRegisterForgetsThePreviousZone() {
+        val engine = DriveEngine(
+            register = SpeedLimitRegister(zones = listOf(zone(50, "A", size = 1.0))),
+            registerCheckedAt = now,
+        )
+        val (sample, t) = sample(inside, 0)
+        assertEquals(50, engine.ingest(sample, now = t).snapshot.limit)
+        engine.register = SpeedLimitRegister(zones = listOf(zone(70, "B", size = 1.0)))
+        val (sample2, t2) = sample(inside, 1)
+        assertEquals(70, engine.ingest(sample2, now = t2).snapshot.limit)
+    }
 }
