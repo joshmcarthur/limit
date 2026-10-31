@@ -22,6 +22,7 @@ import com.joshmcarthur.limit.core.SpeedLimitRegister
 import com.joshmcarthur.limit.core.SyncState
 import com.joshmcarthur.limit.core.SyncStatus
 import com.joshmcarthur.limit.notification.DriveForegroundService
+import com.joshmcarthur.limit.widget.DriveWidget
 import java.time.Instant
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -119,6 +120,7 @@ class DriveModel(private val app: Application) {
                 refresh()
             }
         }
+        scope.launch { DriveWidget.refresh(app) }
     }
 
     fun endDrive(byDriver: Boolean) {
@@ -131,6 +133,7 @@ class DriveModel(private val app: Application) {
         engine.state(Instant.EPOCH)
         _driveState.value = DriveState.searching
         app.stopService(Intent(app, DriveForegroundService::class.java))
+        scope.launch { DriveWidget.refresh(app) }
     }
 
     fun keepDriving() {
@@ -201,6 +204,7 @@ class DriveModel(private val app: Application) {
         _driveState.value = state
         stopDetector.observe(speedKmh = state.snapshot.speed, at = Instant.now())
         DriveForegroundService.update(app, state.snapshot, _settings.value.showOnLockScreen)
+        scope.launch { DriveWidget.refresh(app) }
     }
 
     private fun evaluateStop() {
