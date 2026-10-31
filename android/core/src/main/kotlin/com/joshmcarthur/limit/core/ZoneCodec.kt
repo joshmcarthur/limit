@@ -201,19 +201,29 @@ object ZoneCodec {
             return slice
         }
 
-        fun u8(): Int = bytes(1)[0].toInt() and 0xFF
+        fun u8(): Int {
+            if (remaining < 1) throw ZoneCodecError.Truncated
+            val value = storage[offset].toInt() and 0xFF
+            offset += 1
+            return value
+        }
 
         fun u16(): Int {
-            val b = bytes(2)
-            return (b[0].toInt() and 0xFF) or ((b[1].toInt() and 0xFF) shl 8)
+            if (remaining < 2) throw ZoneCodecError.Truncated
+            val value = (storage[offset].toInt() and 0xFF) or
+                ((storage[offset + 1].toInt() and 0xFF) shl 8)
+            offset += 2
+            return value
         }
 
         fun u32(): Long {
-            val b = bytes(4)
-            return (b[0].toLong() and 0xFF) or
-                ((b[1].toLong() and 0xFF) shl 8) or
-                ((b[2].toLong() and 0xFF) shl 16) or
-                ((b[3].toLong() and 0xFF) shl 24)
+            if (remaining < 4) throw ZoneCodecError.Truncated
+            val value = (storage[offset].toLong() and 0xFF) or
+                ((storage[offset + 1].toLong() and 0xFF) shl 8) or
+                ((storage[offset + 2].toLong() and 0xFF) shl 16) or
+                ((storage[offset + 3].toLong() and 0xFF) shl 24)
+            offset += 4
+            return value
         }
 
         fun i32(): Int = u32().toInt()
