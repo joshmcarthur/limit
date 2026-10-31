@@ -193,7 +193,7 @@ class DriveModel(private val app: Application) {
                 }
             } catch (cancelled: kotlinx.coroutines.CancellationException) {
                 throw cancelled
-            } catch (_: Exception) {
+            } catch (_: Throwable) {
                 sync.failed()
             } finally {
                 publishSync()

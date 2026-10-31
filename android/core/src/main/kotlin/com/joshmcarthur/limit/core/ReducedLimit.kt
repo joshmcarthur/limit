@@ -69,7 +69,7 @@ class ReducedLimit private constructor(
  */
 object SchoolPeriodParser {
     private val time = Regex(
-        """(?<![\d.])(\d{1,2})(?:[:.](\d{2}))?(?![\d:])\s*(am|pm|a\.m\.|p\.m\.)?(?!\s*(?:min|km|hour|second))""",
+        """(?<![\d.])(\d{1,2})(?:[:.](\d{2}))?(?![\d:])[ \t\n\r]*(am|pm|a\.m\.|p\.m\.)?(?![ \t\n\r]*(?:min|km|hour|second))""",
         RegexOption.IGNORE_CASE,
     )
 
