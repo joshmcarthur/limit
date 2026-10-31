@@ -116,7 +116,10 @@ fun DriveScreen(model: DriveModel, onSettings: () -> Unit) {
             val sub = DriveScreenText.subheadline(isDriving, access, snapshot)
             if (landscape) {
                 Row(
-                    Modifier.weight(1f).fillMaxWidth(),
+                    Modifier
+                        .weight(1f)
+                        .fillMaxWidth()
+                        .padding(bottom = 56.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     SignBlock(headline, sub, snapshot.sign, snapshot.limitNote, Modifier.weight(1f))
@@ -131,8 +134,17 @@ fun DriveScreen(model: DriveModel, onSettings: () -> Unit) {
                     SignBlock(headline, sub, snapshot.sign, snapshot.limitNote)
                     SpeedReadout(snapshot.speed, snapshot.over, Modifier.padding(top = 24.dp))
                 }
+                Footer(sync, Modifier.padding(bottom = 72.dp, top = 8.dp))
             }
-            Footer(sync, Modifier.padding(bottom = 72.dp, top = 8.dp))
+        }
+        if (landscape) {
+            Footer(
+                sync,
+                Modifier
+                    .align(Alignment.BottomCenter)
+                    .navigationBarsPadding()
+                    .padding(start = 24.dp, end = 88.dp, bottom = 8.dp),
+            )
         }
         DriveFab(
             isDriving = isDriving,
