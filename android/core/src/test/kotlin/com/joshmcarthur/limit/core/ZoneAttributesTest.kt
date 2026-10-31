@@ -157,7 +157,7 @@ class ZoneAttributesTest {
     @Test
     fun anOldFormatCopyIsRejected() {
         val old = ZoneCodec.encode(emptyList())
-        old[4] = 2
+        old[4] = 2.toByte()
         val error = assertFails { ZoneCodec.decode(old) }
         assertEquals(ZoneCodecError.UnsupportedVersion(2), error)
     }
@@ -167,7 +167,7 @@ class ZoneAttributesTest {
         val z = SpeedZone(name = null, limit = 50, polygons = listOf(Polygon(outer = ring())))!!
         val bytes = ZoneCodec.encode(listOf(z))
         val badKind = bytes.copyOf()
-        badKind[9 + 2] = 9
+        badKind[9 + 2] = 9.toByte()
         assertEquals(ZoneCodecError.Invalid, assertFails { ZoneCodec.decode(badKind) })
         val badFlags = bytes.copyOf()
         badFlags[9 + 4] = 0x80.toByte()

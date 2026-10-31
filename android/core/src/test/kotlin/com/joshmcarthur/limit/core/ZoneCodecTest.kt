@@ -68,7 +68,7 @@ class ZoneCodecTest {
         val magicError = assertFails { ZoneCodec.decode("NOPE\u0001".toByteArray(Charsets.UTF_8)) }
         assertEquals(ZoneCodecError.BadMagic, magicError)
         val data = ZoneCodec.encode(emptyList())
-        data[4] = 9
+        data[4] = 9.toByte()
         val versionError = assertFails { ZoneCodec.decode(data) }
         assertEquals(ZoneCodecError.UnsupportedVersion(9), versionError)
     }
