@@ -16,6 +16,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:allowBackup="false"
         android:enableOnBackInvokedCallback="true"
+        android:largeHeap="true"
         android:supportsRtl="true"
         android:theme="@style/Theme.Limit">
         <activity

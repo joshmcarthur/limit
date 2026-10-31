@@ -74,9 +74,11 @@ class DriveModel(private val app: Application) {
         engine.evaluator.setTolerance(_settings.value.overTolerance)
         location.onSample = { sample -> handle(sample) }
         location.onAccessChange = { _locationAccess.value = it }
-        loadStoredRegister()
         refreshAccess()
-        syncRegister()
+        scope.launch {
+            withContext(Dispatchers.IO) { loadStoredRegister() }
+            syncRegister()
+        }
     }
 
     val hasCompletedOnboarding: Boolean get() = _settings.value.hasCompletedOnboarding
@@ -238,7 +240,7 @@ class DriveModel(private val app: Application) {
             engine.registerCheckedAt = stored.metadata.checkedAt
             sync.finished(stored.metadata.checkedAt)
             publishSync()
-        } catch (_: Exception) {
+        } catch (_: Throwable) {
             try {
                 store.clear()
             } catch (_: Exception) {
