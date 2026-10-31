@@ -14,36 +14,16 @@ Limit is an aid for staying within the speed limit, not a way to get away with e
 
 | Path | What |
 | --- | --- |
-| `Sources/LimitCore` | Platform-independent logic (Foundation only, so it builds and tests on Linux): geometry, the register, over-limit evaluation, drive state, sync, tokens. |
-| `Tests/LimitCoreTests` | Unit tests for the core. |
-| `App` | The iOS app (SwiftUI, CoreLocation, ActivityKit). |
-| `Shared` | Views and types used by both the app and the widget extension. |
-| `Widgets` | The Live Activity widget extension. |
-| `project.yml` | [XcodeGen](https://github.com/yonaskolb/XcodeGen) spec. The `.xcodeproj` is generated, not committed. |
-| `docs` | Design notes and data-source notes. |
+| `data/` | Local copies of the speed-limit register (gitignored). Shared by the apps. |
+| `docs/` | Design notes, data-source notes, privacy, status. |
+| `design/` | Design system files. |
+| `iOS/` | The iOS app, widget, and Swift core. See `iOS/README.md`. |
+
+An Android app will sit beside `iOS/` when it exists.
 
 ## Develop
 
-Core (any platform with Swift 5.9+):
-
-```sh
-swift build
-swift test
-```
-
-App (macOS with Xcode 16+):
-
-```sh
-brew install xcodegen
-xcodegen generate
-open Limit.xcodeproj
-```
-
-Bundle identifiers and the signing team are set in `project.yml`.
-
-## CI
-
-`.github/workflows/ci.yml` builds and tests the core on macOS, and builds the app for the iOS simulator.
+iOS (macOS with Xcode 16+): see `iOS/README.md`.
 
 ## Status
 

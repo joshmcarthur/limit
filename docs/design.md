@@ -10,7 +10,7 @@ The screens follow the "Limit — onboarding and main screen" canvas, and the to
 | SpeedSign | `SpeedSignView`, state in `SignState`, proportions in `SignMetrics` |
 | SpeedReadout | `SpeedReadoutView`, hysteresis in `OverLimitEvaluator` |
 | SyncStatus | `SyncStatusRow`, state and copy in `SyncState` / `FreshnessText` |
-| LiveActivity | `Widgets/DriveLiveActivity.swift`, state in `DriveActivityAttributes` |
+| LiveActivity | `iOS/Widgets/DriveLiveActivity.swift`, state in `DriveActivityAttributes` |
 | CarPlayWidget | The same Live Activity: CarPlay shows it as a card on the dashboard (iOS 26 and later). No separate widget, and no CarPlay entitlement |
 | Onboarding 1–3 | `OnboardingWelcomeView`, `OnboardingLocationView`, `OnboardingReadyView` |
 | Driving: light, dark, over, finding location, landscape | `DriveView` (one view; state and size class choose the variant) |
@@ -40,7 +40,7 @@ The screens follow the "Limit — onboarding and main screen" canvas, and the to
 
 ## Design check
 
-The build was checked against `design/limit-screens.pdf` in the simulator (portrait, dark, over the limit, searching, landscape, onboarding, Lock Screen). The store listing's screenshots are in `AppStore/` (see its README, and `Tools/store-screenshots.sh` to retake them). The earlier, larger set of check screenshots was removed once the layout moved on; it is in git history (`docs/screenshots`).
+The build was checked against `design/limit-screens.pdf` in the simulator (portrait, dark, over the limit, searching, landscape, onboarding, Lock Screen). The store listing's screenshots are in `iOS/AppStore/` (see its README, and `iOS/Tools/store-screenshots.sh` to retake them). The earlier, larger set of check screenshots was removed once the layout moved on; it is in git history (`docs/screenshots`).
 
 What differs from the design, as last checked:
 

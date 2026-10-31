@@ -10,7 +10,7 @@
 # Environment:
 #   DEVICE   simulator UDID or name. Default: the newest "iPhone 17 Pro Max" (the 6.9-inch size).
 #   OUT      output folder. Default: AppStore/screenshots/6.9-inch
-#   REFRESH  set to 1 to download the register again (it is kept in data/register-check, which is not committed).
+#   REFRESH  set to 1 to download the register again (it is kept in ../data/register-check, which is not committed).
 #
 # Not scripted: the Lock Screen shot (05). It needs the phone locked and woken, which `simctl` can't do.
 # The script finishes by starting a trip and printing how to take it.
@@ -43,10 +43,10 @@ xcodebuild -project Limit.xcodeproj -scheme Limit -destination "id=$UDID" -deriv
 APP="$WORK/dd/Build/Products/Debug-iphonesimulator/Limit.app"
 
 # --- The register to drive with ----------------------------------------------------------------------
-if [ "${REFRESH:-0}" = 1 ]; then rm -rf data/register-check; fi
-if [ ! -d data/register-check ]; then
+if [ "${REFRESH:-0}" = 1 ]; then rm -rf ../data/register-check; fi
+if [ ! -d ../data/register-check ]; then
   echo "Downloading the register (about a minute)..."
-  swift run -c release RegisterCheck data/register-check >/dev/null
+  swift run -c release RegisterCheck ../data/register-check >/dev/null
 fi
 
 # --- Simulator helpers -------------------------------------------------------------------------------
@@ -88,7 +88,7 @@ xcrun simctl terminate "$UDID" $BUNDLE
 CONTAINER=$(xcrun simctl get_app_container "$UDID" $BUNDLE data)
 REGISTER="$CONTAINER/Library/Application Support/Register"
 rm -rf "$REGISTER"; mkdir -p "$REGISTER" "$CONTAINER/Library/Preferences"
-cp -R data/register-check/. "$REGISTER/"
+cp -R ../data/register-check/. "$REGISTER/"
 python3 - "$REGISTER" "$CONTAINER/Library/Preferences/$BUNDLE.plist" <<'PY'
 import datetime, glob, json, plistlib, sys
 register, plist = sys.argv[1], sys.argv[2]

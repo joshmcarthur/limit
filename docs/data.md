@@ -112,7 +112,7 @@ A rejected download counts as a failure for the back-off above.
 
 All 68 road controlling authorities appear in the layer, down to Carterton District with two in-force records, which suggests the layer is now complete, but the total being exactly 69,000 could also mean a capped or stalled import. If the count moves again, re-run `RegisterCheck` and revisit the floor.
 
-## Size and speed (`swift run -c release RegisterCheck`, on a Mac)
+## Size and speed (`swift run -c release RegisterCheck ../data/register-check` from `iOS/`, on a Mac)
 
 15,957 zones, 3.0 million vertices, 23 MB stored, loaded in 0.7 s, a lookup in about 7 microseconds. Full download about 36 s. (Before the rebuild and the ended-record filter it was 25,975 zones, 7.1 million vertices and 55 MB.) Memory and load time on a phone are unmeasured; simplifying polygons is the obvious way to shrink it if they matter.
 

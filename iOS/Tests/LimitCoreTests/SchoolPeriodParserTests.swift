@@ -101,7 +101,11 @@ final class SchoolPeriodParserTests: XCTestCase {
     /// Opt-in: runs over a saved copy of the layer's variable-speed records in data/ (gitignored), if there.
     /// Guards against the parser regressing on the wordings that actually exist.
     func testCoverageOnASavedCopyOfTheRegister() throws {
-        let dir = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+        let dir = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
             .appendingPathComponent("data")
         var texts: [String] = []
         for name in ["var0.json", "var2000.json", "var4000.json"] {

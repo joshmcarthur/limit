@@ -1,6 +1,6 @@
 # App Store listing
 
-Copy for App Store Connect, for the New Zealand storefront. Written to the Limit voice: plain, short sentences, no hype. The user-facing text went through the `humanize` skill.
+Copy for App Store Connect's New Zealand storefront. Limit's voice is plain and direct, with no hype.
 
 Limits are Apple's: name 30, subtitle 30, promotional text 170, keywords 100, description 4000, What's New 4000.
 
@@ -22,23 +22,23 @@ The speed limit for the road you're on, beside your GPS speed. Data from NZTA, k
 
 Limit shows the posted speed limit for the road you're on in New Zealand. It's the red-ring sign you already know, with your GPS speed underneath.
 
-The limits come from the NZTA National Speed Limit Register. Limit downloads the register to your phone (about 24 MB the first time), then checks for updates when you open it, at most once a week. It still works when you have no reception.
+The limits come from the NZTA National Speed Limit Register. The app downloads it to your phone (about 24 MB the first time), then checks for updates when you open it, at most once a week. It still works without reception.
 
 If you go over, your speed turns amber and tells you by how much, for example "+8 over". Nothing beeps and nothing flashes while you drive. There's a small tolerance to allow for GPS error, which you can change in Settings.
 
-The sign also appears on your Lock Screen and in the Dynamic Island. In cars that support it, Limit also shows on your CarPlay dashboard (iOS 26 or later). If the speed stops updating, the Lock Screen dims it, so you're not reading a number that's out of date.
+The sign also appears on your Lock Screen and in the Dynamic Island. If your car supports it, you'll see it on the CarPlay dashboard too (iOS 26 or later). If the speed stops updating, the Lock Screen dims it so you can tell the reading is out of date.
 
-Some roads have no limit of their own in the register. For those, Limit shows an open-road sign (a circle with a diagonal line) and says "Open road".
+Some roads have no limit listed in the register. Limit shows an open-road sign (a circle with a diagonal line) and says "Open road".
 
-School zones follow the time of day. Seasonal and temporary limits say "obey the posted signs". If the GPS is weak or the data is too old, Limit shows a dash, not a number it can't vouch for.
+School zones follow the time of day. Seasonal and temporary limits say "obey the posted signs". If GPS is weak or the data is too old, Limit shows a dash instead of a reading it can't trust.
 
-When you get out of the car and walk away, Limit asks whether the drive is over, so your phone isn't left tracking location in your pocket. If you don't answer, or you stay put for a while, it ends the drive itself. You can turn this off in Settings.
+When you get out of the car and walk away, Limit asks if the drive is over, so your phone isn't left tracking your location in your pocket. If you don't answer, the drive ends after 15 minutes without movement. You can turn this off in Settings.
 
 Outside New Zealand there are no limits to show. Limit says so, and still shows your speed.
 
 There's no account and no analytics. Your location and your movement stay on your phone.
 
-Limit is an aid, not permission. A limit is a maximum, not a target, so there are no speed camera or enforcement features. Set it up before you drive, and obey the posted signs and the Road Code.
+Limit is an aid, not permission to speed. A speed limit is a maximum, not a target. Limit has no speed camera or enforcement features. Set it up before you drive, then follow the posted signs and the Road Code.
 
 Speed limit data is from the National Speed Limit Register by Waka Kotahi NZ Transport Agency, licensed under CC BY 4.0. Waka Kotahi doesn't endorse this app.
 
@@ -70,7 +70,7 @@ Whether App Store Connect accepts both orientations in one set isn't confirmed, 
 | 5 | `03-drive-dark.png` | Easy on the eyes after dark |
 | 6 | `06-welcome.png` | Made in New Zealand. Set it up before you set off. |
 
-The first three are the ones people see without scrolling, so they carry the idea: what it shows, what you see when you go over, and that it follows you to the Lock Screen.
+The first three appear before someone scrolls. They show the limit on your road, what happens when you go over, and the Lock Screen view.
 
 ## Other fields
 
@@ -85,17 +85,17 @@ The first three are the ones people see without scrolling, so they carry the ide
 
 > Limit shows the posted speed limit for the road the user is on in New Zealand, from the NZTA National Speed Limit Register, next to their GPS speed.
 >
-> Location: requested "When In Use" during onboarding, before any driving. Background location is on only while a drive is running, so the Lock Screen Live Activity stays current. The system's blue location indicator shows throughout, and "End drive" turns it off. Location never leaves the device and there is no account or analytics.
+> Location is requested as "When In Use" during onboarding, before any driving. Background location runs only while a drive is active, keeping the Lock Screen Live Activity current. The system's blue location indicator stays visible throughout. "End drive" turns location off. Location never leaves the device, and there's no account or analytics.
 >
-> The app has no speed camera, police or enforcement features and gives no alerts or sounds while driving.
+> The app has no speed camera, police, or enforcement features. It gives no alerts or sounds while driving.
 >
-> CarPlay: the Live Activity shows on the CarPlay dashboard by itself, on supported cars with iOS 26 or later. The app is not a CarPlay app and has no CarPlay entitlement.
+> The Live Activity appears on the CarPlay dashboard on supported cars with iOS 26 or later. The app isn't a CarPlay app and has no CarPlay entitlement.
 >
-> The app only has data for New Zealand. Outside the country it shows "Outside New Zealand" and still shows the GPS speed, which is expected. A screen recording of a drive in New Zealand is attached. To try it yourself, simulate a location in New Zealand, for example Wellington (-41.2865, 174.7762); `AppStore/README.md` lists more points with the result at each. The first launch downloads the register, about 24 MB, which took about 36 seconds in our testing.
+> Limit has data for New Zealand only. Elsewhere it shows "Outside New Zealand" and the GPS speed. That's expected. A screen recording of about 100 seconds is attached. It was made in the iOS Simulator with simulated locations, and says so on screen. It shows onboarding and the permission prompts, drives through 30, 50 and 100 zones, the over-limit state, the Lock Screen and Dynamic Island, Settings and About, the outside-New-Zealand and open-road states, and ending a drive. The simulator can't run the Motion & Fitness walk-away detection or show CarPlay, so those aren't in it. To try the app yourself, simulate a location in New Zealand, such as Wellington (-41.2865, 174.7762). `iOS/AppStore/README.md` lists more test locations and their results. The first launch downloads the register (about 24 MB); it took about 36 seconds in our testing.
 >
-> Motion & Fitness and notifications: both are asked for at the end of onboarding, and the app works if either is declined. They exist for one feature, "Suggest ending my drive" (on by default, off in Settings). When the phone detects the user has got out and walked away, the app sends a notification asking whether to end the drive, so location isn't left on in a pocket. After 15 minutes without moving it ends the drive by itself. Motion data is read on the device and not stored or sent.
+> Motion & Fitness and notifications are requested at the end of onboarding. The app works if either is declined. Both support one feature, "Suggest ending my drive" (on by default, off in Settings). When the phone detects that you've got out and walked away, it sends a notification asking whether to end the drive, so location isn't left running in your pocket. The drive also ends automatically after 15 minutes without movement. Motion data is read on the device, not stored or sent.
 >
-> If location access is declined, the app says "Location needed" and what to turn on.
+> If you decline location access, the app says "Location needed" and tells you what to turn on.
 
 ## To check before submitting
 
@@ -103,7 +103,7 @@ The first three are the ones people see without scrolling, so they carry the ide
 - "Checks for updates when you open it, at most once a week" and "about 24 MB the first time": match `SyncSchedule` and `docs/data.md` (about 24 MB over the wire, 36 seconds in testing). Change them if either changes.
 - "Open-road sign" sentence: matches commit `9f28c10`. The raw screenshots predate it, so retake them, then rerun `Tools/frame-screenshots.py`. The rural 100 shots (02 and 05) may now show the open-road sign.
 - The welcome screen says "Every road, even offline" and "anywhere in Aotearoa New Zealand". That is in-app copy that overclaims, given the known gaps in the register, and it shows in the framed welcome slide. Reword it in the app before submitting.
-- The App Review note says a screen recording is attached. Make one (a short simulated drive) and attach it in App Store Connect.
+- The App Review note says a screen recording is attached. It's made (`iOS/AppStore/review-video/limit-review-demo.mp4`, not in git; see `README.md`). Attach it in App Store Connect, and make a new one if the app's screens change before submission, as the recording shows the current UI. Apple's guidance is that attachments are re-uploaded with each version.
 - `MARKETING_VERSION` is `0.1.0` in `project.yml`. Set it to `1.0.0` for the first release.
 - "Suggest ending my drive" paragraph and the Motion & Fitness review note: the CoreMotion walk-off, the notification and its two buttons, and the 15 minute ending have not been run on a device (`docs/status.md`). Try them on a real drive, or soften the copy.
 - "If the speed stops updating, the Lock Screen dims it": checked in the simulator by freezing the app, not on a device, where the system may throttle updates differently.

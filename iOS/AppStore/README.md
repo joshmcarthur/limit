@@ -16,10 +16,34 @@ Raw captures for the listing, from the iOS 26.5 simulator on an iPhone 17 Pro Ma
 - **Optics:** every shot is at or under the limit except 02, which is a small, realistic 4 km/h over. Keep it that way if you retake them.
 - **Data:** road names and limits are real, from a copy of the NZTA layer taken on 22 October 2026 while NZTA was rebuilding it, so coverage was not complete. Nothing shown is made up. Shots of the seasonal-limit label would need a made-up demo zone, so there are none here.
 - **Status bar:** 9:41, full signal, charging. The Lock Screen shot shows "Carrier" on the left because the simulator ignores the status bar override there.
-- **Retaking:** run `Tools/store-screenshots.sh` (needs Xcode, XcodeGen and an iPhone 17 Pro Max simulator, and downloads the register into `data/register-check` the first time; `REFRESH=1` fetches it again). It builds the app, installs it on a clean simulator, drives simulated trips with `xcrun simctl location`, and turns the phone with a small UI test in `Tools/screenshots/rotate` because the Simulator's rotate shortcut can't be scripted. It takes a few minutes and rewrites 01 to 04 and 06.
+- **Retaking:** run `Tools/store-screenshots.sh` (needs Xcode, XcodeGen and an iPhone 17 Pro Max simulator, and downloads the register into `../data/register-check` the first time; `REFRESH=1` fetches it again). It builds the app, installs it on a clean simulator, drives simulated trips with `xcrun simctl location`, and turns the phone with a small UI test in `Tools/screenshots/rotate` because the Simulator's rotate shortcut can't be scripted. It takes a few minutes and rewrites 01 to 04 and 06.
 - **Lock Screen (05) is by hand.** `simctl` can't lock and wake the phone, so the script ends by starting the trip and printing the three steps. Keep the phone awake long enough to capture it.
 - **Framed versions:** `screenshots/6.9-inch-framed/` has the captioned slides, in `portrait/` (1320 × 2868, five slides) and `landscape/` (2868 × 1320, six). They are generated, not edited by hand: change a caption in `listing.md` and run `python3 -I Tools/frame-screenshots.py`, which needs ImageMagick, `rsvg-convert` and fontTools. The whole screen is shown, uncropped, so the register credit and "checked" line stay visible. The output is flattened RGB with no alpha, which the App Store requires.
 - **Not made:** an iPad set (the app is iPhone-only) and other languages.
+
+## App Review demo video
+
+`review-video/limit-review-demo.mp4` is for App Review, not the store page. It is not in git: it shows one version's screens, and attachments are uploaded to App Store Connect by hand for each version. It is about 100 seconds, H.264, 1320 × 3128, and about 3 MB.
+
+It was recorded in the iOS Simulator with simulated locations, and says so on a title card and under every scene. Each scene has a caption in a strip below the screen, so nothing in the app is covered.
+
+| Time | Scene |
+| --- | --- |
+| 0:00 | Title card, what it is and what it can't show |
+| 0:04 | First run: welcome, then the location explanation and system prompt |
+| 0:16 | Set-up screen: Lock Screen card, over-limit tolerance, "Suggest ending my drive" |
+| 0:23 | The notifications prompt |
+| 0:27 | A drive: Wellington Central 30, Porirua City 50, the Desert Road 100 |
+| 0:44 | Over the limit: 104 in a 100, amber and "+4 over" |
+| 0:52 | Lock Screen: the Live Activities prompt, then the card |
+| 1:03 | The Dynamic Island, with the app in the background |
+| 1:09 | Settings, then About the data (attribution, licence, "doesn't endorse") |
+| 1:22 | Outside New Zealand, then the open-road sign |
+| 1:34 | End drive, then "Drive ended" |
+
+Not in it: the Motion & Fitness walk-away detection and CarPlay, which the simulator can't run (its CarPlay screen doesn't show the Live Activity).
+
+To make a new one: build the app, install it on a clean simulator with permissions reset and the register copied in (as `Tools/store-screenshots.sh` does), start `xcrun simctl io <device> recordVideo --codec=h264`, and step through the app with `xcrun simctl location start` for each route and taps for the rest. Then trim and caption it with `ffmpeg`. The recorder writes frames only when the screen changes and loses the last frame's duration, so hold the final frame from a still. Check the machine isn't busy first: a slow simulator made the first attempt stall.
 
 ## Header and search results image
 

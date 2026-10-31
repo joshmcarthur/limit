@@ -2,7 +2,8 @@ import Foundation
 import LimitCore
 
 // Downloads the live register once and reports what came back: how many zones, how big, how long it
-// takes to load and look up. Run by hand (`swift run RegisterCheck`); the copy goes to data/ (gitignored).
+// takes to load and look up. Run from iOS/ (`swift run RegisterCheck ../data/register-check`); the copy
+// goes to data/ at the repo root (gitignored).
 
 extension URL {
     var fileSizeInBytes: Int? { try? resourceValues(forKeys: [.fileSizeKey]).fileSize }
@@ -14,7 +15,7 @@ func seconds(_ block: () throws -> Void) rethrows -> Double {
     return Date().timeIntervalSince(start)
 }
 
-let directory = URL(fileURLWithPath: CommandLine.arguments.dropFirst().first ?? "data/register-check")
+let directory = URL(fileURLWithPath: CommandLine.arguments.dropFirst().first ?? "../data/register-check")
 let store = RegisterStore(directory: directory)
 
 let started = Date()

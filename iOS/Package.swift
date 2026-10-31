@@ -10,7 +10,7 @@ let package = Package(
     targets: [
         // Platform-independent logic. Foundation only, so it builds and tests on Linux.
         .target(name: "LimitCore"),
-        // Run by hand to check the live register: `swift run RegisterCheck`.
+        // Run by hand to check the live register: `swift run RegisterCheck ../data/register-check`.
         .executableTarget(name: "RegisterCheck", dependencies: ["LimitCore"]),
         .testTarget(name: "LimitCoreTests", dependencies: ["LimitCore"]),
     ]
