@@ -7,19 +7,27 @@
 - Run in the iOS 18 simulator with a simulated drive: onboarding, driving (light, dark, over, landscape), settings, about and the Lock Screen Live Activity. Also run on a real iPhone: the Live Activity showed as a card on a car's CarPlay dashboard (23 October 2026, from photos). Not yet run: the CarPlay simulator, signing.
 - CI exists but is left alone to save build minutes.
 
+## Verified (Android)
+
+- `./gradlew -p android :core:test` and `:app:assembleDebug` on JDK 21.
+- Emulator `Medium_Phone_Play_Store` (API 36), 31 October 2026: Setup (location and notifications granted), Done, Start drive, `adb emu geo fix 174.77557 -41.29346` (Cuba Street, Wellington). GPS good. Sign 30, road name Wellington Central (the current register area, not a 10). Speed 0 km/h. Ongoing FGS notification. End drive stops the service. Start again restores the same sign. Landscape: sign left, speed right, FAB icon-only. Sign ring stays `#c8102e`. The copied `data/register-check` LMTZ loads after `largeHeap` and an IO decode.
+- `Medium_Phone` AVD was rebuilt onto API 36 `google_apis` (the old image was missing android-32).
+
 ## Built (Android)
 
 - `android/`: Gradle modules `:core` (JVM Kotlin port of LimitCore) and `:app` (Compose Material 3).
-- Core tests pass with `./gradlew -p android :core:test`. The debug APK builds with `:app:assembleDebug`.
 - Drive start is explicit. Location uses `LocationManager` (while-using, precise; no Play Services, no background location). Ongoing notification is the Lock Screen surface. Stop detection v1 is GPS idle only.
 - Android Auto: Car App Library `PaneTemplate` (category NAVIGATION). Glance 2×2 / 4×1 home widget and a Quick Settings Drive tile.
-- CI: Ubuntu JDK 21, `:core:test` and `:app:assembleDebug`.
+- CI: Ubuntu JDK 21, `:core:test` and `:app:assembleDebug`. Desktop Head Unit is installed (`extras;google;auto`).
 
 ## Unverified (Android)
 
 - Phone hardware, manufacturer notification shade, and Play Store listing.
-- Android Auto on a car head unit. Desktop Head Unit against `Medium_Phone_Play_Store` is the lab check.
+- Android Auto on a car head unit and a full DHU pairing session.
 - Live Updates promoted ongoing chip on API 36.
+- Home widget and Quick Settings tile on a real launcher.
+- NZTA download on the emulator (the live fetch failed; the copied register was used).
+- Over-limit hysteresis on device (unit tests cover it; emulator GPS speed stayed 0).
 
 ## Built
 
