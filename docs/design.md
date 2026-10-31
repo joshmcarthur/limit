@@ -15,6 +15,21 @@ The screens follow the "Limit — onboarding and main screen" canvas, and the to
 | Onboarding 1–3 | `OnboardingWelcomeView`, `OnboardingLocationView`, `OnboardingReadyView` |
 | Driving: light, dark, over, finding location, landscape | `DriveView` (one view; state and size class choose the variant) |
 
+### Android (`android/`, `design/Android`)
+
+| Design | Code |
+| --- | --- |
+| `design/Android/tokens.json` colours | `LimitTheme` / `Color.kt`. Dynamic colour for chrome. Sign, caution, and unknown stay fixed. |
+| SpeedSign | `SignPainter` + Compose canvas. Sizes 200 / 72 / 40 dp, ring 11%. |
+| SpeedReadout | Drive screen readout. Hysteresis still `OverLimitEvaluator` in `:core`. |
+| SetupStep | `SetupScreen` cards: Location, Notifications 13+, download. |
+| DriveFab | Drive screen FAB. Sentence case: "Start drive". |
+| DriveNotification | `DriveNotification` + `DriveForegroundService`. Channel "Drive in progress", `IMPORTANCE_LOW`. |
+| HomeWidget | Glance `DriveWidget`, 2×2 and 4×1. |
+| QuickSettingsTile | `DriveTileService`. Incomplete setup opens Setup. |
+| Android Auto | `LimitCarAppService` + `DriveCarScreen` `PaneTemplate`. Landscape phone is the guaranteed in-car surface. |
+| Driving: portrait / landscape / over | `DriveScreen`. Over-limit uses the caution container, not red. |
+
 ## Rules enforced in code
 
 - Sign, then speed, in that order on every surface.

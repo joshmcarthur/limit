@@ -10,10 +10,10 @@ If something isn't working, email [limit-app@joshmcarthur.com](mailto:limit-app@
 2. **"Open road" and a circle with a line through it.** The register has no limit recorded for that road, so Limit doesn't guess. Follow the posted signs. If you tell me the street, I'll look at whether the register is missing it.
 3. **"Outside New Zealand".** Limit only has New Zealand's speed limits. It still shows your speed.
 4. **The limit doesn't match the sign.** The register's limits came from each council's bylaws, so a few differ from what's on the road. The sign on the road is the rule. Email me the street and I'll check; the fix belongs in the register, which belongs to NZTA.
-5. **No card on the Lock Screen or in the Dynamic Island.** Check "Show on Lock Screen" in Limit's settings, and that Live Activities are allowed for Limit in the iPhone's Settings.
+5. **No card on the Lock Screen or in the Dynamic Island (iPhone).** Check "Show on Lock Screen" in Limit's settings, and that Live Activities are allowed for Limit in the iPhone's Settings. **On Android**, the Lock Screen surface is the ongoing "Drive in progress" notification. Allow notifications for Limit, and start a drive with **Start drive**. Limit does not use background location.
 6. **The speed goes grey.** Limit hasn't heard a new speed for a few seconds. It's usually the phone being busy. It clears itself.
 7. **Limit asked whether to end my drive, or ended it.** Limit notices when you've got out of the car and walked away, so location isn't left running in your pocket. You can turn this off with "Suggest ending my drive" in Settings.
-8. **Anything else.** Tell me what you saw and what you expected, and which iPhone and iOS version you have.
+8. **Anything else.** Tell me what you saw and what you expected, and which phone and OS version you have.
 
 ## Privacy policy
 
@@ -23,22 +23,28 @@ Limit doesn't collect your personal information. There's no account and no analy
 
 Limit asks for your location while you use the app, so it can find the road you're on and measure your speed. It's used on your phone as you drive and isn't saved, shared or sent anywhere.
 
-Once you start a drive, Limit keeps using your location while your phone is locked or the app is in the background, so the Lock Screen and Dynamic Island stay current. iOS shows a blue indicator while this happens. It stops when you tap "End drive".
+Once you start a drive, Limit keeps using your location while your phone is locked or the app is in the background, so the Lock Screen stays current. On iPhone that is the Live Activity (iOS shows a blue indicator). On Android that is a location foreground service and the "Drive in progress" notification. It stops when you tap "End drive".
+
+On Android the permission is **While using the app** (`ACCESS_FINE_LOCATION` / `ACCESS_COARSE_LOCATION`), with precise location. Limit does **not** ask for background location (`ACCESS_BACKGROUND_LOCATION`). A drive starts only from a visible action (Start drive, the widget, the tile, or Android Auto).
 
 ### Motion & Fitness
 
-Limit asks to read Motion & Fitness, only so it can tell when you've gone from driving to walking and offer to end the drive.
+On iPhone, Limit asks to read Motion & Fitness, only so it can tell when you've gone from driving to walking and offer to end the drive.
 
 - It's read on your phone and isn't stored or sent anywhere.
 - You can say no. Limit then ends a drive by itself after 15 minutes without moving.
 - You can turn it off any time in your iPhone's settings, or turn off "Suggest ending my drive" in Limit's settings.
 
+On Android, Limit does not read activity recognition. It ends a drive after 15 minutes of near-zero GPS speed.
+
 ### Notifications
 
-Limit asks to send notifications for one thing: asking whether to end your drive once you've stopped driving.
+On iPhone, Limit asks to send notifications for one thing: asking whether to end your drive once you've stopped driving.
+
+On Android (13 and later) Limit asks for `POST_NOTIFICATIONS`. That covers the ongoing drive notification and the stop-driving question. On Android 16 and later it may also ask for promoted ongoing notifications (`POST_PROMOTED_NOTIFICATIONS`) so the drive can appear as a Live Update.
 
 - They're made on your phone. Limit has no server and doesn't use push notifications.
-- You can say no. The drive still ends by itself, just without the question.
+- You can say no. The drive still starts and still ends by itself. On Android, Setup says the Lock Screen surface is missing.
 
 ### What Limit keeps on your phone
 
@@ -64,4 +70,4 @@ Under the Privacy Act 2020 you can ask what personal information an agency holds
 
 If this changes, I'll update the date below.
 
-Last updated: 23 October 2026
+Last updated: 31 October 2026

@@ -7,6 +7,20 @@
 - Run in the iOS 18 simulator with a simulated drive: onboarding, driving (light, dark, over, landscape), settings, about and the Lock Screen Live Activity. Also run on a real iPhone: the Live Activity showed as a card on a car's CarPlay dashboard (23 October 2026, from photos). Not yet run: the CarPlay simulator, signing.
 - CI exists but is left alone to save build minutes.
 
+## Built (Android)
+
+- `android/`: Gradle modules `:core` (JVM Kotlin port of LimitCore) and `:app` (Compose Material 3).
+- Core tests pass with `./gradlew -p android :core:test`. The debug APK builds with `:app:assembleDebug`.
+- Drive start is explicit. Location uses `LocationManager` (while-using, precise; no Play Services, no background location). Ongoing notification is the Lock Screen surface. Stop detection v1 is GPS idle only.
+- Android Auto: Car App Library `PaneTemplate` (category NAVIGATION). Glance 2×2 / 4×1 home widget and a Quick Settings Drive tile.
+- CI: Ubuntu JDK 21, `:core:test` and `:app:assembleDebug`.
+
+## Unverified (Android)
+
+- Phone hardware, manufacturer notification shade, and Play Store listing.
+- Android Auto on a car head unit. Desktop Head Unit against `Medium_Phone_Play_Store` is the lab check.
+- Live Updates promoted ongoing chip on API 36.
+
 ## Built
 
 - `LimitCore`: geometry and point-in-polygon, GeoJSON zone parser, grid-indexed register lookup, binary store, ArcGIS downloader with paging and progress, over-limit hysteresis, sign state and freshness, drive engine, settings, sync copy, VoiceOver labels, design tokens.

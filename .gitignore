@@ -13,6 +13,7 @@ iOS/Config/*.plist
 
 # Android
 android/.gradle/
+android/.kotlin/
 android/**/build/
 *.iml
 local.properties
