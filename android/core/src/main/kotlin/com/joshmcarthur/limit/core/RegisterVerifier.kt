@@ -24,7 +24,8 @@ data class DownloadedRegister(
 
 /** What a download must look like before it can replace the live register. */
 data class RegisterVerificationPolicy(
-    var minimumZones: Int = 12_000,
+    /** NZTA's in-force set is about 9,000 zones after superseded records ended. */
+    var minimumZones: Int = 8_000,
     /** The new copy must keep at least this fraction of the zones in the one in use. */
     var minimumFractionOfCurrent: Double = 0.8,
     /** The download must contain at least this fraction of the records the source reported at the start. */

@@ -332,7 +332,7 @@ class RegisterUpdaterTest {
         val source = Source()
         source.records = 4
         val reason = rejection { updater(source, at = Instant.now(), policy = RegisterVerificationPolicy.standard).update() }
-        assertEquals(RegisterRejection.TooFewZones(count = 4, minimum = 12_000), reason)
+        assertEquals(RegisterRejection.TooFewZones(count = 4, minimum = 8_000), reason)
         assertNull(liveZoneCount())
     }
 
@@ -351,7 +351,7 @@ class RegisterUpdaterTest {
         source.records = 4
         source.reportedCount = null
         val reason = rejection { updater(source, at = Instant.now(), policy = RegisterVerificationPolicy.standard).update() }
-        assertEquals(RegisterRejection.TooFewZones(count = 4, minimum = 12_000), reason)
+        assertEquals(RegisterRejection.TooFewZones(count = 4, minimum = 8_000), reason)
     }
 
     @Test

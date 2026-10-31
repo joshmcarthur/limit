@@ -67,6 +67,25 @@ class RegisterVerifierTest {
     }
 
     @Test
+    fun standardPolicyAcceptsTheCurrentNationalSet() {
+        assertNull(
+            RegisterVerifier.check(
+                downloaded(zones = 8_000),
+                current = null,
+                policy = RegisterVerificationPolicy.standard,
+            ),
+        )
+        assertEquals(
+            RegisterRejection.TooFewZones(count = 7_999, minimum = 8_000),
+            RegisterVerifier.check(
+                downloaded(zones = 7_999),
+                current = null,
+                policy = RegisterVerificationPolicy.standard,
+            ),
+        )
+    }
+
+    @Test
     fun anEmptyCurrentCopyDoesNotBlockAnything() {
         assertNull(RegisterVerifier.check(downloaded(zones = 150), current = current(0), policy = policy))
     }
