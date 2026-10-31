@@ -4,6 +4,7 @@ import android.app.Application
 import android.content.Context
 import android.content.Intent
 import android.os.Build
+import android.util.Log
 import androidx.core.content.ContextCompat
 import com.joshmcarthur.limit.core.DriveEngine
 import com.joshmcarthur.limit.core.DriveState
@@ -195,7 +196,8 @@ class DriveModel(private val app: Application) {
                 }
             } catch (cancelled: kotlinx.coroutines.CancellationException) {
                 throw cancelled
-            } catch (_: Throwable) {
+            } catch (error: Throwable) {
+                Log.e(TAG, "register sync failed", error)
                 sync.failed()
             } finally {
                 publishSync()
@@ -276,5 +278,6 @@ class DriveModel(private val app: Application) {
         private const val ENDED_BY_DRIVER = "drive.endedByDriver"
         private const val LOCATION_PROMPTED = "location.prompted"
         private const val NOTIFICATIONS_PROMPTED = "notifications.prompted"
+        private const val TAG = "Limit"
     }
 }
