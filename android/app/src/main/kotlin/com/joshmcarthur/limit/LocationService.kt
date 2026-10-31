@@ -4,7 +4,6 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.PackageManager
-import android.location.Criteria
 import android.location.Location
 import android.location.LocationListener
 import android.location.LocationManager
@@ -21,13 +20,14 @@ class LocationService(private val context: Context) {
     var onAccessChange: ((LocationAccess) -> Unit)? = null
 
     private val manager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+    private var updatesRequested = false
     private val listener = object : LocationListener {
         override fun onLocationChanged(location: Location) {
             onSample?.invoke(
                 LocationSample(
                     coordinate = Coordinate(location.latitude, location.longitude),
-                    speedMetresPerSecond = location.speed.toDouble(),
-                    horizontalAccuracy = location.accuracy.toDouble(),
+                    speedMetresPerSecond = if (location.hasSpeed()) location.speed.toDouble() else -1.0,
+                    horizontalAccuracy = if (location.hasAccuracy()) location.accuracy.toDouble() else -1.0,
                     timestamp = Instant.ofEpochMilli(location.time),
                 ),
             )
@@ -43,17 +43,24 @@ class LocationService(private val context: Context) {
 
     @SuppressLint("MissingPermission")
     fun start() {
-        if (access != LocationAccess.authorized) return
-        val criteria = Criteria().apply {
-            accuracy = Criteria.ACCURACY_FINE
-            isSpeedRequired = true
+        if (access != LocationAccess.authorized || updatesRequested) return
+        val provider = when {
+            manager.isProviderEnabled(LocationManager.GPS_PROVIDER) -> LocationManager.GPS_PROVIDER
+            manager.isProviderEnabled(LocationManager.NETWORK_PROVIDER) -> LocationManager.NETWORK_PROVIDER
+            else -> return
         }
-        val provider = manager.getBestProvider(criteria, true) ?: LocationManager.GPS_PROVIDER
-        manager.requestLocationUpdates(provider, 1_000L, 0f, listener, Looper.getMainLooper())
+        try {
+            manager.requestLocationUpdates(provider, 1_000L, 0f, listener, Looper.getMainLooper())
+            updatesRequested = true
+        } catch (_: SecurityException) {
+            updatesRequested = false
+        }
     }
 
     fun stop() {
+        if (!updatesRequested) return
         manager.removeUpdates(listener)
+        updatesRequested = false
     }
 
     companion object {

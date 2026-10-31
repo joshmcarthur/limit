@@ -19,8 +19,8 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    override fun onResume() {
-        super.onResume()
-        (application as LimitApp).driveModel.refreshAccess()
+    override fun onStart() {
+        super.onStart()
+        (application as LimitApp).driveModel.onForeground()
     }
 }

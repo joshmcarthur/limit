@@ -67,6 +67,9 @@ class DriveModel(private val app: Application) {
     private val _notificationsGranted = MutableStateFlow(notificationAccess())
     val notificationsGranted: StateFlow<Boolean> = _notificationsGranted
 
+    private val _notificationsPrompted = MutableStateFlow(prefs.getBoolean(NOTIFICATIONS_PROMPTED, false))
+    val notificationsPrompted: StateFlow<Boolean> = _notificationsPrompted
+
     init {
         engine.evaluator.setTolerance(_settings.value.overTolerance)
         location.onSample = { sample -> handle(sample) }
@@ -88,6 +91,18 @@ class DriveModel(private val app: Application) {
         refreshAccess()
     }
 
+    fun markNotificationsPrompted() {
+        prefs.edit().putBoolean(NOTIFICATIONS_PROMPTED, true).apply()
+        _notificationsPrompted.value = true
+        refreshAccess()
+    }
+
+    /** Refresh permission state and ask the register schedule whether a check is due. */
+    fun onForeground() {
+        refreshAccess()
+        syncRegister()
+    }
+
     fun updateSettings(transform: (LimitSettings) -> LimitSettings) {
         val next = transform(_settings.value)
         _settings.value = next
@@ -100,7 +115,6 @@ class DriveModel(private val app: Application) {
 
     fun finishOnboarding() {
         updateSettings { it.copy(hasCompletedOnboarding = true) }
-        if (_locationAccess.value.isUsable) beginDrive()
         syncRegister()
     }
 
@@ -168,7 +182,6 @@ class DriveModel(private val app: Application) {
                         is RegisterUpdateOutcome.Unchanged -> {
                             engine.registerCheckedAt = outcome.metadata.checkedAt
                             sync.finished(outcome.metadata.checkedAt)
-                            if (userInitiated) _snackbar.value = "Speed limits updated"
                         }
                         is RegisterUpdateOutcome.Downloaded -> {
                             engine.register = SpeedLimitRegister(outcome.zones)
@@ -178,6 +191,8 @@ class DriveModel(private val app: Application) {
                         }
                     }
                 }
+            } catch (cancelled: kotlinx.coroutines.CancellationException) {
+                throw cancelled
             } catch (_: Exception) {
                 sync.failed()
             } finally {
@@ -258,5 +273,6 @@ class DriveModel(private val app: Application) {
         private const val SETTINGS_KEY = "settings.v1"
         private const val ENDED_BY_DRIVER = "drive.endedByDriver"
         private const val LOCATION_PROMPTED = "location.prompted"
+        private const val NOTIFICATIONS_PROMPTED = "notifications.prompted"
     }
 }

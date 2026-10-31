@@ -1,5 +1,6 @@
 package com.joshmcarthur.limit.ui
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -22,9 +23,12 @@ fun RootScreen(model: DriveModel) {
         SetupScreen(model)
         return
     }
+    BackHandler(enabled = dest != Dest.Drive) {
+        dest = if (dest == Dest.About) Dest.Settings else Dest.Drive
+    }
     when (dest) {
         Dest.Drive -> DriveScreen(model, onSettings = { dest = Dest.Settings })
-        Dest.Settings -> SettingsScreen(model, onAbout = { dest = Dest.About }, onDone = { dest = Dest.Drive })
-        Dest.About -> AboutScreen(model, onBack = { dest = Dest.Settings })
+        Dest.Settings -> SettingsScreen(model, onAbout = { dest = Dest.About })
+        Dest.About -> AboutScreen(model)
     }
 }
