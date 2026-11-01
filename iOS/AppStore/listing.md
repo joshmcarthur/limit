@@ -26,7 +26,7 @@ The limits come from the NZTA National Speed Limit Register. The app downloads i
 
 If you go over, your speed turns amber and tells you by how much, for example "+8 over". Nothing beeps and nothing flashes while you drive. There's a small tolerance to allow for GPS error, which you can change in Settings.
 
-The sign also appears on your Lock Screen and in the Dynamic Island. If your car supports it, you'll see it on the CarPlay dashboard too (iOS 26 or later). If the speed stops updating, the Lock Screen dims it so you can tell the reading is out of date.
+The sign also appears on your Lock Screen and in the Dynamic Island, with the name of the speed zone. If your car supports it, you'll see it on the CarPlay dashboard too (iOS 26 or later). You can show your speed there instead, in Settings. If that speed stops updating, the Lock Screen dims it so you can tell the reading is out of date.
 
 Some roads have no limit listed in the register. Limit shows an open-road sign (a circle with a diagonal line) and says "Open road".
 
@@ -106,7 +106,7 @@ The first three appear before someone scrolls. They show the limit on your road,
 - The App Review note says a screen recording is attached. It's made (`iOS/AppStore/review-video/limit-review-demo.mp4`, not in git; see `README.md`). Attach it in App Store Connect, and make a new one if the app's screens change before submission, as the recording shows the current UI. Apple's guidance is that attachments are re-uploaded with each version.
 - `MARKETING_VERSION` is `0.1.0` in `project.yml`. Set it to `1.0.0` for the first release.
 - "Suggest ending my drive" paragraph and the Motion & Fitness review note: the CoreMotion walk-off, the notification and its two buttons, and the 15 minute ending have not been run on a device (`docs/status.md`). Try them on a real drive, or soften the copy.
-- "If the speed stops updating, the Lock Screen dims it": checked in the simulator by freezing the app, not on a device, where the system may throttle updates differently.
+- "The Lock Screen shows the zone name" and "If that speed stops updating, the Lock Screen dims it": the name is the default. The dim applies only when Settings shows the speed. The earlier dim was checked in the simulator by freezing the app, not on a device, where the system may throttle updates differently. The 15 second dim has not been checked on a device.
 - Add the Motion & Fitness usage string (`NSMotionUsageDescription` in `project.yml`) to any App Privacy answers App Store Connect asks for.
 - CarPlay line: Apple says Live Activities show on the CarPlay dashboard from iOS 26, with no CarPlay app needed, but names no car models, hence "in cars that support it". Check which layout CarPlay uses (the compact Dynamic Island view or the small one) and whether the Lock Screen dimming also happens there. The CarPlay simulator hasn't been run (`docs/status.md`).
 - "CarPlay" is Apple's mark. It is in the description only to say the app works with it. It is not in the keywords: Guideline 2.3.7 warns against trademarked terms there, and I couldn't confirm that Apple's own marks are exempt. Say if you want it in the keywords in place of "offline", and read the guideline and Apple's trademark rules first.

@@ -10,18 +10,21 @@ struct DriveLiveActivity: Widget {
 
     fileprivate static var configuration: some WidgetConfiguration {
         ActivityConfiguration(for: DriveActivityAttributes.self) { context in
-            ActivityBody(snapshot: Self.snapshot(context), receivedAt: context.state.sentAt)
+            ActivityBody(snapshot: Self.snapshot(context), receivedAt: context.state.sentAt, showsSpeed: context.state.showsSpeed)
                 .activityBackgroundTint(Palette.surface)
                 .activitySystemActionForegroundColor(Palette.ink)
         } dynamicIsland: { context in
             let snapshot = Self.snapshot(context)
             let receivedAt = context.state.sentAt
+            let showsSpeed = context.state.showsSpeed
             return DynamicIsland {
                 DynamicIslandExpandedRegion(.leading) {
                     SpeedSignView(state: snapshot.sign, diameter: 56, note: snapshot.limitNote)
                 }
                 DynamicIslandExpandedRegion(.trailing) {
-                    SpeedReadoutView(speed: snapshot.speed, over: snapshot.over, size: 44, unitFont: .caption, receivedAt: receivedAt)
+                    if showsSpeed {
+                        SpeedReadoutView(speed: snapshot.speed, over: snapshot.over, size: 44, unitFont: .caption, receivedAt: receivedAt)
+                    }
                 }
                 DynamicIslandExpandedRegion(.center) {
                     Text(snapshot.roadName ?? "Speed limit")
@@ -37,7 +40,11 @@ struct DriveLiveActivity: Widget {
             } compactLeading: {
                 SpeedSignView(state: snapshot.sign, diameter: 24, note: snapshot.limitNote)
             } compactTrailing: {
-                CompactSpeed(speed: snapshot.speed, over: snapshot.over, receivedAt: receivedAt)
+                if showsSpeed {
+                    CompactSpeed(speed: snapshot.speed, over: snapshot.over, receivedAt: receivedAt)
+                } else {
+                    ZoneNameLabel(name: snapshot.roadName ?? "Speed limit", color: Palette.onIsland)
+                }
             } minimal: {
                 SpeedSignView(state: snapshot.sign, diameter: 24, note: snapshot.limitNote)
             }
@@ -63,12 +70,13 @@ struct DriveLiveActivityWithSmallLayout: Widget {
 private struct ActivityBody: View {
     let snapshot: DriveSnapshot
     let receivedAt: Date
+    let showsSpeed: Bool
 
     var body: some View {
         if #available(iOS 18.0, *) {
-            FamilyBody(snapshot: snapshot, receivedAt: receivedAt)
+            FamilyBody(snapshot: snapshot, receivedAt: receivedAt, showsSpeed: showsSpeed)
         } else {
-            LockScreenView(snapshot: snapshot, receivedAt: receivedAt)
+            LockScreenView(snapshot: snapshot, receivedAt: receivedAt, showsSpeed: showsSpeed)
         }
     }
 }
@@ -77,26 +85,32 @@ private struct ActivityBody: View {
 private struct FamilyBody: View {
     let snapshot: DriveSnapshot
     let receivedAt: Date
+    let showsSpeed: Bool
     @Environment(\.activityFamily) private var family
 
     var body: some View {
         switch family {
-        case .small: SmallView(snapshot: snapshot, receivedAt: receivedAt)
-        default: LockScreenView(snapshot: snapshot, receivedAt: receivedAt)
+        case .small: SmallView(snapshot: snapshot, receivedAt: receivedAt, showsSpeed: showsSpeed)
+        default: LockScreenView(snapshot: snapshot, receivedAt: receivedAt, showsSpeed: showsSpeed)
         }
     }
 }
 
-/// Sign and speed with its unit, nothing else: the room is small and the driver is moving.
+/// Sign, and either the speed or the zone name: the room is small and the driver is moving.
 private struct SmallView: View {
     let snapshot: DriveSnapshot
     let receivedAt: Date
+    let showsSpeed: Bool
 
     var body: some View {
         HStack(spacing: DesignTokens.space3) {
             SpeedSignView(state: snapshot.sign, diameter: 44, note: snapshot.limitNote)
             Spacer(minLength: 0)
-            SpeedReadoutView(speed: snapshot.speed, over: snapshot.over, size: 32, unitFont: .caption2, receivedAt: receivedAt)
+            if showsSpeed {
+                SpeedReadoutView(speed: snapshot.speed, over: snapshot.over, size: 32, unitFont: .caption2, receivedAt: receivedAt)
+            } else {
+                ZoneNameLabel(name: snapshot.roadName ?? "Speed limit", color: Palette.ink)
+            }
         }
         .padding(DesignTokens.space3)
     }
@@ -105,6 +119,7 @@ private struct SmallView: View {
 private struct LockScreenView: View {
     let snapshot: DriveSnapshot
     let receivedAt: Date
+    let showsSpeed: Bool
 
     var body: some View {
         HStack(spacing: DesignTokens.space4) {
@@ -126,9 +141,26 @@ private struct LockScreenView: View {
                 }
             }
             Spacer(minLength: 0)
-            SpeedReadoutView(speed: snapshot.speed, over: snapshot.over, size: 44, unitFont: .caption, receivedAt: receivedAt)
+            if showsSpeed {
+                SpeedReadoutView(speed: snapshot.speed, over: snapshot.over, size: 44, unitFont: .caption, receivedAt: receivedAt)
+            }
         }
         .padding(DesignTokens.space4)
+    }
+}
+
+/// The zone name where the compact card has no other line for it. One or two lines, scaled down.
+private struct ZoneNameLabel: View {
+    let name: String
+    let color: Color
+
+    var body: some View {
+        Text(name)
+            .font(.caption.weight(.semibold))
+            .lineLimit(2)
+            .minimumScaleFactor(0.7)
+            .multilineTextAlignment(.trailing)
+            .foregroundStyle(color)
     }
 }
 

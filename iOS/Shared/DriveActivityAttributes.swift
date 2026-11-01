@@ -8,6 +8,8 @@ import LimitCore
 struct DriveActivityContent: Codable, Hashable {
     var snapshot: DriveSnapshot
     var sentAt: Date
+    /// Off, the card draws the zone name and leaves the speed number out.
+    var showsSpeed: Bool
 }
 
 /// Shared by the app (which starts and updates the activity) and the widget extension (which draws it).
