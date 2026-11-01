@@ -4,6 +4,10 @@ plugins {
     alias(libs.plugins.kotlin.compose)
 }
 
+// Release signing reads LIMIT_UPLOAD_STORE_FILE, LIMIT_UPLOAD_STORE_PASSWORD,
+// LIMIT_UPLOAD_KEY_ALIAS, and LIMIT_UPLOAD_KEY_PASSWORD. Unset leaves the release build unsigned.
+val uploadStorePath = System.getenv("LIMIT_UPLOAD_STORE_FILE")
+
 android {
     namespace = "com.joshmcarthur.limit"
     compileSdk = 36
@@ -13,12 +17,28 @@ android {
         minSdk = 26
         targetSdk = 36
         versionCode = 1
-        versionName = "0.1.0"
+        versionName = "1.0.0"
+    }
+
+    if (uploadStorePath != null) {
+        signingConfigs {
+            create("release") {
+                storeFile = project.file(uploadStorePath)
+                storePassword = System.getenv("LIMIT_UPLOAD_STORE_PASSWORD")
+                keyAlias = System.getenv("LIMIT_UPLOAD_KEY_ALIAS")
+                keyPassword = System.getenv("LIMIT_UPLOAD_KEY_PASSWORD")
+            }
+        }
     }
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"))
+            if (uploadStorePath != null) {
+                signingConfig = signingConfigs.getByName("release")
+            }
         }
     }
 
