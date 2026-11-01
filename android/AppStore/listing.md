@@ -46,7 +46,7 @@ First release.
 
 ## Screenshots
 
-Raw captures are in `screenshots/` (see `README.md`). Phone only: 1080 × 2400 portrait, 2400 × 1080 landscape, no device frames. Play wants two to eight phone screenshots, JPEG or 24-bit PNG with no alpha. Upload all six. Order and captions:
+Raw captures are in `screenshots/` (see `README.md`). Phone only: 1080 × 2400 portrait, 2400 × 1080 landscape, no device frames. Play wants two to eight phone screenshots, JPEG or 24-bit PNG with no alpha. Upload all eight. Order and captions:
 
 | Order | File | Caption |
 | --- | --- | --- |
@@ -56,6 +56,8 @@ Raw captures are in `screenshots/` (see `README.md`). Phone only: 1080 × 2400 p
 | 4 | `04-landscape-dark.png` | Fits a dash mount, either way up |
 | 5 | `03-drive-dark.png` | Easy on the eyes after dark |
 | 6 | `06-welcome.png` | Made in New Zealand. Set it up before you set off. |
+| 7 | `07-drive-variable.png` | When the sign can show more than one speed |
+| 8 | `07-notification-variable.png` | The same empty circle on the notification shade |
 
 The first three appear before someone scrolls. They show the limit on your road, what happens when you go over, and the ongoing drive notification.
 

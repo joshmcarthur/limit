@@ -10,10 +10,14 @@ Raw captures from the API 36 `Medium_Phone_Play_Store` emulator (1080 × 2400; l
 | `screenshots/04-landscape-dark.png` | Landscape, 27 km/h in the 30 zone |
 | `screenshots/05-lock-screen.png` | The ongoing drive notification (Android’s Lock Screen surface), 96 km/h in a 100 |
 | `screenshots/06-welcome.png` | First-run Setup. Location off, register not downloaded yet |
+| `screenshots/07-drive-variable.png` | Horokiwi, SH 2. The sign lists several speeds, so the circle is empty and red. The line is "Variable limit, obey the posted signs" |
+| `screenshots/07-notification-variable.png` | The same empty circle on the notification shade |
 
-Optics match the iOS set: every shot is at or under the limit except 02, which is a small 4 km/h over.
+Optics match the iOS set: every shot is at or under the limit except 02, which is a small 4 km/h over. 07 has no number to be over.
 
 05 is the notification shade, not the keyguard. The emulator lock screen did not show the `IMPORTANCE_LOW` foreground-service notification.
+
+07 is Horokiwi. The stored maximum is 100, and the sign draws no number. The notification still also shows a system "Set a screen lock" notice above the drive card.
 
 06 is Setup, not the iOS marketing welcome. The live NZTA download failed on this emulator, so the first-run card shows that error.
 

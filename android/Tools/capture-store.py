@@ -3,6 +3,9 @@
 
 Usage, from android/:
   python3 Tools/capture-store.py
+  python3 Tools/capture-store.py --horokiwi
+
+The register generation is the name in ../data/register-check/current.
 
 Needs adb, an API 36 emulator, ffmpeg, the debug APK installed, and
 ../data/register-check. Records with the emulator console at 30 fps (not
@@ -14,6 +17,7 @@ import os
 import re
 import signal
 import subprocess
+import sys
 import time
 import xml.etree.ElementTree as ET
 from pathlib import Path
@@ -23,7 +27,6 @@ ANDROID = ROOT / "android"
 OUT = ANDROID / "AppStore" / "screenshots"
 VIDEO = ANDROID / "AppStore" / "review-video"
 PKG = "com.joshmcarthur.limit"
-GEN = "gen-496D84B7-96A4-44D8-9153-41D157B39D28"
 REGISTER = ROOT / "data" / "register-check"
 ADB = os.environ.get("ADB", "adb")
 
@@ -33,6 +36,9 @@ DESERT = [(-39.2941, 175.7408), (-39.2921, 175.7408), (-39.2901, 175.7408), (-39
 PORIRUA = [(-41.0795, 174.8667), (-41.0800, 174.8662), (-41.0805, 174.8657)]
 OPEN_ROAD = [(-41.0767, 174.8709), (-41.0762, 174.8714)]
 CUPERTINO = [(37.3349, -122.0090), (37.3354, -122.0085)]
+# Both points stay inside the zone (checked 2 November 2026). The sign lists several speeds,
+# so the circle is empty and red. Do not keep a shot that shows 100.
+HOROKIWI = [(-41.24460, 174.81851), (-41.24249, 174.82106)]
 
 PORTRAIT_FAB = (855, 2237)
 SETTINGS = (996, 168)
@@ -104,21 +110,35 @@ def grant() -> None:
         adb("shell", "pm", "grant", PKG, perm)
 
 
+def register_generation() -> str:
+    current = REGISTER / "current"
+    name = current.read_text().strip()
+    if not name:
+        raise SystemExit(f"empty {current}")
+    return name
+
+
 def push_register() -> None:
-    gen_dir = REGISTER / GEN
-    dest = f"files/Register/{GEN}"
+    gen = register_generation()
+    gen_dir = REGISTER / gen
+    dest = f"files/Register/{gen}"
     sh(f"run-as {PKG} mkdir -p {dest}")
 
     def send(local: Path, remote: str) -> None:
-        print(f"  push {local.name}")
-        with local.open("rb") as fh:
-            result = run(
-                [ADB, "shell", f"run-as {PKG} sh -c 'cat > {remote}'"],
-                stdin=fh,
-                timeout=180,
-            )
-            if result.returncode != 0:
-                raise RuntimeError(f"push failed: {remote}")
+        # adb shell stdin is not binary-safe. Push to the sdcard, then copy on the device.
+        print(f"  push {local.name} ({local.stat().st_size} bytes)")
+        tmp = f"/sdcard/limit-{local.name}"
+        result = adb("push", str(local), tmp, timeout=180)
+        if result.returncode != 0:
+            raise RuntimeError(f"adb push failed: {local.name}: {result.stderr}")
+        copied = adb("shell", f"cat {tmp} | run-as {PKG} sh -c 'cat > {remote}'", timeout=180)
+        if copied.returncode != 0:
+            raise RuntimeError(f"copy failed: {remote}: {copied.stderr}")
+        sized = sh(f"run-as {PKG} wc -c {remote}")
+        written = int((sized.stdout or "0").split()[0])
+        if written != local.stat().st_size:
+            raise RuntimeError(f"{local.name}: device has {written} bytes, host has {local.stat().st_size}")
+        adb("shell", "rm", "-f", tmp)
 
     send(gen_dir / "register.json", f"{dest}/register.json")
     send(gen_dir / "register.lmtz", f"{dest}/register.lmtz")
@@ -161,7 +181,11 @@ def driving() -> bool:
 
 
 def dump_root() -> ET.Element | None:
-    adb("shell", "uiautomator", "dump", "--compressed", "/sdcard/window_dump.xml", timeout=20)
+    try:
+        adb("shell", "uiautomator", "dump", "--compressed", "/sdcard/window_dump.xml", timeout=20)
+    except subprocess.TimeoutExpired:
+        print("  ui dump timed out")
+        return None
     pull = adb("exec-out", "cat", "/sdcard/window_dump.xml")
     try:
         return ET.fromstring(pull.stdout)
@@ -404,6 +428,8 @@ def stills() -> None:
     sh("cmd statusbar collapse")
     time.sleep(0.6)
 
+    horokiwi_still(prepare=False)
+
 
 def write_srt(scenes: list[tuple[float, str]], path: Path) -> None:
     def ts(seconds: float) -> str:
@@ -473,16 +499,61 @@ def live_record() -> None:
     print(f"  wrote {final.relative_to(ROOT)}")
 
 
+def horokiwi_still(prepare: bool = True) -> None:
+    """Empty red circle on Horokiwi. Slow, so the route stays inside the thin polygon."""
+    print("07 Horokiwi variable")
+    night(False)
+    landscape(False)
+    if prepare:
+        adb("shell", "am", "force-stop", PKG)
+        time.sleep(0.5)
+        push_register()
+        set_onboarded()
+        grant()
+        launch()
+        wait_for_drive_ui()
+        start_drive()
+    sh("cmd statusbar collapse")
+    time.sleep(0.6)
+    deadline = time.time() + 180
+    texts: list[str] = []
+    while time.time() < deadline:
+        geo_drive(HOROKIWI, 15, 4)
+        texts = dump_texts()
+        print("  screen:", " | ".join(texts[:12]))
+        if any("Horokiwi" in text or "Variable limit, obey" in text for text in texts):
+            break
+        time.sleep(3)
+    else:
+        raise SystemExit("Horokiwi did not show an empty circle")
+    shot(OUT / "07-drive-variable.png")
+    sh("cmd statusbar expand-notifications")
+    time.sleep(1.5)
+    shade = dump_texts()
+    print("  shade:", " | ".join(shade[:16]))
+    if any("Variable" in text or "Horokiwi" in text for text in shade):
+        shot(OUT / "07-notification-variable.png")
+    else:
+        print("  shade does not show the variable sign; leaving it")
+    sh("cmd statusbar collapse")
+    time.sleep(0.6)
+
+
 def main() -> None:
     OUT.mkdir(parents=True, exist_ok=True)
     VIDEO.mkdir(parents=True, exist_ok=True)
     devices = adb("devices").stdout
     if "device" not in devices.split("List of devices attached", 1)[-1]:
         raise SystemExit("no emulator attached")
-    if not (REGISTER / GEN / "register.lmtz").exists():
-        raise SystemExit(f"missing register at {REGISTER / GEN}")
+    gen = register_generation()
+    if not (REGISTER / gen / "register.lmtz").exists():
+        raise SystemExit(f"missing register at {REGISTER / gen}")
     disable_circle_to_search()
     demo_mode()
+    if "--horokiwi" in sys.argv:
+        horokiwi_still()
+        print("Done.")
+        return
     stills()
     live_record()
     print("Done.")
