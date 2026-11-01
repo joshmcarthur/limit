@@ -40,6 +40,7 @@ class DriveTileService : TileService() {
                     when (val sign = model.driveState.value.snapshot.sign) {
                         is SignState.Limit -> "${sign.value} km/h limit"
                         is SignState.OpenRoad -> "Open road"
+                        is SignState.VariablePosted -> "Variable limit"
                         is SignState.Unknown -> "Driving"
                     }
                 } else {

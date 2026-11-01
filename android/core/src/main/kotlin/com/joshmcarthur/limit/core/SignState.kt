@@ -37,6 +37,12 @@ sealed class SignState {
      */
     data class OpenRoad(val isStale: Boolean) : SignState()
 
+    /**
+     * A variable speed sign can show any of several limits. The register only stored the highest, so the
+     * circle is empty and red: there is a limit, and the sign on the road has the number.
+     */
+    data class VariablePosted(val isStale: Boolean) : SignState()
+
     /** No fix, off the register, or data too old to trust. Never shows the last known limit. */
     data object Unknown : SignState()
 
@@ -46,21 +52,24 @@ sealed class SignState {
     val isOpenRoad: Boolean
         get() = this is OpenRoad
 
+    val isVariablePosted: Boolean
+        get() = this is VariablePosted
+
     companion object {
         fun make(
             limit: Int?,
             dataAge: Duration?,
             isDefaultArea: Boolean = false,
+            postedLimitUnknown: Boolean = false,
             policy: FreshnessPolicy = FreshnessPolicy.standard,
         ): SignState {
-            if (limit == null || dataAge == null) return Unknown
-            return when (policy.level(dataAge)) {
-                FreshnessPolicy.Level.Fresh ->
-                    if (isDefaultArea) OpenRoad(isStale = false) else Limit(limit, isStale = false)
-                FreshnessPolicy.Level.Stale ->
-                    if (isDefaultArea) OpenRoad(isStale = true) else Limit(limit, isStale = true)
-                FreshnessPolicy.Level.TooOld -> Unknown
-            }
+            if (dataAge == null) return Unknown
+            if (policy.level(dataAge) == FreshnessPolicy.Level.TooOld) return Unknown
+            val stale = policy.level(dataAge) == FreshnessPolicy.Level.Stale
+            if (postedLimitUnknown) return VariablePosted(isStale = stale)
+            if (limit == null) return Unknown
+            if (isDefaultArea) return OpenRoad(isStale = stale)
+            return Limit(limit, isStale = stale)
         }
     }
 }

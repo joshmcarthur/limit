@@ -25,19 +25,21 @@ object SignPainter {
             style = Paint.Style.STROKE
             strokeWidth = ring
         }
-        val known = state is SignState.Limit
+        val ringIsRed = state is SignState.Limit || state is SignState.VariablePosted
         fill.color = FACE
-        stroke.color = if (known) RING else UNKNOWN
+        stroke.color = if (ringIsRed) RING else UNKNOWN
         canvas.drawCircle(cx, cy, radius, fill)
         canvas.drawCircle(cx, cy, radius, stroke)
         when (state) {
             is SignState.Unknown -> drawNumeral(canvas, cx, cy, "\u2013", size, null, UNKNOWN, typeface)
             is SignState.OpenRoad -> drawOpenRoad(canvas, cx, cy, size, ring)
+            is SignState.VariablePosted -> Unit
             is SignState.Limit -> drawNumeral(canvas, cx, cy, state.value.toString(), size, state.value, INK, typeface)
         }
         val stale = when (state) {
             is SignState.Limit -> state.isStale
             is SignState.OpenRoad -> state.isStale
+            is SignState.VariablePosted -> state.isStale
             SignState.Unknown -> false
         }
         if (stale && SignMetrics.showsStaleBadge(size.toDouble())) drawStaleBadge(canvas, size)

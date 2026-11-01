@@ -155,6 +155,28 @@ class ZoneAttributesTest {
     }
 
     @Test
+    fun postedLimitUnknownRoundTripsAndVersion3DoesNotHaveIt() {
+        val z = SpeedZone(
+            name = "SH 2",
+            limit = 100,
+            postedLimitUnknown = true,
+            kind = ZoneKind.variable,
+            polygons = listOf(Polygon(outer = ring())),
+        )!!
+        val decoded = ZoneCodec.decode(ZoneCodec.encode(listOf(z))).first()
+        assertTrue(decoded.postedLimitUnknown)
+        assertEquals(100, decoded.limit)
+        val old = ZoneCodec.encode(listOf(z))
+        old[4] = 3.toByte()
+        val v3 = old.toMutableList()
+        v3.removeAt(9 + 5)
+        val decodedV3 = ZoneCodec.decode(v3.toByteArray()).first()
+        assertFalse(decodedV3.postedLimitUnknown)
+        assertEquals("SH 2", decodedV3.name)
+        assertEquals(100, decodedV3.limit)
+    }
+
+    @Test
     fun anOldFormatCopyIsRejected() {
         val old = ZoneCodec.encode(emptyList())
         old[4] = 2.toByte()
@@ -186,7 +208,7 @@ class ZoneAttributesTest {
         val bytes = ZoneCodec.encode(listOf(z))
         val bad = 20_231_399
         for (i in 0 until 4) {
-            bytes[9 + 5 + i] = ((bad shr (8 * i)) and 0xFF).toByte()
+            bytes[9 + 6 + i] = ((bad shr (8 * i)) and 0xFF).toByte()
         }
         assertEquals(ZoneCodecError.Invalid, assertFails { ZoneCodec.decode(bytes) })
     }

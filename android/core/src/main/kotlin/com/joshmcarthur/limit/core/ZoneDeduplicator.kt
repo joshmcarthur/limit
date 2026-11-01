@@ -28,5 +28,6 @@ object ZoneDeduplicator {
 
     private fun repeats(earlier: SpeedZone, zone: SpeedZone): Boolean =
         earlier.limit == zone.limit && earlier.reduced == zone.reduced && earlier.kind == zone.kind &&
+            earlier.postedLimitUnknown == zone.postedLimitUnknown &&
             earlier.structure == zone.structure && earlier.period == zone.period && earlier.polygons == zone.polygons
 }

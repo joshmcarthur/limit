@@ -7,8 +7,10 @@ class SpeedZone private constructor(
     /** The register's identifier for the zone. Only used to drop repeated records; not stored on disk. */
     val id: String?,
     val name: String?,
-    /** The permanent limit. */
+    /** The permanent limit. When [postedLimitUnknown] is set, this is the highest speed the sign can show. */
     val limit: Int,
+    /** The sign on the road can show any of several speeds, and this record only has the highest. */
+    val postedLimitUnknown: Boolean,
     /** A lower limit that applies at set times (a school zone), if the register gives one we can read. */
     val reduced: ReducedLimit?,
     val kind: ZoneKind,
@@ -36,7 +38,8 @@ class SpeedZone private constructor(
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other !is SpeedZone) return false
-        return id == other.id && name == other.name && limit == other.limit && reduced == other.reduced &&
+        return id == other.id && name == other.name && limit == other.limit &&
+            postedLimitUnknown == other.postedLimitUnknown && reduced == other.reduced &&
             kind == other.kind && structure == other.structure && period == other.period &&
             polygons == other.polygons && bounds == other.bounds
     }
@@ -45,6 +48,7 @@ class SpeedZone private constructor(
         var result = id?.hashCode() ?: 0
         result = 31 * result + (name?.hashCode() ?: 0)
         result = 31 * result + limit
+        result = 31 * result + if (postedLimitUnknown) 1 else 0
         result = 31 * result + (reduced?.hashCode() ?: 0)
         result = 31 * result + kind.hashCode()
         result = 31 * result + structure.hashCode()
@@ -59,6 +63,7 @@ class SpeedZone private constructor(
             id: String? = null,
             name: String?,
             limit: Int,
+            postedLimitUnknown: Boolean = false,
             reduced: ReducedLimit? = null,
             kind: ZoneKind = ZoneKind.permanent,
             structure: StructureType = StructureType.none,
@@ -78,6 +83,7 @@ class SpeedZone private constructor(
                 id = id,
                 name = name,
                 limit = limit,
+                postedLimitUnknown = postedLimitUnknown,
                 reduced = reduced,
                 kind = kind,
                 structure = structure,

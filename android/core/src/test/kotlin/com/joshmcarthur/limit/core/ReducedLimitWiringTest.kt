@@ -4,14 +4,17 @@ import java.time.OffsetDateTime
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFails
+import kotlin.test.assertFalse
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 class ReducedLimitWiringTest {
     private val square = "[[[174,-41],[175,-41],[175,-40],[174,-40],[174,-41]]]"
     private val inside = Coordinate(latitude = -40.5, longitude = 174.5)
 
-    private fun feature(value: String = "50", variable: String?, periods: String?): ByteArray {
+    private fun feature(value: String = "50", variable: String?, periods: String?, category: String? = null): ByteArray {
         val extra = listOfNotNull(
+            category?.let { "\"speedCategoryName\":\"$it\"" },
             variable?.let { "\"speedLimitZoneVariableSpeed\":\"$it\"" },
             periods?.let { "\"speedLimitZoneVarPrdDesc\":\"$it\"" },
         ).joinToString(",")
@@ -33,6 +36,20 @@ class ReducedLimitWiringTest {
         assertEquals(50, z.limit)
         assertEquals(40, z.reduced?.limit)
         assertEquals(2, z.reduced?.windows?.size)
+    }
+
+    @Test
+    fun aListOfSpeedsHidesTheNumberAndOneLowerSpeedDoesNot() {
+        val highway = zone(feature(value = "100", variable = "50 km/h, 60 km/h, 70 km/h, 80 km/h, 90 km/h", periods = null, category = "Variable"))
+        assertTrue(highway.postedLimitUnknown)
+        assertEquals(100, highway.limit)
+        assertNull(highway.reduced)
+        val school = zone(feature(value = "50", variable = "40 km/h", periods = "8.30am to 9.15am", category = "Variable"))
+        assertFalse(school.postedLimitUnknown)
+        assertEquals(40, school.reduced?.limit)
+        val step = zone(feature(value = "100", variable = "70 km/h", periods = null, category = "Variable"))
+        assertFalse(step.postedLimitUnknown)
+        assertFalse(zone(feature(value = "100", variable = "50 km/h, 60 km/h", periods = null, category = "Permanent")).postedLimitUnknown)
     }
 
     @Test

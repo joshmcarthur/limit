@@ -63,6 +63,7 @@ private fun Content(app: LimitApp) {
     val limitText = when (val sign = snapshot.sign) {
         is SignState.Limit -> sign.value.toString()
         is SignState.OpenRoad -> "Open"
+        is SignState.VariablePosted -> ""
         is SignState.Unknown -> "–"
     }
     val action = actionRunCallback<ToggleDriveAction>()

@@ -9,6 +9,8 @@ class SpeedLimitMatch(
     val zoneName: String?,
     /** Seasonal and emergency limits end, so the driver is told which one they're looking at. */
     val kind: ZoneKind = ZoneKind.permanent,
+    /** The sign on the road can show a lower number than [limit]. The circle is drawn empty. */
+    val postedLimitUnknown: Boolean = false,
     /** Which zone in the register matched, so the next lookup can prefer staying in it. */
     val zoneID: Int = -1,
 ) {
@@ -22,13 +24,15 @@ class SpeedLimitMatch(
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other !is SpeedLimitMatch) return false
-        return limit == other.limit && zoneName == other.zoneName && kind == other.kind
+        return limit == other.limit && zoneName == other.zoneName && kind == other.kind &&
+            postedLimitUnknown == other.postedLimitUnknown
     }
 
     override fun hashCode(): Int {
         var result = limit
         result = 31 * result + (zoneName?.hashCode() ?: 0)
         result = 31 * result + kind.hashCode()
+        result = 31 * result + if (postedLimitUnknown) 1 else 0
         return result
     }
 }
@@ -97,6 +101,7 @@ class SpeedLimitRegister private constructor(
             limit = zone.effectiveLimit(at),
             zoneName = zone.name,
             kind = zone.kind,
+            postedLimitUnknown = zone.postedLimitUnknown,
             zoneID = best,
         )
     }

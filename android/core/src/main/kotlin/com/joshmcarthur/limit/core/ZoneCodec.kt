@@ -18,14 +18,15 @@ sealed class ZoneCodecError : Exception() {
  *
  * Layout, little endian: `LMTZ`, version u8, zone count u32, then per zone: limit u8, reduced limit u8
  * (0 = none) and, if present, window count u8 with start u16 and end u16 (minutes) for each, kind u8,
- * structure u8, period flags u8 (1 = start, 2 = end, 4 = repeats yearly) then start and end as i32 `yyyymmdd`
+ * structure u8, period flags u8 (1 = start, 2 = end, 4 = repeats yearly), then from version 4 one byte
+ * (1 = the posted number is unknown), then start and end as i32 `yyyymmdd`
  * for those present, name length
  * u16 (0 = none) and UTF-8 bytes, polygon count u32; per polygon: ring count u32 (first is the outer ring);
  * per ring: point count u32 then lat i32, lon i32 for each point.
  */
 object ZoneCodec {
     val magic: ByteArray = "LMTZ".toByteArray(Charsets.US_ASCII)
-    const val version: Int = 3
+    const val version: Int = 4
     private const val scale = 1_000_000.0
 
     fun encode(zones: List<SpeedZone>): ByteArray {
@@ -55,10 +56,13 @@ object ZoneCodec {
                 if (period.end != null) flags = flags or 2
                 if (period.repeatsYearly) flags = flags or 4
                 out.write(flags)
-                period.start?.let { putI32(ActivePeriod.pack(it), out) }
-                period.end?.let { putI32(ActivePeriod.pack(it), out) }
             } else {
                 out.write(0)
+            }
+            out.write(if (zone.postedLimitUnknown) 1 else 0)
+            if (period != null) {
+                period.start?.let { putI32(ActivePeriod.pack(it), out) }
+                period.end?.let { putI32(ActivePeriod.pack(it), out) }
             }
             val name = (zone.name ?: "").toByteArray(Charsets.UTF_8).let { bytes ->
                 if (bytes.size > 0xFFFF) bytes.copyOf(0xFFFF) else bytes
@@ -85,7 +89,7 @@ object ZoneCodec {
         val reader = Reader(data)
         if (!reader.bytes(4).contentEquals(magic)) throw ZoneCodecError.BadMagic
         val foundVersion = reader.u8()
-        if (foundVersion != version) throw ZoneCodecError.UnsupportedVersion(foundVersion)
+        if (foundVersion != 3 && foundVersion != version) throw ZoneCodecError.UnsupportedVersion(foundVersion)
 
         val zoneCountLong = reader.u32()
         if (zoneCountLong > reader.remaining.toLong() / 14) throw ZoneCodecError.Truncated
@@ -108,6 +112,7 @@ object ZoneCodec {
             val kind = ZoneKind.fromRaw(reader.u8()) ?: throw ZoneCodecError.Invalid
             val structure = StructureType.fromRaw(reader.u8()) ?: throw ZoneCodecError.Invalid
             val flags = reader.u8()
+            val postedLimitUnknown = if (foundVersion >= 4) reader.u8() != 0 else false
             var period: ActivePeriod? = null
             if (flags != 0) {
                 if ((flags and 7.inv()) != 0) throw ZoneCodecError.Invalid
@@ -151,6 +156,7 @@ object ZoneCodec {
             val zone = SpeedZone(
                 name = name,
                 limit = limit,
+                postedLimitUnknown = postedLimitUnknown,
                 reduced = reduced,
                 kind = kind,
                 structure = structure,

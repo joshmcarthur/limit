@@ -37,6 +37,32 @@ class DriveEngineTest {
         )
 
     @Test
+    fun aVariableListShowsTheNameAndNoNumber() {
+        val ring = Ring(
+            listOf(
+                Coordinate(latitude = -41.1, longitude = 173.9),
+                Coordinate(latitude = -41.1, longitude = 174.1),
+                Coordinate(latitude = -40.9, longitude = 174.1),
+                Coordinate(latitude = -40.9, longitude = 173.9),
+            ),
+        )!!
+        val zone = SpeedZone(
+            name = "HOROKIWI TO NGAURANGA, SH 2",
+            limit = 100,
+            postedLimitUnknown = true,
+            kind = ZoneKind.variable,
+            polygons = listOf(Polygon(outer = ring)),
+        )!!
+        val e = DriveEngine(register = SpeedLimitRegister(zones = listOf(zone)), registerCheckedAt = now.minusSeconds(3_600))
+        val state = e.ingest(sample(kmh = 110.0), now = now)
+        assertEquals(SignState.VariablePosted(isStale = false), state.snapshot.sign)
+        assertNull(state.snapshot.limit)
+        assertEquals("Horokiwi To Ngauranga, SH 2", state.snapshot.roadName)
+        assertEquals(LimitNote.variable, state.snapshot.limitNote)
+        assertEquals(OverLimitState.NotOver, state.snapshot.over)
+    }
+
+    @Test
     fun normalDriving() {
         val e = engine()
         val state = e.ingest(sample(kmh = 47.0), now = now)
