@@ -8,7 +8,7 @@ settings:
   base:
     SWIFT_VERSION: "5.0"
     DEVELOPMENT_TEAM: T86Z8SF4GG
-    MARKETING_VERSION: "0.1.0"
+    MARKETING_VERSION: "2"
     CURRENT_PROJECT_VERSION: "1"
 packages:
   Limit:
@@ -26,6 +26,8 @@ targets:
       path: Config/App-Info.plist
       properties:
         CFBundleDisplayName: Limit
+        CFBundleShortVersionString: "$(MARKETING_VERSION)"
+        CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
         UILaunchScreen: {}
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait, UIInterfaceOrientationPortraitUpsideDown, UIInterfaceOrientationLandscapeLeft, UIInterfaceOrientationLandscapeRight]
         NSLocationWhenInUseUsageDescription: Limit uses your location to find the road you’re on and to measure your speed. It never leaves your phone.
@@ -49,6 +51,8 @@ targets:
       path: Config/Widgets-Info.plist
       properties:
         CFBundleDisplayName: Limit
+        CFBundleShortVersionString: "$(MARKETING_VERSION)"
+        CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
         NSExtension:
           NSExtensionPointIdentifier: com.apple.widgetkit-extension
     settings:
