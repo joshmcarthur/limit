@@ -19,6 +19,22 @@ extension Color {
             })
         }
     }
+
+    /// One solid token colour for a known appearance.
+    /// The Lock Screen card tint and its text can otherwise resolve against different trait collections,
+    /// which draws the dark-mode ink (white) on the light card.
+    init(_ token: ThemedColor, scheme: ColorScheme) {
+        let hex: HexColor
+        switch scheme {
+        case .dark:
+            hex = token.dark
+        case .light:
+            hex = token.light
+        @unknown default:
+            hex = token.light
+        }
+        self.init(uiColor: UIColor(hex))
+    }
 }
 
 /// The Limit design system colours. `signRing` is reserved for the speed sign.
