@@ -5,7 +5,7 @@ import Foundation
 public enum LimitCore {
     public static let registerName = "NZTA National Speed Limit Register"
 
-    /// The credit shown on the drive screen and the Live Activity. The About screen carries the full CC BY 4.0 credit.
+    /// The credit on the drive screen. The About screen carries the full CC BY 4.0 credit. The Lock Screen does not repeat it.
     public static let attribution = "Data from Waka Kotahi’s National Speed Limit Register"
 
     /// Sent with every request to the source, so its operators can see who is asking and get in touch.
