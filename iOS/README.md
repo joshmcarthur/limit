@@ -39,7 +39,12 @@ To download a local copy of the register into the shared `data/` folder:
 
 ```sh
 swift run RegisterCheck ../data/register-check
+swift run RegisterCheck ../data/register-check --lookup -41.17,174.83
+swift run RegisterCheck ../data/register-check --along -41.17,174.83 -41.13,174.84 --step 200
+swift run RegisterCheck ../data/register-check --export corridor.geojson --bbox -41.18,174.80,-41.12,174.86
 ```
+
+`--lookup` and `--along` print the limit the app would show. `--export` writes the stored zones. `--bbox` is `minLat,minLon,maxLat,maxLon`.
 
 ## CI
 

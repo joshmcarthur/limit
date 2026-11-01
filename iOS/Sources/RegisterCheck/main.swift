@@ -4,6 +4,11 @@ import LimitCore
 // Downloads the live register once and reports what came back: how many zones, how big, how long it
 // takes to load and look up. Run from iOS/ (`swift run RegisterCheck ../data/register-check`); the copy
 // goes to data/ at the repo root (gitignored).
+//
+// The same copy can be queried the way the app looks a point up, or written out as GeoJSON:
+//   --lookup lat,lon
+//   --along lat,lon lat,lon [--step 200]
+//   --export file.geojson [--bbox minLat,minLon,maxLat,maxLon]
 
 extension URL {
     var fileSizeInBytes: Int? { try? resourceValues(forKeys: [.fileSizeKey]).fileSize }
@@ -15,7 +20,8 @@ func seconds(_ block: () throws -> Void) rethrows -> Double {
     return Date().timeIntervalSince(start)
 }
 
-let directory = URL(fileURLWithPath: CommandLine.arguments.dropFirst().first ?? "../data/register-check")
+let options = CheckOptions.parse()
+let directory = URL(fileURLWithPath: options.directory)
 let store = RegisterStore(directory: directory)
 
 let started = Date()
@@ -27,7 +33,11 @@ do {
     }
 } catch RegisterSyncError.rejected(let reason) {
     print("\ndownload rejected, nothing was replaced: \(reason)")
-    exit(2)
+    // A lookup still has the copy the app would keep. The no-flag report stops here, as before.
+    guard options.wantsQuery, let zones = try? store.loadZones() else { exit(2) }
+    print("using the copy still in \(directory.path)")
+    try query(zones, options)
+    exit(0)
 }
 FileHandle.standardError.write(Data("\n".utf8))
 
@@ -43,7 +53,16 @@ case .downloaded(let zones, let metadata):
     print("by limit: " + limits.map { "\($0.key)=\($0.value)" }.joined(separator: " "))
     print("vertices: \(zones.reduce(0) { $0 + $1.polygons.reduce(0) { $0 + $1.outer.points.count + $1.holes.reduce(0) { $0 + $1.points.count } } })")
     print("source last edited: \(metadata.sourceEditedAt.map { "\($0)" } ?? "unknown")")
-    report(zones)
+    if !options.wantsQuery { report(zones) }
+}
+
+if options.wantsQuery {
+    guard let zones = try store.loadZones() else {
+        fputs("no register in \(directory.path)\n", stderr)
+        exit(1)
+    }
+    try query(zones, options)
+    exit(0)
 }
 
 /// What kinds of record came back, and how often a bridge and the road under it disagree.
@@ -100,3 +119,174 @@ let lookupTime = seconds {
     }
 }
 print("\(lookups) lookups in Wellington: \(String(format: "%.3f", lookupTime)) s (\(String(format: "%.1f", lookupTime / Double(lookups) * 1e6)) µs each), \(hits) matched")
+
+struct CheckOptions {
+    var directory = "../data/register-check"
+    var lookups: [Coordinate] = []
+    var along: (Coordinate, Coordinate)?
+    var stepMetres = 200.0
+    var exportPath: String?
+    var bbox: BoundingBox?
+
+    var wantsQuery: Bool { !lookups.isEmpty || along != nil || exportPath != nil }
+
+    static func parse() -> CheckOptions {
+        var options = CheckOptions()
+        var args = Array(CommandLine.arguments.dropFirst())
+        var sawDirectory = false
+        func take(_ flag: String) -> String {
+            guard !args.isEmpty else { fail("missing value for \(flag)") }
+            return args.removeFirst()
+        }
+        while !args.isEmpty {
+            let arg = args.removeFirst()
+            switch arg {
+            case "--lookup":
+                options.lookups.append(coordinate(take(arg), flag: arg))
+            case "--along":
+                let start = coordinate(take(arg), flag: arg)
+                let end = coordinate(take(arg), flag: arg)
+                options.along = (start, end)
+            case "--step":
+                guard let metres = Double(take(arg)), metres > 0 else { fail("--step needs a distance in metres") }
+                options.stepMetres = metres
+            case "--export":
+                options.exportPath = take(arg)
+            case "--bbox":
+                options.bbox = box(take(arg))
+            case "--help", "-h":
+                print(usage)
+                exit(0)
+            default:
+                if arg.hasPrefix("-") { fail("unknown flag \(arg)") }
+                if sawDirectory { fail("unexpected argument \(arg)") }
+                options.directory = arg
+                sawDirectory = true
+            }
+        }
+        return options
+    }
+}
+
+func query(_ zones: [SpeedZone], _ options: CheckOptions) throws {
+    let register = SpeedLimitRegister(zones: zones)
+    for point in options.lookups { print(line(register, point)) }
+    if let (start, end) = options.along {
+        let points = samples(from: start, to: end, stepMetres: options.stepMetres)
+        print("along \(format(start)) to \(format(end)), every \(Int(options.stepMetres)) m, \(points.count) points")
+        for point in points { print(line(register, point)) }
+    }
+    if let path = options.exportPath {
+        let chosen = zones.filter { zone in
+            guard let bbox = options.bbox else { return true }
+            return overlaps(zone.bounds, bbox)
+        }
+        let data = try JSONSerialization.data(withJSONObject: featureCollection(chosen))
+        try data.write(to: URL(fileURLWithPath: path), options: .atomic)
+        print("exported \(chosen.count) zones to \(path)")
+    }
+}
+
+func line(_ register: SpeedLimitRegister, _ point: Coordinate) -> String {
+    guard let match = register.lookup(point) else { return "\(format(point)): no zone" }
+    let name = match.zoneName ?? "(no name)"
+    let area = match.isDefaultArea ? " default-area" : ""
+    return "\(format(point)): \(match.limit) \(name) \(kindName(match.kind))\(area)"
+}
+
+func format(_ point: Coordinate) -> String {
+    String(format: "%.5f,%.5f", point.latitude, point.longitude)
+}
+
+func samples(from start: Coordinate, to end: Coordinate, stepMetres: Double) -> [Coordinate] {
+    let meanLat = (start.latitude + end.latitude) / 2 * .pi / 180
+    let metresPerDegree = 111_320.0
+    let north = (end.latitude - start.latitude) * metresPerDegree
+    let east = (end.longitude - start.longitude) * metresPerDegree * cos(meanLat)
+    let length = hypot(north, east)
+    let steps = max(1, Int((length / stepMetres).rounded(.up)))
+    return (0...steps).map { i in
+        let t = Double(i) / Double(steps)
+        return Coordinate(
+            latitude: start.latitude + (end.latitude - start.latitude) * t,
+            longitude: start.longitude + (end.longitude - start.longitude) * t
+        )
+    }
+}
+
+func overlaps(_ zone: BoundingBox, _ box: BoundingBox) -> Bool {
+    zone.maxLatitude >= box.minLatitude && zone.minLatitude <= box.maxLatitude
+        && zone.maxLongitude >= box.minLongitude && zone.minLongitude <= box.maxLongitude
+}
+
+func featureCollection(_ zones: [SpeedZone]) -> [String: Any] {
+    ["type": "FeatureCollection", "features": zones.map(feature)]
+}
+
+func feature(_ zone: SpeedZone) -> [String: Any] {
+    var properties: [String: Any] = [
+        "limit": zone.limit,
+        "kind": kindName(zone.kind),
+        "structure": structureName(zone.structure),
+    ]
+    if let name = zone.name { properties["name"] = name }
+    let type: String
+    let coordinates: Any
+    if zone.polygons.count == 1 {
+        type = "Polygon"
+        coordinates = rings(zone.polygons[0])
+    } else {
+        type = "MultiPolygon"
+        coordinates = zone.polygons.map(rings)
+    }
+    return [
+        "type": "Feature",
+        "properties": properties,
+        "geometry": ["type": type, "coordinates": coordinates],
+    ]
+}
+
+func rings(_ polygon: Polygon) -> [[[Double]]] {
+    ([polygon.outer] + polygon.holes).map { ring in ring.points.map { [$0.longitude, $0.latitude] } }
+}
+
+func kindName(_ kind: ZoneKind) -> String {
+    switch kind {
+    case .permanent: return "permanent"
+    case .variable: return "variable"
+    case .seasonal: return "seasonal"
+    case .emergency: return "emergency"
+    }
+}
+
+func structureName(_ structure: StructureType) -> String {
+    switch structure {
+    case .none: return "none"
+    case .overpass: return "overpass"
+    case .underpass: return "underpass"
+    case .intersection: return "intersection"
+    }
+}
+
+func coordinate(_ text: String, flag: String) -> Coordinate {
+    let parts = text.split(separator: ",").map { Double($0.trimmingCharacters(in: .whitespaces)) }
+    guard parts.count == 2, let latitude = parts[0], let longitude = parts[1] else { fail("\(flag) needs lat,lon") }
+    return Coordinate(latitude: latitude, longitude: longitude)
+}
+
+func box(_ text: String) -> BoundingBox {
+    let parts = text.split(separator: ",").map { Double($0.trimmingCharacters(in: .whitespaces)) }
+    guard parts.count == 4, let minLat = parts[0], let minLon = parts[1], let maxLat = parts[2], let maxLon = parts[3] else {
+        fail("--bbox needs minLat,minLon,maxLat,maxLon")
+    }
+    return BoundingBox(minLatitude: minLat, maxLatitude: maxLat, minLongitude: minLon, maxLongitude: maxLon)
+}
+
+let usage = """
+usage: RegisterCheck [directory] [--lookup lat,lon] [--along lat,lon lat,lon] [--step metres] [--export file.geojson] [--bbox minLat,minLon,maxLat,maxLon]
+"""
+
+func fail(_ message: String) -> Never {
+    fputs("\(message)\n\(usage)\n", stderr)
+    exit(1)
+}
