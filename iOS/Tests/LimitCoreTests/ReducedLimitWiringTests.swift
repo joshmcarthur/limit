@@ -6,8 +6,9 @@ final class ReducedLimitWiringTests: XCTestCase {
     private let square = "[[[174,-41],[175,-41],[175,-40],[174,-40],[174,-41]]]"
     private let inside = Coordinate(latitude: -40.5, longitude: 174.5)
 
-    private func feature(value: String = "50", variable: String?, periods: String?) -> Data {
-        let extra = [variable.map { "\"speedLimitZoneVariableSpeed\":\"\($0)\"" },
+    private func feature(value: String = "50", variable: String?, periods: String?, category: String? = nil) -> Data {
+        let extra = [category.map { "\"speedCategoryName\":\"\($0)\"" },
+                     variable.map { "\"speedLimitZoneVariableSpeed\":\"\($0)\"" },
                      periods.map { "\"speedLimitZoneVarPrdDesc\":\"\($0)\"" }]
             .compactMap { $0 }.joined(separator: ",")
         return Data("""
@@ -28,6 +29,19 @@ final class ReducedLimitWiringTests: XCTestCase {
         XCTAssertEqual(z.limit, 50)
         XCTAssertEqual(z.reduced?.limit, 40)
         XCTAssertEqual(z.reduced?.windows.count, 2)
+    }
+
+    func testAListOfSpeedsHidesTheNumberAndOneLowerSpeedDoesNot() throws {
+        let highway = try zone(feature(value: "100", variable: "50 km/h, 60 km/h, 70 km/h, 80 km/h, 90 km/h", periods: nil, category: "Variable"))
+        XCTAssertTrue(highway.postedLimitUnknown)
+        XCTAssertEqual(highway.limit, 100)
+        XCTAssertNil(highway.reduced)
+        let school = try zone(feature(value: "50", variable: "40 km/h", periods: "8.30am to 9.15am", category: "Variable"))
+        XCTAssertFalse(school.postedLimitUnknown)
+        XCTAssertEqual(school.reduced?.limit, 40)
+        let step = try zone(feature(value: "100", variable: "70 km/h", periods: nil, category: "Variable"))
+        XCTAssertFalse(step.postedLimitUnknown, "one lower speed still shows the stored number")
+        XCTAssertFalse(try zone(feature(value: "100", variable: "50 km/h, 60 km/h", periods: nil, category: "Permanent")).postedLimitUnknown)
     }
 
     func testReducedLimitIsIgnoredWhenItCannotBeTrusted() throws {

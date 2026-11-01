@@ -71,6 +71,8 @@ Landscape and the Lock Screen were checked by rotating with a throwaway UI test 
 
 When the limit is seasonal, temporary, or variable, a small pill sits between the sign and the road name: "Seasonal limit, obey the posted signs", "Temporary limit, obey the posted signs", or "Variable limit, obey the posted signs" (`LimitNote`, `LimitNoteView`). The Lock Screen card uses that same line under the zone name, and shows nothing there for a permanent limit. The Dynamic Island's expanded view shows the note underneath. VoiceOver reads a numbered sign as "Speed limit 30 kilometres per hour, seasonal". A permanent limit carries none.
 
+A variable sign that lists several speeds draws an empty red circle. The register only stores the highest of those speeds, so the circle does not show it, and the app does not count "over" against it. VoiceOver reads "Variable speed limit, obey the posted signs". A school zone, or any variable record with one lower speed, still shows its number. The empty circle is not the open-road diagonal and not the grey dash.
+
 The speed readout also lost the gap between the digits and "km/h" (the font's line box was far taller than its digits). Checked in the simulator on the drive screen and on the Lock Screen after a clean install.
 
 A Live Activity survives the app being killed. The app now ends every activity it owns before starting one and when a drive ends, so relaunching mid-drive gives one card, not two. If the app relaunches and doesn't resume a drive (Lock Screen off, or no location access), a leftover card stays until the next drive.

@@ -43,6 +43,7 @@ public enum GeoJSONZoneParser {
             let polygons = polygons(from: feature["geometry"] as? [String: Any])
             let kind = ZoneKind(category: properties["speedCategoryName"] as? String)
             guard let zone = SpeedZone(id: text(properties["speedLimitZoneId"]), name: text(properties["speedLimitZoneName"]), limit: limit,
+                                    postedLimitUnknown: kind == .variable && listsSeveralSpeeds(properties["speedLimitZoneVariableSpeed"]),
                                     reduced: reducedLimit(in: properties, permanent: limit),
                                     kind: kind, structure: StructureType(name: properties["speedLimitZoneStructureTypeName"] as? String),
                                     period: period(in: properties, kind: kind), polygons: polygons) else { continue }
@@ -52,6 +53,16 @@ public enum GeoJSONZoneParser {
     }
 
     // MARK: Properties
+
+    /// A comma or a slash separates speeds the sign can show ("50 km/h, 60 km/h, …"). `km/h` is the unit,
+    /// not a separator. One value is a school or intersection step, and the permanent number still applies
+    /// outside that step.
+    static func listsSeveralSpeeds(_ value: Any?) -> Bool {
+        guard let speed = value as? String else { return false }
+        let withoutUnit = speed.replacingOccurrences(of: "km/h", with: "", options: .caseInsensitive)
+        let parts = withoutUnit.split { $0 == "," || $0 == "/" }.map { $0.trimmingCharacters(in: .whitespaces) }
+        return parts.filter { !$0.isEmpty }.count > 1
+    }
 
     /// `speedLimitZoneVariableSpeed` is the lower limit as text ("40 km/h"), or a list for highway
     /// variable-speed signs; only a single, lower value with readable periods is used.
