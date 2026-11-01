@@ -64,6 +64,13 @@ rotate() {
 # stretch that stays in one zone; if the layer changes, check the road name and limit in each shot.
 CENTRAL=("-41.2880,174.7772" "-41.2930,174.7775" "-41.2990,174.7780" "-41.3050,174.7785")
 DESERT=("-39.2941,175.7408" "-39.2921,175.7408" "-39.2901,175.7408" "-39.2881,175.7408")
+# Both points stay inside the zone (checked 2 November 2026). Horokiwi lists several speeds,
+# so the sign is an empty red circle. Do not keep a shot that shows 100.
+# Waipu Cove is seasonal, in force about late October to early April. Outside that window the
+# card will not show the seasonal line. This copy of the register has no emergency zone.
+VARIABLE=("-41.24460,174.81851" "-41.24249,174.82106")
+# Close together: a straight line between the ends of this road leaves the polygon.
+SEASONAL=("-36.03450,174.51230" "-36.03469,174.51248" "-36.03490,174.51280")
 
 # 9:41, full signal, charging.
 xcrun simctl boot "$UDID" 2>/dev/null || true
@@ -97,8 +104,14 @@ for f in glob.glob(register + "/gen-*/register.json"):
     meta = json.load(open(f))
     meta["checkedAt"] = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     json.dump(meta, open(f, "w"))
-# Onboarding done, everything else at its default. All three keys are needed or the app falls back to defaults.
-settings = json.dumps({"showOnLockScreen": True, "overTolerance": 3, "hasCompletedOnboarding": True}).encode()
+# Onboarding done. The Lock Screen card shows the zone name (showSpeedOnLockScreen stays off).
+settings = json.dumps({
+    "showOnLockScreen": True,
+    "showSpeedOnLockScreen": False,
+    "overTolerance": 3,
+    "hasCompletedOnboarding": True,
+    "suggestEndingDrive": True,
+}).encode()
 plistlib.dump({"settings.v1": settings}, open(plist, "wb"))
 PY
 
@@ -130,15 +143,23 @@ echo "  saved $OUT/04-landscape-dark.png"
 rotate portrait
 xcrun simctl ui "$UDID" appearance light
 
-# --- 05 The Lock Screen: set it up, then take it by hand --------------------------------------------
+# --- Lock Screen shots: set each trip up, then take it by hand ---------------------------------------
+# 05 is a permanent limit: sign and zone name, no second line.
+# 07 is variable: an empty red circle, the zone name, and the variable line. Not the number 100.
+# 08 is seasonal: the second line says it only applies for the season. See the date note above.
 launch; route 26.7 "${DESERT[@]}"
 cat <<EOF
 
-Lock Screen (05) is by hand:
-  1. In the Simulator press Cmd+L to lock, and wait about ten seconds.
-  2. Wake it (press the home button, Device > Home), allow Live Activities if asked.
-  3. Take it:  xcrun simctl io "$UDID" screenshot "$OUT/05-lock-screen.png"
-The trip lasts a couple of minutes. Rerun the last step of the script (or this whole script) for another go.
+Lock Screen shots are by hand. For each one: lock (Cmd+L), wait about ten seconds, wake, then take it.
+The trip lasts a couple of minutes. Rerun that route for another go.
+
+  05 permanent   already running (Desert Road). Then:
+                 xcrun simctl io "$UDID" screenshot "$OUT/05-lock-screen.png"
+  07 variable    printf '%s\n' ${VARIABLE[*]} | xcrun simctl location "$UDID" start --speed=20 -
+                 xcrun simctl io "$UDID" screenshot "$OUT/07-lock-screen-variable.png"
+  08 seasonal    printf '%s\n' ${SEASONAL[*]} | xcrun simctl location "$UDID" start --speed=4 -
+                 xcrun simctl io "$UDID" screenshot "$OUT/08-lock-screen-seasonal.png"
+                 Only while Waipu Cove's seasonal limit is in force (about late October to early April).
 
 Check each shot before keeping it: speeds at or under the limit apart from 02, real road names, nothing
 stale or "Searching for GPS". Done: $OUT
