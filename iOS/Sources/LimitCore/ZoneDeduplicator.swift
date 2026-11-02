@@ -10,6 +10,7 @@ public enum ZoneDeduplicator {
         for zone in zones {
             guard let id = zone.id else { result.append(zone); continue }
             if seen[id, default: []].contains(where: { $0.limit == zone.limit && $0.reduced == zone.reduced && $0.kind == zone.kind
+                && $0.postedLimitUnknown == zone.postedLimitUnknown
                 && $0.structure == zone.structure && $0.period == zone.period && $0.polygons == zone.polygons }) { continue }
             seen[id, default: []].append(zone)
             result.append(zone)

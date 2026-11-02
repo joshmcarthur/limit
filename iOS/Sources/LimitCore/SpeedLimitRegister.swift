@@ -5,6 +5,8 @@ public struct SpeedLimitMatch: Sendable {
     public let zoneName: String?
     /// Seasonal and emergency limits end, so the driver is told which one they're looking at.
     public let kind: ZoneKind
+    /// The sign on the road can show a lower number than `limit`. The circle is drawn empty.
+    public let postedLimitUnknown: Bool
     /// The register's catch-all record (`DEFAULT SPEED LIMIT`, and its `- INTERSECTION n` variants), which
     /// covers anywhere no zone is recorded. It is the national open-road limit, not a limit set for this
     /// road, so a street the register has missed (Freshfields Place, Plimmerton) matches it too.
@@ -15,14 +17,15 @@ public struct SpeedLimitMatch: Sendable {
     /// Which zone in the register matched, so the next lookup can prefer staying in it.
     let zoneID: Int
 
-    public init(limit: Int, zoneName: String?, kind: ZoneKind = .permanent) {
-        self.init(limit: limit, zoneName: zoneName, kind: kind, zoneID: -1)
+    public init(limit: Int, zoneName: String?, kind: ZoneKind = .permanent, postedLimitUnknown: Bool = false) {
+        self.init(limit: limit, zoneName: zoneName, kind: kind, postedLimitUnknown: postedLimitUnknown, zoneID: -1)
     }
 
-    init(limit: Int, zoneName: String?, kind: ZoneKind, zoneID: Int) {
+    init(limit: Int, zoneName: String?, kind: ZoneKind, postedLimitUnknown: Bool = false, zoneID: Int) {
         self.limit = limit
         self.zoneName = zoneName
         self.kind = kind
+        self.postedLimitUnknown = postedLimitUnknown
         self.zoneID = zoneID
     }
 }
@@ -30,7 +33,7 @@ public struct SpeedLimitMatch: Sendable {
 /// Two matches are the same when the driver would see the same thing; which record they came from doesn't matter.
 extension SpeedLimitMatch: Equatable {
     public static func == (a: SpeedLimitMatch, b: SpeedLimitMatch) -> Bool {
-        a.limit == b.limit && a.zoneName == b.zoneName && a.kind == b.kind
+        a.limit == b.limit && a.zoneName == b.zoneName && a.kind == b.kind && a.postedLimitUnknown == b.postedLimitUnknown
     }
 }
 
@@ -102,7 +105,8 @@ public struct SpeedLimitRegister: Sendable {
             }
         }
         let zone = zones[best]
-        return SpeedLimitMatch(limit: zone.effectiveLimit(at: date), zoneName: zone.name, kind: zone.kind, zoneID: best)
+        return SpeedLimitMatch(limit: zone.effectiveLimit(at: date), zoneName: zone.name, kind: zone.kind,
+                                postedLimitUnknown: zone.postedLimitUnknown, zoneID: best)
     }
 
     /// Whether zone `a` should be shown in preference to zone `b`.

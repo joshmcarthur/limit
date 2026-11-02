@@ -6,6 +6,7 @@ final class AccessibilityTests: XCTestCase {
         XCTAssertEqual(AccessibilityLabels.sign(.limit(50, isStale: false)), "Speed limit 50 kilometres per hour")
         XCTAssertEqual(AccessibilityLabels.sign(.unknown), "Speed limit unknown")
         XCTAssertEqual(AccessibilityLabels.sign(.openRoad(isStale: false)), "No limit recorded for this road, follow the posted signs")
+        XCTAssertEqual(AccessibilityLabels.sign(.variablePosted(isStale: false)), "Variable speed limit, obey the posted signs")
     }
 
     func testReadoutLabels() {

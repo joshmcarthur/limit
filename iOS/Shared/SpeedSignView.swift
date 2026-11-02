@@ -14,19 +14,24 @@ struct SpeedSignView: View {
 
     private var isStale: Bool {
         switch state {
-        case .limit(_, let stale), .openRoad(let stale): return stale
+        case .limit(_, let stale), .openRoad(let stale), .variablePosted(let stale): return stale
         case .unknown: return false
         }
+    }
+
+    /// An empty variable sign is still a red ring. Open road and unknown have no posted number, so they stay grey.
+    private var ringIsRed: Bool {
+        state.isVariablePosted || limit != nil
     }
 
     var body: some View {
         ZStack {
             Circle().fill(Palette.signFace)
             Circle().strokeBorder(
-                limit == nil ? Palette.unknown : Palette.signRing,
+                ringIsRed ? Palette.signRing : Palette.unknown,
                 lineWidth: CGFloat(SignMetrics.ringWidth(diameter: Double(diameter)))
             )
-            if state.isOpenRoad { openRoadStroke } else { numeral }
+            if state.isOpenRoad { openRoadStroke } else if state.isVariablePosted { EmptyView() } else { numeral }
         }
         .frame(width: diameter, height: diameter)
         .overlay(alignment: .topTrailing) {

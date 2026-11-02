@@ -13,13 +13,15 @@ public enum ZoneCodecError: Error, Equatable {
 ///
 /// Layout, little endian: `LMTZ`, version u8, zone count u32, then per zone: limit u8, reduced limit u8
 /// (0 = none) and, if present, window count u8 with start u16 and end u16 (minutes) for each, kind u8,
-/// structure u8, period flags u8 (1 = start, 2 = end, 4 = repeats yearly) then start and end as i32 `yyyymmdd`
+/// structure u8, period flags u8 (1 = start, 2 = end, 4 = repeats yearly), then from version 4 one byte
+/// (1 = the posted number is unknown), then start and end as i32 `yyyymmdd`
 /// for those present, name length
 /// u16 (0 = none) and UTF-8 bytes, polygon count u32; per polygon: ring count u32 (first is the outer ring);
 /// per ring: point count u32 then lat i32, lon i32 for each point.
 public enum ZoneCodec {
     static let magic: [UInt8] = Array("LMTZ".utf8)
-    static let version: UInt8 = 3
+    /// Version 3 has no posted-limit flag. Version 4 adds one byte after the period flags.
+    static let version: UInt8 = 4
     static let scale = 1_000_000.0
 
     public static func encode(_ zones: [SpeedZone]) -> Data {
@@ -42,10 +44,13 @@ public enum ZoneCodec {
             out.append(zone.structure.rawValue)
             if let period = zone.period {
                 out.append((period.start != nil ? 1 : 0) | (period.end != nil ? 2 : 0) | (period.repeatsYearly ? 4 : 0))
-                if let start = period.start { put(ActivePeriod.pack(start), to: &out) }
-                if let end = period.end { put(ActivePeriod.pack(end), to: &out) }
             } else {
                 out.append(0)
+            }
+            out.append(zone.postedLimitUnknown ? 1 : 0)
+            if let period = zone.period {
+                if let start = period.start { put(ActivePeriod.pack(start), to: &out) }
+                if let end = period.end { put(ActivePeriod.pack(end), to: &out) }
             }
             let name = Array((zone.name ?? "").utf8.prefix(Int(UInt16.max)))
             put(UInt16(name.count), to: &out)
@@ -70,7 +75,7 @@ public enum ZoneCodec {
         var r = Reader(storage: [UInt8](data))
         guard try r.bytes(4) == magic else { throw ZoneCodecError.badMagic }
         let v = try r.u8()
-        guard v == version else { throw ZoneCodecError.unsupportedVersion(v) }
+        guard v == 3 || v == version else { throw ZoneCodecError.unsupportedVersion(v) }
 
         let zoneCount = Int(try r.u32())
         // Each zone is at least 12 bytes, so a count beyond that is corrupt, not just large.
@@ -97,6 +102,7 @@ public enum ZoneCodec {
                 throw ZoneCodecError.invalid
             }
             let flags = try r.u8()
+            let postedLimitUnknown = v >= 4 ? try r.u8() != 0 : false
             var period: ActivePeriod?
             if flags != 0 {
                 guard flags & ~7 == 0 else { throw ZoneCodecError.invalid }
@@ -131,7 +137,7 @@ public enum ZoneCodec {
                 }
                 polygons.append(Polygon(outer: rings[0], holes: Array(rings.dropFirst())))
             }
-            guard let zone = SpeedZone(name: name, limit: limit, reduced: reduced, kind: kind, structure: structure, period: period, polygons: polygons) else { throw ZoneCodecError.invalid }
+            guard let zone = SpeedZone(name: name, limit: limit, postedLimitUnknown: postedLimitUnknown, reduced: reduced, kind: kind, structure: structure, period: period, polygons: polygons) else { throw ZoneCodecError.invalid }
             zones.append(zone)
         }
         return zones

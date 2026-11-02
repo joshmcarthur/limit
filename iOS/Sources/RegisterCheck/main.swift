@@ -191,7 +191,8 @@ func line(_ register: SpeedLimitRegister, _ point: Coordinate) -> String {
     guard let match = register.lookup(point) else { return "\(format(point)): no zone" }
     let name = match.zoneName ?? "(no name)"
     let area = match.isDefaultArea ? " default-area" : ""
-    return "\(format(point)): \(match.limit) \(name) \(kindName(match.kind))\(area)"
+    let posted = match.postedLimitUnknown ? " posted-unknown" : ""
+    return "\(format(point)): \(match.limit) \(name) \(kindName(match.kind))\(area)\(posted)"
 }
 
 func format(_ point: Coordinate) -> String {

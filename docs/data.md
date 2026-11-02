@@ -10,7 +10,7 @@ https://services.arcgis.com/CXBb7LAjgIIdcsPt/ArcGIS/rest/services/SpeedLimitZone
 
 ## The layer (checked against the live service, October 2026)
 
-- Limit field: `speedLimitZoneValue`, a string such as `"50"`. Other fields we read: `speedLimitZoneId`, `speedLimitZoneName`, `speedLimitZoneVariableSpeed` (the reduced school limit, e.g. `"40 km/h"`, or a list for highway variable-speed signs) and `speedLimitZoneVarPrdDesc` (free text for when it applies).
+- Limit field: `speedLimitZoneValue`, a string such as `"50"`. Other fields we read: `speedLimitZoneId`, `speedLimitZoneName`, `speedLimitZoneVariableSpeed` (one lower speed, e.g. `"40 km/h"`, or a comma-separated list) and `speedLimitZoneVarPrdDesc` (free text for when it applies). A list means the sign on the road can show any of those speeds. The stored number is the highest, and the app draws an empty red circle instead of that number. One lower speed, including a school zone, still shows its number.
 - 91,912 records, but 64,048 have `whenIneffective` set (superseded or expired). The download asks for `whenIneffective IS NULL`: 27,864 records.
 - Records repeat: the same zone id with the same shape appears several times. After removing exact repeats, 25,975 zones remained at the time. See "Layer size over time" below for what it looks like now.
 - Geometry is polygons in layers, not road centre-lines: a `DEFAULT SPEED LIMIT` 100 area, urban areas on top (`WELLINGTON CITY UTA`, 50), then zones (`WELLINGTON CENTRAL`, 30), then single streets (`CUBA STREET`, 10, a 12-point polygon). The smallest area containing the point wins, so there is no "nearest line" matching and intersections resolve themselves.
@@ -52,7 +52,7 @@ Each record has a category (`speedCategoryName`: Permanent, Variable, Seasonal, 
 
 - `speedLimitZoneLanePurposeName` and `SeperateLaneSpeeds`: bus lanes and per-lane speeds; empty in the data seen so far.
 - `speedLimitZoneReasonName`: why the limit exists (school, congestion, default area, park and so on). It could help tell a road from an area when showing the name.
-- `speedLimitZoneMaxValue` and `speedLimitZoneMinValue`: for variable-speed signs on state highways.
+- `speedLimitZoneMaxValue` and `speedLimitZoneMinValue`: the same range as a variable-speed list. The list in `speedLimitZoneVariableSpeed` is what the app reads.
 
 ## Staying current
 
