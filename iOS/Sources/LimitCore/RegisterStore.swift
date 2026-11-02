@@ -134,10 +134,16 @@ public struct RegisterStore: Sendable {
         return try Self.decoder.decode(RegisterMetadata.self, from: Data(contentsOf: metadataURL(generation)))
     }
 
+    /// The zones in the live copy, decoded with `ZoneCodec`. Nil when nothing has been downloaded.
+    /// Throws if the file is damaged; callers should `clear()`.
+    public func loadZones() throws -> [SpeedZone]? {
+        guard let generation = currentGeneration else { return nil }
+        return try ZoneCodec.decode(Data(contentsOf: zonesURL(generation)))
+    }
+
     /// Nil when nothing has been downloaded. Throws if the files are damaged; callers should `clear()`.
     public func load() throws -> StoredRegister? {
-        guard let generation = currentGeneration, let metadata = try loadMetadata() else { return nil }
-        let zones = try ZoneCodec.decode(Data(contentsOf: zonesURL(generation)))
+        guard let metadata = try loadMetadata(), let zones = try loadZones() else { return nil }
         return StoredRegister(register: SpeedLimitRegister(zones: zones), metadata: metadata)
     }
 

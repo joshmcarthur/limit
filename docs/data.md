@@ -22,6 +22,16 @@ Freshfields Place, Plimmerton showed 100 on a drive. The live layer has only `DE
 
 The default records (about 2,000: `DEFAULT SPEED LIMIT` and its `- INTERSECTION n` variants) are the national open-road limit, not a limit set for the road. The app therefore shows an open-road sign with no number and "Open road" for them, never 100, and never flags over-the-limit against them. Detection is by name (`SpeedLimitMatch.isDefaultArea`), pinned by a test, so a rename at the source would bring the 100 back. The cost: a real rural road on the default also shows no number.
 
+## Tawa to Porirua (checked 1 November 2026)
+
+`RegisterCheck --along -41.17,174.83 -41.13,174.84 --step 200` against the copy the app keeps (21,363 zones) is 50 the whole way: Wellington City UTA, then Porirua City UTA. That straight line is not a hole.
+
+The motorway is in the same copy. Interior points on its polygons look up as the named zones: Tawa to Glenside southbound 100, Ranui to Tawa northbound 100, Ranui to Tawa northbound 110, and Whitby to Tawa 110. A point on Porirua City Centre to Tawa (SH 59) in this sample fell through to Porirua City UTA 50, so that sample was off the polygon.
+
+There is a gap beside the 110 zone near Kenepuru. Around -41.1526, 174.843 the lookup is no zone. Just south, around -41.1520, 174.843, it is `DEFAULT SPEED LIMIT` (shown as open road). The 110 zone itself matches at -41.1523, 174.8428. No zone was added for the gap.
+
+A download the same day was rejected and not used: 16,467 zones against the 21,363 already stored (`muchSmaller`). The lookup above is the kept copy.
+
 ## Licence and attribution
 
 The dataset page ([NSLR on NZTA Open Data](https://opendata-nzta.opendata.arcgis.com/datasets/NZTA::national-speed-limit-register-nslr/about)) credits Waka Kotahi NZ Transport Agency and licenses the data under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). CC BY asks for: appropriate credit, a link to the licence, a note of any changes, and no suggestion of endorsement. The About screen carries all four (name and author, links to the source and the licence, what we changed, and a not-endorsed line), and the drive screen and Live Activity credit the register. Any store listing and the README should carry the same credit.
