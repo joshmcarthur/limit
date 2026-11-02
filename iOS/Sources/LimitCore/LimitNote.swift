@@ -1,14 +1,16 @@
-/// A note shown with the limit when it's one that comes and goes, so the driver doesn't take it for
-/// the permanent limit. Permanent limits and school zones carry none.
+/// A note shown when the limit is not a single permanent number, so the driver doesn't take the sign
+/// for the whole story. A permanent limit carries none.
 public enum LimitNote: String, Codable, Equatable, Sendable {
     case seasonal
     case temporary
+    case variable
 
     public init?(kind: ZoneKind?) {
         switch kind {
         case .seasonal: self = .seasonal
         case .emergency: self = .temporary
-        case .permanent, .variable, .none: return nil
+        case .variable: self = .variable
+        case .permanent, .none: return nil
         }
     }
 
@@ -16,6 +18,7 @@ public enum LimitNote: String, Codable, Equatable, Sendable {
         switch self {
         case .seasonal: return "Seasonal limit, obey the posted signs"
         case .temporary: return "Temporary limit, obey the posted signs"
+        case .variable: return "Variable limit, obey the posted signs"
         }
     }
 
@@ -24,6 +27,7 @@ public enum LimitNote: String, Codable, Equatable, Sendable {
         switch self {
         case .seasonal: return "seasonal"
         case .temporary: return "temporary"
+        case .variable: return "variable"
         }
     }
 }
