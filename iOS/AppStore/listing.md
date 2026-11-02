@@ -104,7 +104,7 @@ The first three appear before someone scrolls. They show the limit on your road,
 - "Open-road sign" sentence: matches commit `9f28c10`. The raw screenshots predate it, so retake them, then rerun `Tools/frame-screenshots.py`. The rural 100 shots (02 and 05) may now show the open-road sign.
 - The welcome screen says "Every road, even offline" and "anywhere in Aotearoa New Zealand". That is in-app copy that overclaims, given the known gaps in the register, and it shows in the framed welcome slide. Reword it in the app before submitting.
 - The App Review note says a screen recording is attached. It's made (`iOS/AppStore/review-video/limit-review-demo.mp4`, not in git; see `README.md`). Attach it in App Store Connect, and make a new one if the app's screens change before submission, as the recording shows the current UI. Apple's guidance is that attachments are re-uploaded with each version.
-- `MARKETING_VERSION` is `0.1.0` in `project.yml`. Set it to `1.0.0` for the first release.
+- `MARKETING_VERSION` is an integer in `project.yml`. It is `2`. Bump it by one for each release. `CURRENT_PROJECT_VERSION` is the build. It is `1`. Bump it only when you upload again for the same version.
 - "Suggest ending my drive" paragraph and the Motion & Fitness review note: the CoreMotion walk-off, the notification and its two buttons, and the 15 minute ending have not been run on a device (`docs/status.md`). Try them on a real drive, or soften the copy.
 - "If the speed stops updating, the Lock Screen dims it": checked in the simulator by freezing the app, not on a device, where the system may throttle updates differently.
 - Add the Motion & Fitness usage string (`NSMotionUsageDescription` in `project.yml`) to any App Privacy answers App Store Connect asks for.
