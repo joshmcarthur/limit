@@ -12,7 +12,12 @@ final class AppModel {
             persistSettings()
             engine.evaluator.setTolerance(settings.overTolerance)
             if settings.suggestEndingDrive != oldValue.suggestEndingDrive { suggestingEndChanged() }
-            if !settings.showOnLockScreen { activity.end() } else if isDriving { activity.start(driveState.snapshot) }
+            if settings.showOnLockScreen != oldValue.showOnLockScreen {
+                if !settings.showOnLockScreen { activity.end() }
+                else if isDriving { activity.start(driveState.snapshot, showsSpeed: settings.showSpeedOnLockScreen) }
+            } else if settings.showSpeedOnLockScreen != oldValue.showSpeedOnLockScreen, isDriving, settings.showOnLockScreen {
+                activity.update(driveState.snapshot, showsSpeed: settings.showSpeedOnLockScreen)
+            }
         }
     }
     private(set) var driveState = DriveState.searching
@@ -90,7 +95,7 @@ final class AppModel {
         location.start()
         stopDetector = DriveStopDetector()
         if settings.suggestEndingDrive { motion.start() }
-        if settings.showOnLockScreen { activity.start(driveState.snapshot) }
+        if settings.showOnLockScreen { activity.start(driveState.snapshot, showsSpeed: settings.showSpeedOnLockScreen) }
         ticker = Task { [weak self] in
             // Age out a stalled GPS so the display shows "–" rather than a frozen number.
             while !Task.isCancelled {
@@ -165,8 +170,9 @@ final class AppModel {
     private func apply(_ state: DriveState) {
         if state != driveState { driveState = state }
         stopDetector.observe(speedKmh: state.snapshot.speed, at: Date())
-        // Always offered: the controller re-sends unchanged content on a heartbeat so it can't go stale.
-        if settings.showOnLockScreen { activity.update(state.snapshot) }
+        // Always offered. The controller sends a speed change at once, and re-sends a steady speed on a
+        // heartbeat so it can't go stale. A card that shows the zone name sends only when that name changes.
+        if settings.showOnLockScreen { activity.update(state.snapshot, showsSpeed: settings.showSpeedOnLockScreen) }
     }
 
     // MARK: Register

@@ -34,11 +34,16 @@ struct OnboardingReadyView: View {
                         Toggle("Show on Lock Screen", isOn: $model.settings.showOnLockScreen)
                             .frame(minHeight: 52)
                         Divider()
+                        Toggle("Show my speed on the Lock Screen", isOn: $model.settings.showSpeedOnLockScreen)
+                            .frame(minHeight: 52)
+                        Divider()
                         ToleranceStepper(settings: $model.settings)
                             .frame(minHeight: 52)
                     }
                     .padding(.horizontal, DesignTokens.space4)
                     .background(Palette.surface, in: RoundedRectangle(cornerRadius: DesignTokens.radiusMedium, style: .continuous))
+                    Text("The Lock Screen shows the zone name. Your speed on this screen stays live.")
+                        .font(.footnote).foregroundStyle(Palette.inkMuted).padding(.horizontal, DesignTokens.space4)
                     Text(ToleranceStepper.footnote)
                         .font(.footnote).foregroundStyle(Palette.inkMuted).padding(.horizontal, DesignTokens.space4)
                 }

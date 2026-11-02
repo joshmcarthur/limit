@@ -5,6 +5,7 @@ final class LimitSettingsTests: XCTestCase {
     func testDefaultsMatchOnboardingDesign() {
         let s = LimitSettings()
         XCTAssertTrue(s.showOnLockScreen)
+        XCTAssertFalse(s.showSpeedOnLockScreen)
         XCTAssertEqual(s.overTolerance, 3)
         XCTAssertFalse(s.hasCompletedOnboarding)
         XCTAssertEqual(s.toleranceLabel, "+3 km/h")
@@ -14,6 +15,7 @@ final class LimitSettingsTests: XCTestCase {
     func testRoundTrip() throws {
         var s = LimitSettings()
         s.overTolerance = 5
+        s.showSpeedOnLockScreen = true
         XCTAssertEqual(LimitSettings.decode(s.encoded()), s)
     }
 
@@ -34,6 +36,7 @@ final class LimitSettingsTests: XCTestCase {
         XCTAssertEqual(s.overTolerance, 5)
         XCTAssertTrue(s.hasCompletedOnboarding)
         XCTAssertTrue(s.suggestEndingDrive, "defaults on")
+        XCTAssertFalse(s.showSpeedOnLockScreen, "a saved copy with no key shows the zone name")
     }
 
     func testBadDataGivesDefaults() {

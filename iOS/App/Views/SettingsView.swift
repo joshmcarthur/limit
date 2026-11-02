@@ -13,11 +13,15 @@ struct SettingsView: View {
             }
             Section {
                 Toggle("Show on Lock Screen", isOn: $model.settings.showOnLockScreen)
+                Toggle("Show my speed on the Lock Screen", isOn: $model.settings.showSpeedOnLockScreen)
                 ToleranceStepper(settings: $model.settings)
             } header: {
                 Text("While driving")
             } footer: {
-                Text(ToleranceStepper.footnote)
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("The Lock Screen shows the zone name. Your speed on this screen stays live.")
+                    Text(ToleranceStepper.footnote)
+                }
             }
             Section {
                 Toggle("Suggest ending my drive", isOn: $model.settings.suggestEndingDrive)

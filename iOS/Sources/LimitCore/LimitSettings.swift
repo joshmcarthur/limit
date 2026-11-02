@@ -3,6 +3,9 @@ import Foundation
 /// User settings, as shown under "While driving" in onboarding and Settings.
 public struct LimitSettings: Equatable, Codable, Sendable {
     public var showOnLockScreen = true
+    /// The Lock Screen card shows your GPS speed. Off, it shows the zone name. The phone screen always
+    /// shows your speed.
+    public var showSpeedOnLockScreen = false
     /// Show "over" from this many km/h above the limit.
     public var overTolerance = OverLimitEvaluator.defaultTolerance
     public var hasCompletedOnboarding = false
@@ -18,6 +21,7 @@ public struct LimitSettings: Equatable, Codable, Sendable {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         let defaults = LimitSettings()
         showOnLockScreen = try c.decodeIfPresent(Bool.self, forKey: .showOnLockScreen) ?? defaults.showOnLockScreen
+        showSpeedOnLockScreen = try c.decodeIfPresent(Bool.self, forKey: .showSpeedOnLockScreen) ?? defaults.showSpeedOnLockScreen
         overTolerance = try c.decodeIfPresent(Int.self, forKey: .overTolerance) ?? defaults.overTolerance
         hasCompletedOnboarding = try c.decodeIfPresent(Bool.self, forKey: .hasCompletedOnboarding) ?? defaults.hasCompletedOnboarding
         suggestEndingDrive = try c.decodeIfPresent(Bool.self, forKey: .suggestEndingDrive) ?? defaults.suggestEndingDrive
