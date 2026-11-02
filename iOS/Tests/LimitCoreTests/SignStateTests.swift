@@ -29,6 +29,14 @@ final class SignStateTests: XCTestCase {
         XCTAssertNil(SignState.openRoad(isStale: false).limit)
     }
 
+    func testAListedVariableSpeedDrawsNoNumber() {
+        XCTAssertEqual(SignState.make(limit: 100, dataAge: day, postedLimitUnknown: true), .variablePosted(isStale: false))
+        XCTAssertEqual(SignState.make(limit: 100, dataAge: 31 * day, postedLimitUnknown: true), .variablePosted(isStale: true))
+        XCTAssertEqual(SignState.make(limit: 100, dataAge: 200 * day, postedLimitUnknown: true), .unknown)
+        XCTAssertNil(SignState.variablePosted(isStale: false).limit)
+        XCTAssertFalse(SignState.variablePosted(isStale: false).isOpenRoad)
+    }
+
     func testBoundaries() {
         let p = FreshnessPolicy(staleAfter: 10, unknownAfter: 20)
         XCTAssertEqual(p.level(forAge: 9.9), .fresh)

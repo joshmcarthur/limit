@@ -112,6 +112,20 @@ final class ZoneAttributesTests: XCTestCase {
         XCTAssertEqual(decoded.map(\.period), zones.map(\.period))
     }
 
+    func testPostedLimitUnknownRoundTripsAndVersion3DoesNotHaveIt() throws {
+        let z = SpeedZone(name: "SH 2", limit: 100, postedLimitUnknown: true, kind: .variable, polygons: [Polygon(outer: ring())])!
+        let decoded = try XCTUnwrap(ZoneCodec.decode(ZoneCodec.encode([z])).first)
+        XCTAssertTrue(decoded.postedLimitUnknown)
+        XCTAssertEqual(decoded.limit, 100)
+        var old = [UInt8](ZoneCodec.encode([z]))
+        old[4] = 3
+        old.remove(at: 9 + 5)
+        let v3 = try XCTUnwrap(ZoneCodec.decode(Data(old)).first)
+        XCTAssertFalse(v3.postedLimitUnknown)
+        XCTAssertEqual(v3.name, "SH 2")
+        XCTAssertEqual(v3.limit, 100)
+    }
+
     func testAnOldFormatCopyIsRejected() {
         var old = ZoneCodec.encode([])
         old[4] = 2
@@ -132,9 +146,9 @@ final class ZoneAttributesTests: XCTestCase {
         let start = Date(timeIntervalSince1970: 1_700_000_000)
         let z = SpeedZone(name: nil, limit: 50, period: ActivePeriod(start: start, end: nil), polygons: [Polygon(outer: ring())])!
         var bytes = [UInt8](ZoneCodec.encode([z]))
-        // flags at 9+4, packed start follows: make it 20231399 (month 13).
+        // flags at 9+4, the posted-limit byte follows, then the packed start: make it 20231399 (month 13).
         let bad = Int32(20_231_399)
-        withUnsafeBytes(of: bad.littleEndian) { for (i, b) in $0.enumerated() { bytes[9 + 5 + i] = b } }
+        withUnsafeBytes(of: bad.littleEndian) { for (i, b) in $0.enumerated() { bytes[9 + 6 + i] = b } }
         XCTAssertThrowsError(try ZoneCodec.decode(Data(bytes))) { XCTAssertEqual($0 as? ZoneCodecError, .invalid) }
     }
 

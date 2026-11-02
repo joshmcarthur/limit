@@ -2,6 +2,7 @@
 public enum AccessibilityLabels {
     public static func sign(_ state: SignState, note: LimitNote? = nil) -> String {
         if state.isOpenRoad { return "No limit recorded for this road, follow the posted signs" }
+        if state.isVariablePosted { return "Variable speed limit, obey the posted signs" }
         guard let limit = state.limit else { return "Speed limit unknown" }
         let spoken = "Speed limit \(limit) kilometres per hour"
         return note.map { "\(spoken), \($0.spoken)" } ?? spoken
