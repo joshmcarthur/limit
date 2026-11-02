@@ -8,17 +8,19 @@ Raw captures for the listing, from the iOS 26.5 simulator on an iPhone 17 Pro Ma
 | `screenshots/6.9-inch/02-over-the-limit-104-in-100.png` | A realistic over-the-limit case: 104 km/h on a 100 km/h state highway (the Desert Road, SH 1), "+4 over" |
 | `screenshots/6.9-inch/03-drive-dark.png` | Dark mode, 26 km/h in the 30 zone |
 | `screenshots/6.9-inch/04-landscape-dark.png` | Landscape, 27 km/h in the 30 zone |
-| `screenshots/6.9-inch/05-lock-screen.png` | The Lock Screen Live Activity, 96 km/h on a 100 km/h state highway |
+| `screenshots/6.9-inch/05-lock-screen.png` | The Lock Screen card: the 100 sign and the zone name Turangi To Waiouru, SH 1. A permanent limit, so no second line |
+| `screenshots/6.9-inch/07-lock-screen-variable.png` | The same card on a variable limit: Horokiwi To Ngauranga, SH 2, an empty red circle, with "Variable limit, obey the posted signs" |
+| `screenshots/6.9-inch/08-lock-screen-seasonal.png` | The same card on a seasonal limit: Waipu Cove Road, 60, with "Seasonal limit, obey the posted signs". In force about late October to early April |
 | `screenshots/6.9-inch/06-welcome.png` | The first screen: what it does, offline, no account |
 
 ## Things to know
 
 - **Optics:** every shot is at or under the limit except 02, which is a small, realistic 4 km/h over. Keep it that way if you retake them.
-- **Data:** road names and limits are real, from a copy of the NZTA layer taken on 22 October 2026 while NZTA was rebuilding it, so coverage was not complete. Nothing shown is made up. Shots of the seasonal-limit label would need a made-up demo zone, so there are none here.
+- **Data:** road names and limits are real. Nothing shown is made up. The Lock Screen variable and seasonal shots use the register downloaded on 2 November 2026. Wellington Central is still 30 and Turangi To Waiouru is still 100, so the earlier drive shots stay. This copy has no emergency zone, so there is no temporary-limit shot. The seasonal shot only matches while that limit is in force, about late October to early April.
 - **Status bar:** 9:41, full signal, charging. The Lock Screen shot shows "Carrier" on the left because the simulator ignores the status bar override there.
 - **Retaking:** run `Tools/store-screenshots.sh` (needs Xcode, XcodeGen and an iPhone 17 Pro Max simulator, and downloads the register into `../data/register-check` the first time; `REFRESH=1` fetches it again). It builds the app, installs it on a clean simulator, drives simulated trips with `xcrun simctl location`, and turns the phone with a small UI test in `Tools/screenshots/rotate` because the Simulator's rotate shortcut can't be scripted. It takes a few minutes and rewrites 01 to 04 and 06.
-- **Lock Screen (05) is by hand.** `simctl` can't lock and wake the phone, so the script ends by starting the trip and printing the three steps. Keep the phone awake long enough to capture it.
-- **Framed versions:** `screenshots/6.9-inch-framed/` has the captioned slides, in `portrait/` (1320 × 2868, five slides) and `landscape/` (2868 × 1320, six). They are generated, not edited by hand: change a caption in `listing.md` and run `python3 -I Tools/frame-screenshots.py`, which needs ImageMagick, `rsvg-convert` and fontTools. The whole screen is shown, uncropped, so the register credit and "checked" line stay visible. The output is flattened RGB with no alpha, which the App Store requires.
+- **Lock Screen (05, 07, 08) is by hand.** `simctl` can't lock and wake the phone, so the script ends by starting the permanent trip and printing the routes for the variable and seasonal cards. Keep the phone awake long enough to capture each one.
+- **Framed versions:** `screenshots/6.9-inch-framed/` has the captioned slides, in `portrait/` (1320 × 2868, seven slides) and `landscape/` (2868 × 1320, eight). They are generated, not edited by hand: change a caption in `listing.md` and run `python3 -I Tools/frame-screenshots.py`, which needs ImageMagick, `rsvg-convert` and fontTools. The whole screen is shown, uncropped, so the register credit and "checked" line stay visible. The output is flattened RGB with no alpha, which the App Store requires.
 - **Not made:** an iPad set (the app is iPhone-only) and other languages.
 
 ## App Review demo video

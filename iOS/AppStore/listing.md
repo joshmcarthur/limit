@@ -56,8 +56,8 @@ First release.
 
 Raw captures are in `screenshots/6.9-inch/` (see `README.md`). The app is iPhone-only, so there is no iPad set. Two framed sets are made from them by `Tools/frame-screenshots.py`, which reads this table:
 
-- `screenshots/6.9-inch-framed/portrait/` (1320 × 2868): five slides, the table below without row 4, which is a wide capture and doesn't suit a tall canvas.
-- `screenshots/6.9-inch-framed/landscape/` (2868 × 1320): all six slides, in the order below.
+- `screenshots/6.9-inch-framed/portrait/` (1320 × 2868): the table below without the landscape row, which is a wide capture and doesn't suit a tall canvas.
+- `screenshots/6.9-inch-framed/landscape/` (2868 × 1320): all slides, in the order below.
 
 Whether App Store Connect accepts both orientations in one set isn't confirmed, so they're kept apart. Upload the portrait set as the main one. Order and captions:
 
@@ -66,9 +66,11 @@ Whether App Store Connect accepts both orientations in one set isn't confirmed, 
 | 1 | `01-drive-light.png` | The limit for the road you're on |
 | 2 | `02-over-the-limit-104-in-100.png` | See at a glance if you've crept over the limit |
 | 3 | `05-lock-screen.png` | On your Lock Screen too |
-| 4 | `04-landscape-dark.png` | Fits a dash mount, either way up |
-| 5 | `03-drive-dark.png` | Easy on the eyes after dark |
-| 6 | `06-welcome.png` | Made in New Zealand. Set it up before you set off. |
+| 4 | `07-lock-screen-variable.png` | When the limit can change |
+| 5 | `08-lock-screen-seasonal.png` | When it only applies for the season |
+| 6 | `04-landscape-dark.png` | Fits a dash mount, either way up |
+| 7 | `03-drive-dark.png` | Easy on the eyes after dark |
+| 8 | `06-welcome.png` | Made in New Zealand. Set it up before you set off. |
 
 The first three appear before someone scrolls. They show the limit on your road, what happens when you go over, and the Lock Screen view.
 
