@@ -69,7 +69,7 @@ Landscape and the Lock Screen were checked by rotating with a throwaway UI test 
 
 ## Seasonal and temporary limit label (not in the original design)
 
-When the limit in force comes from a seasonal or emergency record, a small pill sits between the sign and the road name: "Seasonal limit, obey the posted signs" or "Temporary limit, obey the posted signs" (`LimitNote`, `LimitNoteView`). In the Live Activity it takes the attribution line's place while it's showing, and the Dynamic Island's expanded view shows it underneath. VoiceOver reads the sign as "Speed limit 30 kilometres per hour, seasonal". School zones and permanent limits carry none. Checked in the simulator on the drive screen and on the Lock Screen after a clean install.
+When the limit is seasonal, temporary, or variable, a small pill sits between the sign and the road name: "Seasonal limit, obey the posted signs", "Temporary limit, obey the posted signs", or "Variable limit, obey the posted signs" (`LimitNote`, `LimitNoteView`). The Lock Screen card uses that same line under the zone name, and shows nothing there for a permanent limit. The Dynamic Island's expanded view shows the note underneath. VoiceOver reads a numbered sign as "Speed limit 30 kilometres per hour, seasonal". A permanent limit carries none.
 
 The speed readout also lost the gap between the digits and "km/h" (the font's line box was far taller than its digits). Checked in the simulator on the drive screen and on the Lock Screen after a clean install.
 
@@ -77,7 +77,7 @@ A Live Activity survives the app being killed. The app now ends every activity i
 
 ## Where the register credit sits
 
-On the drive screen the "Data from Waka Kotahi's National Speed Limit Register" line now sits at the bottom, directly above "Speed limits checked today, 9:41 pm", in both orientations, so where the data comes from and how fresh it is read together. The road name under the sign stands on its own while a limit is showing.
+On the drive screen the "Data from Waka Kotahi's National Speed Limit Register" line sits at the bottom, directly above "Speed limits checked today, 9:41 pm", in both orientations, so where the data comes from and how fresh it is read together. The road name under the sign stands on its own while a limit is showing. The Lock Screen card does not repeat the credit.
 
 ## Top bar
 

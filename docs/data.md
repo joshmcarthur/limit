@@ -24,7 +24,7 @@ The default records (about 2,000: `DEFAULT SPEED LIMIT` and its `- INTERSECTION 
 
 ## Licence and attribution
 
-The dataset page ([NSLR on NZTA Open Data](https://opendata-nzta.opendata.arcgis.com/datasets/NZTA::national-speed-limit-register-nslr/about)) credits Waka Kotahi NZ Transport Agency and licenses the data under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). CC BY asks for: appropriate credit, a link to the licence, a note of any changes, and no suggestion of endorsement. The About screen carries all four (name and author, links to the source and the licence, what we changed, and a not-endorsed line), and the drive screen and Live Activity credit the register. Any store listing and the README should carry the same credit.
+The dataset page ([NSLR on NZTA Open Data](https://opendata-nzta.opendata.arcgis.com/datasets/NZTA::national-speed-limit-register-nslr/about)) credits Waka Kotahi NZ Transport Agency and licenses the data under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). CC BY asks for: appropriate credit, a link to the licence, a note of any changes, and no suggestion of endorsement. The About screen carries all four (name and author, links to the source and the licence, what we changed, and a not-endorsed line), and the drive screen credits the register. The Lock Screen does not repeat that credit. Any store listing and the README should carry the same credit.
 
 The dataset's own quality notes matter for the copy: limits were migrated from each council's bylaw, so some differ from what's signed on the road, and temporary limits other than emergency ones aren't included.
 

@@ -5,7 +5,7 @@ import LimitCore
 struct SpeedSignView: View {
     let state: SignState
     var diameter: CGFloat = 120
-    /// Read out with the limit when it is a seasonal or temporary one.
+    /// Read out with the limit when it is seasonal, temporary, or variable.
     var note: LimitNote?
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion

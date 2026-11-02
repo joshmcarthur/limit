@@ -10,9 +10,7 @@ struct DriveLiveActivity: Widget {
 
     fileprivate static var configuration: some WidgetConfiguration {
         ActivityConfiguration(for: DriveActivityAttributes.self) { context in
-            ActivityBody(snapshot: Self.snapshot(context), receivedAt: context.state.sentAt, showsSpeed: context.state.showsSpeed)
-                .activityBackgroundTint(Palette.surface)
-                .activitySystemActionForegroundColor(Palette.ink)
+            ActivityChrome(snapshot: Self.snapshot(context), receivedAt: context.state.sentAt, showsSpeed: context.state.showsSpeed)
         } dynamicIsland: { context in
             let snapshot = Self.snapshot(context)
             let receivedAt = context.state.sentAt
@@ -66,6 +64,25 @@ struct DriveLiveActivityWithSmallLayout: Widget {
     }
 }
 
+/// The Lock Screen glass stays light, and a dark ink on it washes out. The card uses the dark surface so the name stays readable.
+private struct ActivityChrome: View {
+    let snapshot: DriveSnapshot
+    let receivedAt: Date
+    let showsSpeed: Bool
+
+    var body: some View {
+        ActivityBody(snapshot: snapshot, receivedAt: receivedAt, showsSpeed: showsSpeed)
+            .activityBackgroundTint(ActivityColor.surface)
+            .activitySystemActionForegroundColor(ActivityColor.ink)
+    }
+}
+
+private enum ActivityColor {
+    static let surface = Color(DesignTokens.surface, scheme: .dark)
+    static let ink = Color(DesignTokens.ink, scheme: .dark)
+    static let inkMuted = Color(DesignTokens.inkMuted, scheme: .dark)
+}
+
 /// The Lock Screen card, or the small layout where the system asks for it.
 private struct ActivityBody: View {
     let snapshot: DriveSnapshot
@@ -107,9 +124,9 @@ private struct SmallView: View {
             SpeedSignView(state: snapshot.sign, diameter: 44, note: snapshot.limitNote)
             Spacer(minLength: 0)
             if showsSpeed {
-                SpeedReadoutView(speed: snapshot.speed, over: snapshot.over, size: 32, unitFont: .caption2, receivedAt: receivedAt)
+                SpeedReadoutView(speed: snapshot.speed, over: snapshot.over, size: 32, unitFont: .caption2, receivedAt: receivedAt, ink: ActivityColor.ink, inkMuted: ActivityColor.inkMuted)
             } else {
-                ZoneNameLabel(name: snapshot.roadName ?? "Speed limit", color: Palette.ink)
+                ZoneNameLabel(name: snapshot.roadName ?? "Speed limit", color: ActivityColor.ink)
             }
         }
         .padding(DesignTokens.space3)
@@ -128,21 +145,18 @@ private struct LockScreenView: View {
                 Text(snapshot.roadName ?? "Speed limit")
                     .font(.headline)
                     .lineLimit(1)
-                    .foregroundStyle(Palette.ink)
+                    .minimumScaleFactor(0.75)
+                    .foregroundStyle(ActivityColor.ink)
                 if let note = snapshot.limitNote {
-                    // Room is tight, so the note takes the attribution line's place while it's showing.
                     Text(note.label)
                         .font(.caption.weight(.semibold))
-                        .foregroundStyle(Palette.ink)
-                } else {
-                    Text(LimitCore.attribution)
-                        .font(.caption)
-                        .foregroundStyle(Palette.inkMuted)
+                        .foregroundStyle(ActivityColor.ink)
+                        .lineLimit(2)
                 }
             }
-            Spacer(minLength: 0)
+            .frame(maxWidth: .infinity, alignment: .leading)
             if showsSpeed {
-                SpeedReadoutView(speed: snapshot.speed, over: snapshot.over, size: 44, unitFont: .caption, receivedAt: receivedAt)
+                SpeedReadoutView(speed: snapshot.speed, over: snapshot.over, size: 44, unitFont: .caption, receivedAt: receivedAt, ink: ActivityColor.ink, inkMuted: ActivityColor.inkMuted)
             }
         }
         .padding(DesignTokens.space4)

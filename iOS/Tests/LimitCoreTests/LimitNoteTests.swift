@@ -2,17 +2,18 @@ import XCTest
 @testable import LimitCore
 
 final class LimitNoteTests: XCTestCase {
-    func testOnlySeasonalAndEmergencyRecordsGetANote() {
+    func testAPermanentLimitIsTheOnlyKindWithoutANote() {
         XCTAssertEqual(LimitNote(kind: .seasonal), .seasonal)
         XCTAssertEqual(LimitNote(kind: .emergency), .temporary)
+        XCTAssertEqual(LimitNote(kind: .variable), .variable)
         XCTAssertNil(LimitNote(kind: .permanent))
-        XCTAssertNil(LimitNote(kind: .variable), "school zones carry no note")
         XCTAssertNil(LimitNote(kind: nil))
     }
 
     func testTheWording() {
         XCTAssertEqual(LimitNote.seasonal.label, "Seasonal limit, obey the posted signs")
         XCTAssertEqual(LimitNote.temporary.label, "Temporary limit, obey the posted signs")
+        XCTAssertEqual(LimitNote.variable.label, "Variable limit, obey the posted signs")
     }
 
     func testVoiceOverReadsTheNoteAfterTheLimit() {
@@ -20,6 +21,8 @@ final class LimitNoteTests: XCTestCase {
                        "Speed limit 30 kilometres per hour, seasonal")
         XCTAssertEqual(AccessibilityLabels.sign(.limit(50, isStale: false), note: .temporary),
                        "Speed limit 50 kilometres per hour, temporary")
+        XCTAssertEqual(AccessibilityLabels.sign(.limit(40, isStale: false), note: .variable),
+                       "Speed limit 40 kilometres per hour, variable")
         XCTAssertEqual(AccessibilityLabels.sign(.limit(50, isStale: false), note: nil), "Speed limit 50 kilometres per hour")
         XCTAssertEqual(AccessibilityLabels.sign(.unknown, note: .seasonal), "Speed limit unknown", "no limit, nothing to qualify")
     }
@@ -59,6 +62,11 @@ final class LimitNoteTests: XCTestCase {
         XCTAssertEqual(snapshot(zone, at: nz(2026, 12, 20)).limitNote, .seasonal)
         XCTAssertEqual(snapshot(zone, at: nz(2026, 12, 20)).limit, 30)
         XCTAssertNil(snapshot(zone, at: nz(2026, 7, 1)).limit, "out of season and nothing else underneath")
+    }
+
+    func testAVariableLimitIsLabelled() {
+        let zone = SpeedZone(name: "SCHOOL", limit: 40, kind: .variable, polygons: [Polygon(outer: ring())])!
+        XCTAssertEqual(snapshot(zone, at: nz(2026, 10, 22)).limitNote, .variable)
     }
 
     func testAPermanentLimitHasNoNote() {

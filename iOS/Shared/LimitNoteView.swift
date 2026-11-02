@@ -1,7 +1,7 @@
 import SwiftUI
 import LimitCore
 
-/// Says that the limit above is a seasonal or temporary one. Quiet, but not colour alone: it's text.
+/// Says that the limit above is seasonal, temporary, or variable. Quiet, but not colour alone: it's text.
 struct LimitNoteView: View {
     let note: LimitNote
 

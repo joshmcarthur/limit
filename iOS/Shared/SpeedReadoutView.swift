@@ -11,6 +11,9 @@ struct SpeedReadoutView: View {
     /// When the speed was received (Live Activity only). The number dims by itself `LiveActivityRefresh.dimAfter`
     /// later, so a number that has stopped updating doesn't look live even before the system marks it stale.
     var receivedAt: Date?
+    /// Solid colours for the Live Activity card. The phone screen leaves these nil and uses the palette.
+    var ink: Color?
+    var inkMuted: Color?
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -52,16 +55,16 @@ struct SpeedReadoutView: View {
 
     private var numberColor: Color {
         if over.isOver { return Palette.onCaution }
-        return speed == nil ? Palette.inkMuted : Palette.ink
+        return speed == nil ? (inkMuted ?? Palette.inkMuted) : (ink ?? Palette.ink)
     }
 
     @ViewBuilder private var caption: some View {
         if case .over(let by) = over {
             Text("+\(by) over").font(unitFont.weight(.semibold)).foregroundStyle(Palette.cautionInk)
         } else if speed == nil {
-            Text("No GPS").font(unitFont).foregroundStyle(Palette.inkMuted)
+            Text("No GPS").font(unitFont).foregroundStyle(inkMuted ?? Palette.inkMuted)
         } else {
-            Text("km/h").font(unitFont).foregroundStyle(Palette.inkMuted)
+            Text("km/h").font(unitFont).foregroundStyle(inkMuted ?? Palette.inkMuted)
         }
     }
 }
