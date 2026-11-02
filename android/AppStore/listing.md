@@ -65,8 +65,8 @@ No 7-inch or 10-inch tablet set, no Chromebook set, no Automotive OS screenshot 
 
 ## Other fields
 
-- **App icon (Play):** 512 × 512 32-bit PNG with alpha. This is not the launcher mipmap. Not made yet.
-- **Feature graphic:** required, 1024 × 500 JPEG or 24-bit PNG, no alpha. Not made yet.
+- **App icon (Play):** `icon-512.png`. 512 × 512 32-bit PNG with alpha. This is not the launcher mipmap. Alt text: "A red-ring speed sign that says LIMIT."
+- **Feature graphic:** `feature-graphic.png`. 1024 × 500 24-bit PNG, no alpha. Alt text: "Three speed signs: 30 in Wellington Central at 28, 50 in Porirua City at 47, and 100 on State Highway 1 at 96."
 - **Promo video:** optional YouTube URL. The App Review clip is not for the store page.
 - **Category:** Maps & Navigation.
 - **Tags:** Speedometer, Offline, if Console still offers them. Don't stuff.
@@ -99,7 +99,6 @@ No 7-inch or 10-inch tablet set, no Chromebook set, no Automotive OS screenshot 
 - Phone screenshots are 1080 × 2400. Play rejects a screenshot whose long side is more than twice the short side (2400 / 1080 ≈ 2.22). Crop or recapture at 1080 × 2160 or 1080 × 1920 before upload.
 - 05 is the notification shade, not the keyguard. The emulator lock screen did not show the `IMPORTANCE_LOW` foreground-service notification. Soften the caption if that is still true on a phone.
 - 06 is Setup, and the current still shows a failed NZTA download. Retake it on a clean first run, or don't use that shot.
-- Feature graphic (1024 × 500) and Play 512 icon are required and not in this folder.
 - "It still works without reception": follows from the register being stored on the device. Confirm on a phone (`docs/status.md`), or soften it.
 - "Checks for updates when you open it, at most once a week" and "about 24 MB the first time": match `SyncSchedule` and `docs/data.md`. Change them if either changes.
 - Home widget, Quick Settings tile, and Android Auto are built. Widget and tile have not been checked on a real launcher. Android Auto has not been checked on a car head unit (`docs/status.md`). Try them, or drop those sentences.
