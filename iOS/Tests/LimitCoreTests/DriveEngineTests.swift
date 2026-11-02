@@ -31,6 +31,22 @@ final class DriveEngineTests: XCTestCase {
         XCTAssertEqual(state.snapshot.sign, .limit(50, isStale: false))
     }
 
+    func testAVariableListShowsTheNameAndNoNumber() {
+        let ring = Ring(points: [
+            Coordinate(latitude: -41.1, longitude: 173.9), Coordinate(latitude: -41.1, longitude: 174.1),
+            Coordinate(latitude: -40.9, longitude: 174.1), Coordinate(latitude: -40.9, longitude: 173.9),
+        ])!
+        let zone = SpeedZone(name: "HOROKIWI TO NGAURANGA, SH 2", limit: 100, postedLimitUnknown: true, kind: .variable,
+                             polygons: [Polygon(outer: ring)])!
+        var e = DriveEngine(register: SpeedLimitRegister(zones: [zone]), registerCheckedAt: now.addingTimeInterval(-3_600))
+        let state = e.ingest(sample(kmh: 110), now: now)
+        XCTAssertEqual(state.snapshot.sign, .variablePosted(isStale: false))
+        XCTAssertNil(state.snapshot.limit)
+        XCTAssertEqual(state.snapshot.roadName, "Horokiwi To Ngauranga, SH 2")
+        XCTAssertEqual(state.snapshot.limitNote, .variable)
+        XCTAssertEqual(state.snapshot.over, .notOver)
+    }
+
     func testOverTheLimit() {
         var e = engine(limit: 30)
         let state = e.ingest(sample(kmh: 38), now: now)

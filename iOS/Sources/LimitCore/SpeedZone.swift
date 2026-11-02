@@ -5,8 +5,11 @@ public struct SpeedZone: Equatable, Sendable {
     /// The register's identifier for the zone. Only used to drop repeated records; not stored on disk.
     public let id: String?
     public let name: String?
-    /// The permanent limit.
+    /// The permanent limit. When `postedLimitUnknown` is set, this is the highest speed the sign can show.
     public let limit: Int
+    /// The sign on the road can show any of several speeds, and this record only has the highest.
+    /// A school zone with one lower speed is not this: that lower speed is in `reduced`.
+    public let postedLimitUnknown: Bool
     /// A lower limit that applies at set times (a school zone), if the register gives one we can read.
     public let reduced: ReducedLimit?
     public let kind: ZoneKind
@@ -17,13 +20,14 @@ public struct SpeedZone: Equatable, Sendable {
     public let bounds: BoundingBox
 
     public init?(
-        id: String? = nil, name: String?, limit: Int, reduced: ReducedLimit? = nil, kind: ZoneKind = .permanent,
+        id: String? = nil, name: String?, limit: Int, postedLimitUnknown: Bool = false, reduced: ReducedLimit? = nil, kind: ZoneKind = .permanent,
         structure: StructureType = .none, period: ActivePeriod? = nil, polygons: [Polygon]
     ) {
         guard let first = polygons.first else { return nil }
         self.id = id
         self.name = name
         self.limit = limit
+        self.postedLimitUnknown = postedLimitUnknown
         self.reduced = reduced
         self.kind = kind
         self.structure = structure

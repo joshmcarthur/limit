@@ -121,7 +121,8 @@ public struct DriveEngine {
         let speed = Speed.displayed(Speed.kilometresPerHour(fromMetresPerSecond: sample.speedMetresPerSecond))
         let match = zone.current
         let age = registerCheckedAt.map { now.timeIntervalSince($0) }
-        let sign = SignState.make(limit: match?.limit, dataAge: age, isDefaultArea: match?.isDefaultArea ?? false, policy: freshness)
+        let sign = SignState.make(limit: match?.limit, dataAge: age, isDefaultArea: match?.isDefaultArea ?? false,
+                                  postedLimitUnknown: match?.postedLimitUnknown ?? false, policy: freshness)
         let over = evaluator.evaluate(speed: speed, limit: sign.limit)
 
         var snapshot = DriveSnapshot(sign: sign, speed: speed, over: over)
@@ -131,7 +132,7 @@ public struct DriveEngine {
         } else if match == nil, !Coverage.isNewZealand(sample.coordinate) {
             snapshot.roadName = Coverage.outsideNewZealandName
             snapshot.isOutsideNewZealand = true
-        } else if sign.limit != nil {
+        } else if sign.limit != nil || sign.isVariablePosted {
             snapshot.roadName = RoadNameFormatter.display(match?.zoneName)
             snapshot.limitNote = LimitNote(kind: match?.kind)
         }

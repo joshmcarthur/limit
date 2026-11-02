@@ -28,6 +28,9 @@ public enum SignState: Hashable, Codable, Sendable {
     /// The register has only its national default here, which says nothing about this road: it is what
     /// covers any street no council has recorded a zone for. Shows no number, so the driver reads the signs.
     case openRoad(isStale: Bool)
+    /// A variable speed sign can show any of several limits. The register only stored the highest, so the
+    /// circle is empty and red: there is a limit, and the sign on the road has the number.
+    case variablePosted(isStale: Bool)
     /// No fix, off the register, or data too old to trust. Never shows the last known limit.
     case unknown
 
@@ -41,14 +44,20 @@ public enum SignState: Hashable, Codable, Sendable {
         return false
     }
 
+    public var isVariablePosted: Bool {
+        if case .variablePosted = self { return true }
+        return false
+    }
+
     public static func make(limit: Int?, dataAge: TimeInterval?, isDefaultArea: Bool = false,
-                            policy: FreshnessPolicy = .standard) -> SignState {
-        guard let limit, let dataAge else { return .unknown }
-        switch policy.level(forAge: dataAge) {
-        case .fresh: return isDefaultArea ? .openRoad(isStale: false) : .limit(limit, isStale: false)
-        case .stale: return isDefaultArea ? .openRoad(isStale: true) : .limit(limit, isStale: true)
-        case .tooOld: return .unknown
-        }
+                            postedLimitUnknown: Bool = false, policy: FreshnessPolicy = .standard) -> SignState {
+        guard let dataAge else { return .unknown }
+        if policy.level(forAge: dataAge) == .tooOld { return .unknown }
+        let stale = policy.level(forAge: dataAge) == .stale
+        if postedLimitUnknown { return .variablePosted(isStale: stale) }
+        guard let limit else { return .unknown }
+        if isDefaultArea { return .openRoad(isStale: stale) }
+        return .limit(limit, isStale: stale)
     }
 }
 
