@@ -155,6 +155,7 @@ class DriveEngine(
             limit = match?.limit,
             dataAge = age,
             isDefaultArea = match?.isDefaultArea ?: false,
+            postedLimitUnknown = match?.postedLimitUnknown ?: false,
             policy = freshness,
         )
         val over = evaluator.evaluate(speed = speed, limit = sign.limit)
@@ -164,7 +165,7 @@ class DriveEngine(
             snapshot = snapshot.copy(roadName = "Open road")
         } else if (match == null && !Coverage.isNewZealand(sample.coordinate)) {
             snapshot = snapshot.copy(roadName = Coverage.outsideNewZealandName, isOutsideNewZealand = true)
-        } else if (sign.limit != null) {
+        } else if (sign.limit != null || sign.isVariablePosted) {
             snapshot = snapshot.copy(
                 roadName = RoadNameFormatter.display(match?.zoneName),
                 limitNote = LimitNote(kind = match?.kind),
@@ -178,12 +179,14 @@ class DriveEngine(
 private fun SignState.toJson(): JSONObject = when (this) {
     is SignState.Limit -> JSONObject().put("type", "limit").put("value", value).put("isStale", isStale)
     is SignState.OpenRoad -> JSONObject().put("type", "openRoad").put("isStale", isStale)
+    is SignState.VariablePosted -> JSONObject().put("type", "variablePosted").put("isStale", isStale)
     SignState.Unknown -> JSONObject().put("type", "unknown")
 }
 
 private fun JSONObject.toSignState(): SignState = when (val type = getString("type")) {
     "limit" -> SignState.Limit(value = getInt("value"), isStale = getBoolean("isStale"))
     "openRoad" -> SignState.OpenRoad(isStale = getBoolean("isStale"))
+    "variablePosted" -> SignState.VariablePosted(isStale = getBoolean("isStale"))
     "unknown" -> SignState.Unknown
     else -> error("Unknown sign type $type")
 }

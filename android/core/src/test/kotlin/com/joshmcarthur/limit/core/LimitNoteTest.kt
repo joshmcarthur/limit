@@ -13,7 +13,7 @@ class LimitNoteTest {
         assertEquals(LimitNote.seasonal, LimitNote(kind = ZoneKind.seasonal))
         assertEquals(LimitNote.temporary, LimitNote(kind = ZoneKind.emergency))
         assertNull(LimitNote(kind = ZoneKind.permanent))
-        assertNull(LimitNote(kind = ZoneKind.variable))
+        assertEquals(LimitNote.variable, LimitNote(kind = ZoneKind.variable))
         assertNull(LimitNote(kind = null))
     }
 
@@ -21,6 +21,7 @@ class LimitNoteTest {
     fun theWording() {
         assertEquals("Seasonal limit, obey the posted signs", LimitNote.seasonal.label)
         assertEquals("Temporary limit, obey the posted signs", LimitNote.temporary.label)
+        assertEquals("Variable limit, obey the posted signs", LimitNote.variable.label)
     }
 
     @Test

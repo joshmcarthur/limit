@@ -9,6 +9,10 @@ class AccessibilityTest {
         assertEquals("Speed limit 50 kilometres per hour", AccessibilityLabels.sign(SignState.Limit(50, isStale = false)))
         assertEquals("Speed limit unknown", AccessibilityLabels.sign(SignState.Unknown))
         assertEquals(
+            "Variable speed limit, obey the posted signs",
+            AccessibilityLabels.sign(SignState.VariablePosted(isStale = false)),
+        )
+        assertEquals(
             "No limit recorded for this road, follow the posted signs",
             AccessibilityLabels.sign(SignState.OpenRoad(isStale = false)),
         )

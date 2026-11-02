@@ -44,6 +44,25 @@ class SignStateTest {
     }
 
     @Test
+    fun aListedVariableSpeedDrawsNoNumber() {
+        val day = Duration.ofSeconds(86_400)
+        assertEquals(
+            SignState.VariablePosted(isStale = false),
+            SignState.make(limit = 100, dataAge = day, postedLimitUnknown = true),
+        )
+        assertEquals(
+            SignState.VariablePosted(isStale = true),
+            SignState.make(limit = 100, dataAge = day.multipliedBy(31), postedLimitUnknown = true),
+        )
+        assertEquals(
+            SignState.Unknown,
+            SignState.make(limit = 100, dataAge = day.multipliedBy(200), postedLimitUnknown = true),
+        )
+        assertNull(SignState.VariablePosted(isStale = false).limit)
+        assertFalse(SignState.VariablePosted(isStale = false).isOpenRoad)
+    }
+
+    @Test
     fun boundaries() {
         val p = FreshnessPolicy(staleAfter = Duration.ofSeconds(10), unknownAfter = Duration.ofSeconds(20))
         assertEquals(FreshnessPolicy.Level.Fresh, p.level(Duration.ofMillis(9900)))

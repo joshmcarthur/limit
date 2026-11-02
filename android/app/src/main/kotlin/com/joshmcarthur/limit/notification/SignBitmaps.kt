@@ -41,10 +41,13 @@ object SignBitmaps {
         }
         val text = when (state) {
             is SignState.Limit -> state.value.toString()
+            is SignState.VariablePosted -> null
             else -> "–"
         }
-        val y = cx - (cut.descent() + cut.ascent()) / 2f
-        canvas.drawText(text, cx, y, cut)
+        if (text != null) {
+            val y = cx - (cut.descent() + cut.ascent()) / 2f
+            canvas.drawText(text, cx, y, cut)
+        }
         return bitmap
     }
 }

@@ -15,6 +15,7 @@ object DriveNotification {
         return when (val sign = snapshot.sign) {
             is SignState.Limit -> if (road != null) "${sign.value} km/h · $road" else "${sign.value} km/h"
             is SignState.OpenRoad -> if (road != null) "Open road · $road" else "Open road"
+            is SignState.VariablePosted -> if (road != null) "Variable limit · $road" else "Variable limit"
             SignState.Unknown -> if (snapshot.roadName != null) "Limit unknown · ${snapshot.roadName}" else "Limit unknown · finding your road"
         }
     }

@@ -64,6 +64,8 @@ object GeoJSONZoneParser {
                 id = text(optional(properties, "speedLimitZoneId")),
                 name = text(optional(properties, "speedLimitZoneName")),
                 limit = limit,
+                postedLimitUnknown = kind == ZoneKind.variable &&
+                    listsSeveralSpeeds(optionalString(properties, "speedLimitZoneVariableSpeed")),
                 reduced = reducedLimit(properties, limit),
                 kind = kind,
                 structure = StructureType(name = optionalString(properties, "speedLimitZoneStructureTypeName")),
@@ -73,6 +75,17 @@ object GeoJSONZoneParser {
             result.zones.add(zone)
         }
         return result
+    }
+
+    /**
+     * A comma or a slash separates speeds the sign can show ("50 km/h, 60 km/h, …"). `km/h` is the unit,
+     * not a separator. One value is a school or intersection step.
+     */
+    internal fun listsSeveralSpeeds(value: String?): Boolean {
+        val speed = value ?: return false
+        val withoutUnit = Regex("km/h", RegexOption.IGNORE_CASE).replace(speed, "")
+        val parts = withoutUnit.split(Regex("[,/]")).map { it.trim() }.filter { it.isNotEmpty() }
+        return parts.size > 1
     }
 
     /**
