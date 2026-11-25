@@ -16,8 +16,8 @@ android {
         applicationId = "com.joshmcarthur.limit"
         minSdk = 26
         targetSdk = 36
-        versionCode = 2
-        versionName = "1.0.1"
+        versionCode = 3
+        versionName = "1.0.2"
     }
 
     if (uploadStorePath != null) {
@@ -75,8 +75,6 @@ dependencies {
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.material.icons)
-    implementation(libs.androidx.car.app)
-    implementation(libs.androidx.car.app.projected)
     implementation(libs.androidx.glance)
     implementation(libs.androidx.glance.material3)
 }

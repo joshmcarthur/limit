@@ -22,11 +22,10 @@ Where Limit shows up outside its own screen, and the Android rules each surface 
 - One tile, **Drive**, inactive/active. Tapping starts or ends a drive without opening the app: the most Android-native shortcut there is, usable before setting off.
 - If location permission hasn’t been granted, tapping opens the app’s setup instead.
 
-## Android Auto
+## In-car (mounted phone)
 
-- Android Auto apps must use the Car App Library’s templates and fit an allowed category. A speed-limit display isn’t obviously in one. Treat Android Auto as unconfirmed until checked against Google’s current categories and quality guidelines.
-- If it qualifies, use a simple pane template with the sign as an image and speed as a row: no custom drawing.
-- Until then, the mounted phone is the in-car surface. That’s why the main screen has a landscape layout.
+- Android Auto is not shipped. Play's Navigation category requires turn-by-turn directions. Limit shows the posted speed limit, so it does not qualify. There is no Utility category, and IoT/POI/Weather do not fit.
+- The mounted phone is the in-car surface. That is why the main screen has a landscape layout.
 
 ## Battery and background rules
 

@@ -25,7 +25,7 @@ Optics match the iOS set: every shot is at or under the limit except 02, which i
 
 `review-video/limit-review-demo.mp4` is a captioned slideshow of those stills plus Porirua 50, Desert Road 96, Settings, and End drive. It is not a live screen recording (the emulator recorder writes too few frames, and Circle to Search stole the second take).
 
-Not in it: About, outside New Zealand, open road, Android Auto (this Play Store image has no head-unit server), the widget, or the tile.
+Not in it: About, outside New Zealand, open road, the widget, or the tile.
 
 ## Play icon and feature graphic
 

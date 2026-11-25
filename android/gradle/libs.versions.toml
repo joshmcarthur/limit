@@ -6,7 +6,6 @@ coreKtx = "1.17.0"
 junit = "4.13.2"
 activityCompose = "1.11.0"
 lifecycle = "2.9.4"
-carApp = "1.7.0"
 glance = "1.1.1"
 orgJson = "20250517"
 coroutines = "1.10.2"
@@ -26,8 +25,6 @@ androidx-compose-ui-tooling = { group = "androidx.compose.ui", name = "ui-toolin
 androidx-compose-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-tooling-preview" }
 androidx-compose-material3 = { group = "androidx.compose.material3", name = "material3" }
 androidx-compose-material-icons = { group = "androidx.compose.material", name = "material-icons-extended" }
-androidx-car-app = { group = "androidx.car.app", name = "app", version.ref = "carApp" }
-androidx-car-app-projected = { group = "androidx.car.app", name = "app-projected", version.ref = "carApp" }
 androidx-glance = { group = "androidx.glance", name = "glance-appwidget", version.ref = "glance" }
 androidx-glance-material3 = { group = "androidx.glance", name = "glance-material3", version.ref = "glance" }
 org-json = { group = "org.json", name = "json", version.ref = "orgJson" }
