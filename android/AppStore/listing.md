@@ -24,7 +24,7 @@ The limits come from the NZTA National Speed Limit Register. The app downloads i
 
 If you go over, your speed turns amber and tells you by how much, for example "+8 over". Nothing beeps and nothing flashes while you drive. There's a small tolerance to allow for GPS error, which you can change in Settings.
 
-The sign also appears in an ongoing notification while you drive. You can add a home-screen widget or a Quick Settings tile. If your car supports Android Auto, you'll see it there too.
+The sign also appears in an ongoing notification while you drive. You can add a home-screen widget or a Quick Settings tile.
 
 Some roads have no limit listed in the register. Limit shows an open-road sign (a circle with a diagonal line) and says "Open road".
 
@@ -40,9 +40,9 @@ Limit is an aid, not permission to speed. A speed limit is a maximum, not a targ
 
 Speed limit data is from the National Speed Limit Register by Waka Kotahi NZ Transport Agency, licensed under CC BY 4.0. Waka Kotahi doesn't endorse this app.
 
-## Release notes (first release)
+## Release notes
 
-First release.
+Removes Android Auto. Limit shows the posted speed limit next to your GPS speed. It is not a turn-by-turn navigation app.
 
 ## Screenshots
 
@@ -63,7 +63,7 @@ The first three appear before someone scrolls. They show the limit on your road,
 
 Play captions are alt text, not on-image taglines. Do not burn the captions into the PNGs.
 
-No 7-inch or 10-inch tablet set, no Chromebook set, no Automotive OS screenshot set. The app is a phone app with a projected Android Auto session, not an Automotive OS APK.
+No 7-inch or 10-inch tablet set, no Chromebook set, no Automotive OS screenshot set. The app is a phone app. Landscape is for a dash mount.
 
 ## Other fields
 
@@ -86,9 +86,9 @@ No 7-inch or 10-inch tablet set, no Chromebook set, no Automotive OS screenshot 
 >
 > The app has no speed camera, police, or enforcement features. It gives no alerts or sounds while driving.
 >
-> Android Auto uses the Car App Library (`PaneTemplate`, category NAVIGATION). It is a projected phone session, not an Android Automotive OS app.
+> This build does not include Android Auto. An earlier submission declared the Car App Library Navigation category. Play rejected it because Limit does not provide turn-by-turn directions. Limit is a speed-limit display for New Zealand, not a routing app. The in-car surface is the phone in landscape.
 >
-> Limit has data for New Zealand only. Elsewhere it shows "Outside New Zealand" and the GPS speed. That's expected. A screen recording is attached. It was made on the Android emulator with simulated GPS, and says so on screen. It shows setup, drives through 30, 50 and 100 zones, the over-limit state, the ongoing notification, Settings, and ending a drive. The emulator image has no Android Auto head-unit server, so Auto isn't in it. Home widget and Quick Settings tile aren't in it either. To try the app yourself, send a GPS fix in New Zealand, such as Wellington (latitude -41.2865, longitude 174.7762). `android/AppStore/README.md` lists more test locations. The first launch downloads the register (about 24 MB).
+> Limit has data for New Zealand only. Elsewhere it shows "Outside New Zealand" and the GPS speed. That's expected. A screen recording is attached. It was made on the Android emulator with simulated GPS, and says so on screen. It shows setup, drives through 30, 50 and 100 zones, the over-limit state, the ongoing notification, Settings, and ending a drive. Home widget and Quick Settings tile aren't in it. To try the app yourself, send a GPS fix in New Zealand, such as Wellington (latitude -41.2865, longitude 174.7762). `android/AppStore/README.md` lists more test locations. The first launch downloads the register (about 24 MB).
 >
 > Notifications are requested during setup. The app works if they're declined: the drive still starts, and the location foreground service still runs. Notifications support the ongoing drive card and the "Suggest ending my drive" ping.
 >
@@ -103,10 +103,10 @@ No 7-inch or 10-inch tablet set, no Chromebook set, no Automotive OS screenshot 
 - 06 is Setup, and the current still shows a failed NZTA download. Retake it on a clean first run, or don't use that shot.
 - "It still works without reception": follows from the register being stored on the device. Confirm on a phone (`docs/status.md`), or soften it.
 - "Checks for updates when you open it, at most once a week" and "about 24 MB the first time": match `SyncSchedule` and `docs/data.md`. Change them if either changes.
-- Home widget, Quick Settings tile, and Android Auto are built. Widget and tile have not been checked on a real launcher. Android Auto has not been checked on a car head unit (`docs/status.md`). Try them, or drop those sentences.
+- Home widget and Quick Settings tile are built. They have not been checked on a real launcher (`docs/status.md`). Try them, or drop those sentences.
 - The review note says a screen recording is attached. Make a live one (`android/Tools/capture-store.py`); the current file is a captioned slideshow. It is not in git (`android/AppStore/review-video/`). Attach it in Play Console. Make a new one if the screens change.
-- `versionName` is `0.1.0` in `android/app/build.gradle.kts`. Set it to `1.0.0` for the first release.
-- "Android Auto" is Google's mark. It is in the description only to say the app works with it.
+- `versionName` is `1.0.2` and `versionCode` is `3` in `android/app/build.gradle.kts`.
+- In Play Console, turn off Android Auto / Automotive if a previous upload declared it. This APK has no `CarAppService`.
 - Location while a drive is running: matches `LocationService` and `DriveForegroundService`. Confirm on a phone that ending the drive stops the service.
 - Privacy policy URL and a contact email are required. Neither is set up yet.
 - Data safety: fill the form as no data collected. Location is ephemeral on-device use, not a stored track.

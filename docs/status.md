@@ -21,13 +21,12 @@
 
 - `android/`: Gradle modules `:core` (JVM Kotlin port of LimitCore) and `:app` (Compose Material 3).
 - Drive start is explicit. Location uses `LocationManager` (while-using, precise; no Play Services, no background location). Ongoing notification is the Lock Screen surface. Stop detection v1 is GPS idle only.
-- Android Auto: Car App Library `PaneTemplate` (category NAVIGATION). Glance 2×2 / 4×1 home widget and a Quick Settings Drive tile.
-- CI: Ubuntu JDK 21, `:core:test` and `:app:assembleDebug`. Desktop Head Unit is installed (`extras;google;auto`).
+- Glance 2×2 / 4×1 home widget and a Quick Settings Drive tile.
+- CI: Ubuntu JDK 21, `:core:test` and `:app:assembleDebug`.
 
 ## Unverified (Android)
 
 - Phone hardware, manufacturer notification shade, and Play Store listing.
-- Android Auto on a car head unit. DHU 2.0 is installed. ADB transport to port 5277 connects, then drops: this Play Store image ships an Android Auto stub with no head-unit server.
 - Live Updates promoted ongoing chip on API 36.
 - Home widget and Quick Settings tile on a real launcher.
 - NZTA download on the emulator (the live fetch failed; the copied register was used).

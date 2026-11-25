@@ -27,7 +27,7 @@ The screens follow the "Limit — onboarding and main screen" canvas, and the to
 | DriveNotification | `DriveNotification` + `DriveForegroundService`. Channel "Drive in progress", `IMPORTANCE_LOW`. |
 | HomeWidget | Glance `DriveWidget`, 2×2 and 4×1. |
 | QuickSettingsTile | `DriveTileService`. Incomplete setup opens Setup. |
-| Android Auto | `LimitCarAppService` + `DriveCarScreen` `PaneTemplate`. Landscape phone is the guaranteed in-car surface. |
+| In-car | Landscape phone is the in-car surface. Android Auto is not shipped: Play's Navigation category requires turn-by-turn, and Limit is a speed-limit display. |
 | Driving: portrait / landscape / over | `DriveScreen`. Over-limit uses the caution container, not red. |
 
 ## Rules enforced in code

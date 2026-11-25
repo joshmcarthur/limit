@@ -25,7 +25,7 @@ Limit asks for your location while you use the app, so it can find the road you'
 
 Once you start a drive, Limit keeps using your location while your phone is locked or the app is in the background, so the Lock Screen stays current. On iPhone that is the Live Activity (iOS shows a blue indicator). On Android that is a location foreground service and the "Drive in progress" notification. It stops when you tap "End drive".
 
-On Android the permission is **While using the app** (`ACCESS_FINE_LOCATION` / `ACCESS_COARSE_LOCATION`), with precise location. Limit does **not** ask for background location (`ACCESS_BACKGROUND_LOCATION`). A drive starts only from a visible action (Start drive, the widget, the tile, or Android Auto).
+On Android the permission is **While using the app** (`ACCESS_FINE_LOCATION` / `ACCESS_COARSE_LOCATION`), with precise location. Limit does **not** ask for background location (`ACCESS_BACKGROUND_LOCATION`). A drive starts only from a visible action (Start drive, the widget, or the tile).
 
 ### Motion & Fitness
 

@@ -48,4 +48,4 @@ Material Symbols Rounded, weight 400, optical size matched to use. Suggested: `n
 
 ## Components
 
-SpeedSign, SpeedReadout, DriveFab, SetupStep, DriveNotification, HomeWidget and QuickSettingsTile. The **Android surfaces** section covers the notification, widget, tile and Android Auto in more depth.
+SpeedSign, SpeedReadout, DriveFab, SetupStep, DriveNotification, HomeWidget and QuickSettingsTile. The **Android surfaces** section covers the notification, widget, tile and the landscape in-car layout in more depth.
